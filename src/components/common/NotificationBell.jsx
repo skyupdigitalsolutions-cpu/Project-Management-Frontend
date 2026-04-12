@@ -14,10 +14,33 @@ function extractLink(message) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Audio Engine  (Web Audio API — no external files needed)
+// Audio Engine
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ✅ FIX 1: Made async so resume() is properly awaited before returning context
+/**
+ * ✅ KEY FIX: Browsers (Chrome, Firefox, Safari) block AudioContext from
+ * starting without a user gesture (click/tap). We register listeners on
+ * mount so the context is primed and running BEFORE any poll fires.
+ * Without this, getOrResumeCtx() returns a suspended context and
+ * all scheduled notes are silently dropped.
+ */
+function primeAudioOnUserGesture() {
+  const prime = async () => {
+    try {
+      if (!window.__notifAudioCtx || window.__notifAudioCtx.state === 'closed') {
+        window.__notifAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
+      }
+      if (window.__notifAudioCtx.state === 'suspended') {
+        await window.__notifAudioCtx.resume()
+      }
+    } catch {}
+  }
+  // { once: true } removes the listener automatically after first trigger
+  document.addEventListener('click',      prime, { once: true })
+  document.addEventListener('keydown',    prime, { once: true })
+  document.addEventListener('touchstart', prime, { once: true })
+}
+
 async function getOrResumeCtx() {
   if (!window.__notifAudioCtx || window.__notifAudioCtx.state === 'closed') {
     try {
@@ -25,16 +48,18 @@ async function getOrResumeCtx() {
     } catch { return null }
   }
   if (window.__notifAudioCtx.state === 'suspended') {
-    await window.__notifAudioCtx.resume() // ✅ properly awaited
+    try { await window.__notifAudioCtx.resume() } catch { return null }
+  }
+  if (window.__notifAudioCtx.state !== 'running') {
+    console.warn('[NotifSound] AudioContext blocked — user must interact with the page first.')
+    return null
   }
   return window.__notifAudioCtx
 }
 
 const SOUND_PRESETS = {
-  // ── task sounds ──────────────────────────────────────────────────────────
   chime: {
-    label: 'Chime',
-    category: 'task',
+    label: 'Chime', category: 'task',
     notes: [
       { freq: 523.25, start: 0,    dur: 0.18, vol: 0.75 },
       { freq: 659.25, start: 0.15, dur: 0.22, vol: 0.70 },
@@ -42,31 +67,25 @@ const SOUND_PRESETS = {
     ],
   },
   pop: {
-    label: 'Pop',
-    category: 'task',
+    label: 'Pop', category: 'task',
     notes: [
-      { freq: 800,    start: 0,    dur: 0.06, vol: 0.80, type: 'square' },
-      { freq: 1000,   start: 0.07, dur: 0.10, vol: 0.70, type: 'sine'   },
+      { freq: 800,  start: 0,    dur: 0.06, vol: 0.80, type: 'square' },
+      { freq: 1000, start: 0.07, dur: 0.10, vol: 0.70, type: 'sine'   },
     ],
   },
   ping: {
-    label: 'Ping',
-    category: 'task',
-    notes: [
-      { freq: 880,    start: 0,    dur: 0.30, vol: 0.80 },
-    ],
+    label: 'Ping', category: 'task',
+    notes: [{ freq: 880, start: 0, dur: 0.30, vol: 0.80 }],
   },
   double_ping: {
-    label: 'Double Ping',
-    category: 'task',
+    label: 'Double Ping', category: 'task',
     notes: [
       { freq: 880,    start: 0,    dur: 0.14, vol: 0.80 },
       { freq: 1046.5, start: 0.20, dur: 0.18, vol: 0.75 },
     ],
   },
   bell: {
-    label: 'Bell',
-    category: 'task',
+    label: 'Bell', category: 'task',
     notes: [
       { freq: 1318.5, start: 0,    dur: 0.08, vol: 0.85, type: 'triangle' },
       { freq: 659.25, start: 0.05, dur: 0.40, vol: 0.55, type: 'sine'     },
@@ -74,8 +93,7 @@ const SOUND_PRESETS = {
     ],
   },
   xylophone: {
-    label: 'Xylophone',
-    category: 'task',
+    label: 'Xylophone', category: 'task',
     notes: [
       { freq: 523.25, start: 0,    dur: 0.14, vol: 0.80, type: 'triangle' },
       { freq: 659.25, start: 0.16, dur: 0.14, vol: 0.80, type: 'triangle' },
@@ -83,10 +101,8 @@ const SOUND_PRESETS = {
       { freq: 1046.5, start: 0.48, dur: 0.18, vol: 0.75, type: 'triangle' },
     ],
   },
-  // ── meeting sounds ───────────────────────────────────────────────────────
   fanfare: {
-    label: 'Fanfare',
-    category: 'meeting',
+    label: 'Fanfare', category: 'meeting',
     notes: [
       { freq: 523.25, start: 0,    dur: 0.12, vol: 0.80 },
       { freq: 659.25, start: 0.13, dur: 0.12, vol: 0.80 },
@@ -95,43 +111,35 @@ const SOUND_PRESETS = {
     ],
   },
   alert: {
-    label: 'Alert',
-    category: 'meeting',
+    label: 'Alert', category: 'meeting',
     notes: [
-      { freq: 440,    start: 0,    dur: 0.10, vol: 0.90, type: 'square' },
-      { freq: 550,    start: 0.15, dur: 0.10, vol: 0.90, type: 'square' },
-      { freq: 440,    start: 0.30, dur: 0.10, vol: 0.85, type: 'square' },
-      { freq: 660,    start: 0.45, dur: 0.20, vol: 0.80, type: 'square' },
+      { freq: 440, start: 0,    dur: 0.10, vol: 0.90, type: 'square' },
+      { freq: 550, start: 0.15, dur: 0.10, vol: 0.90, type: 'square' },
+      { freq: 440, start: 0.30, dur: 0.10, vol: 0.85, type: 'square' },
+      { freq: 660, start: 0.45, dur: 0.20, vol: 0.80, type: 'square' },
     ],
   },
-  // ── general sounds ───────────────────────────────────────────────────────
   soft: {
-    label: 'Soft',
-    category: 'general',
-    notes: [
-      { freq: 440,    start: 0,    dur: 0.28, vol: 0.60 },
-    ],
+    label: 'Soft', category: 'general',
+    notes: [{ freq: 440, start: 0, dur: 0.28, vol: 0.60 }],
   },
   swoosh: {
-    label: 'Swoosh',
-    category: 'general',
+    label: 'Swoosh', category: 'general',
     notes: [
-      { freq: 300,    start: 0,    dur: 0.05, vol: 0.50, type: 'sawtooth' },
-      { freq: 600,    start: 0.06, dur: 0.12, vol: 0.65, type: 'sine'     },
-      { freq: 900,    start: 0.18, dur: 0.10, vol: 0.55, type: 'sine'     },
+      { freq: 300, start: 0,    dur: 0.05, vol: 0.50, type: 'sawtooth' },
+      { freq: 600, start: 0.06, dur: 0.12, vol: 0.65, type: 'sine'     },
+      { freq: 900, start: 0.18, dur: 0.10, vol: 0.55, type: 'sine'     },
     ],
   },
 }
 
-// ✅ FIX 1: Made async so AudioContext is fully resumed before scheduling notes
 async function playSound(presetKey = 'chime', masterVol = 1) {
   const preset = SOUND_PRESETS[presetKey]
   if (!preset) return
-  const ctx = await getOrResumeCtx() // ✅ awaited
+  const ctx = await getOrResumeCtx()
   if (!ctx) return
 
-  const now = ctx.currentTime
-
+  const now        = ctx.currentTime
   const masterGain = ctx.createGain()
   masterGain.gain.setValueAtTime(Math.min(1, Math.max(0, masterVol)), now)
   masterGain.connect(ctx.destination)
@@ -139,24 +147,20 @@ async function playSound(presetKey = 'chime', masterVol = 1) {
   preset.notes.forEach(({ freq, start, dur, vol, type = 'sine' }) => {
     const osc  = ctx.createOscillator()
     const gain = ctx.createGain()
-
     osc.connect(gain)
     gain.connect(masterGain)
-
     osc.type = type
     osc.frequency.setValueAtTime(freq, now + start)
-
     gain.gain.setValueAtTime(0, now + start)
     gain.gain.linearRampToValueAtTime(vol, now + start + 0.012)
     gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur)
-
     osc.start(now + start)
     osc.stop(now + start + dur + 0.05)
   })
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Default sound config stored in localStorage
+// Sound config (localStorage)
 // ─────────────────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'notif_sound_config'
 
@@ -165,18 +169,29 @@ function loadSoundConfig() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw)
   } catch {}
-  return {
-    enabled:      true,
-    volume:       0.85,
-    taskSound:    'chime',
-    meetingSound: 'fanfare',
-    generalSound: 'soft',
-  }
+  return { enabled: true, volume: 0.85, taskSound: 'chime', meetingSound: 'fanfare', generalSound: 'soft' }
 }
 
 function saveSoundConfig(cfg) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg))
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Notification type lists
+// ✅ If sound still doesn't play after this fix, open DevTools → Console and
+//    look for the "[NotifSound] new notifications:" log line. It shows the
+//    exact `type` string your backend sends. Add it to TASK_TYPES below.
+// ─────────────────────────────────────────────────────────────────────────────
+const TASK_TYPES = [
+  'task_assigned', 'task_assign',
+  'task_updated',  'task_update',
+  'task_completed','task_complete',
+  'new_task',      'task',
+]
+
+const MEETING_TYPES = [
+  'meeting_invite', 'meeting_invitation', 'meeting',
+]
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sound Settings Panel
@@ -192,8 +207,6 @@ function SoundSettingsPanel({ onClose }) {
     })
   }
 
-  const previewSound = (key) => playSound(key, cfg.volume)
-
   const categoryPresets = (cat) =>
     Object.entries(SOUND_PRESETS).filter(([, v]) => v.category === cat)
 
@@ -206,16 +219,16 @@ function SoundSettingsPanel({ onClose }) {
           return (
             <div
               key={key}
+              onClick={() => update({ [configKey]: key })}
               className={`flex items-center justify-between px-2.5 py-2 rounded-lg border cursor-pointer transition-all ${
                 selected
                   ? 'border-brand-500/70 bg-brand-500/15 text-brand-300'
                   : 'border-white/8 bg-white/3 text-slate-400 hover:border-white/20 hover:text-slate-200'
               }`}
-              onClick={() => update({ [configKey]: key })}
             >
               <span className="text-xs font-medium">{preset.label}</span>
               <button
-                onClick={(e) => { e.stopPropagation(); previewSound(key) }}
+                onClick={(e) => { e.stopPropagation(); playSound(key, cfg.volume) }}
                 className="p-0.5 rounded hover:text-white transition-colors"
                 title="Preview"
               >
@@ -235,10 +248,7 @@ function SoundSettingsPanel({ onClose }) {
           <Music size={14} className="text-brand-400" />
           <span className="text-sm font-semibold text-white">Sound Settings</span>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors"
-        >
+        <button onClick={onClose} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
           <X size={14} />
         </button>
       </div>
@@ -314,34 +324,42 @@ export default function NotificationBell() {
   const [replyId,      setReplyId]      = useState(null)
   const [replyText,    setReplyText]    = useState('')
   const [replying,     setReplying]     = useState(false)
+  // Shows amber banner if browser hasn't allowed audio yet
+  const [audioBlocked, setAudioBlocked] = useState(false)
 
   const ref          = useRef(null)
-  // ✅ FIX 3: Initialised to 0 (not undefined) so the very first poll can
-  //           detect new notifications immediately on page load.
-  const prevUnread   = useRef(0)
+  const prevUnread   = useRef(0)          // ✅ 0 not undefined
   const prevNotifIds = useRef(new Set())
   const openRef      = useRef(open)
 
   useEffect(() => { openRef.current = open }, [open])
 
-  // ── helper: play based on current config ──────────────────────────────────
-  const playSoundFor = useCallback((kind = 'general') => {
+  // ✅ KEY FIX: Register gesture listeners on mount so AudioContext is primed
+  //    before the first poll fires. Browsers silently block audio without this.
+  useEffect(() => {
+    primeAudioOnUserGesture()
+  }, [])
+
+  // ── helper ────────────────────────────────────────────────────────────────
+  const playSoundFor = useCallback(async (kind = 'general') => {
     const cfg = loadSoundConfig()
     if (!cfg.enabled) return
     const key = kind === 'meeting' ? cfg.meetingSound
               : kind === 'task'    ? cfg.taskSound
               :                      cfg.generalSound
-    playSound(key, cfg.volume) // async — fire and forget is fine here
+    try {
+      await playSound(key, cfg.volume)
+    } catch (err) {
+      console.warn('[NotifSound] playSound error:', err)
+    }
   }, [])
 
-  // ── poll unread count every 15 s ──────────────────────────────────────────
+  // ── poll every 15 s ───────────────────────────────────────────────────────
   const fetchCount = useCallback(async () => {
     try {
       const { data } = await api.get('/notifications/unread-count')
       const newCount = data.unread_count ?? 0
 
-      // ✅ FIX 3: Removed `prevUnread.current !== undefined` guard —
-      //           prevUnread starts at 0 so comparison works on first poll.
       if (newCount > prevUnread.current) {
         try {
           const { data: nd } = await api.get('/notifications?limit=10')
@@ -349,23 +367,22 @@ export default function NotificationBell() {
           const newOnes  = incoming.filter(n => !prevNotifIds.current.has(n._id))
 
           if (newOnes.length > 0) {
-            // ✅ FIX 2: Extended task type list to catch all common backend strings.
-            //    Add your backend's actual type values here if still not matching.
-            const hasMeeting = newOnes.some(n => n.type === 'meeting_invite')
-            const hasTask    = newOnes.some(n =>
-              [
-                'task_assigned',
-                'task_assign',
-                'task_updated',
-                'task_update',
-                'task_completed',
-                'task_complete',
-                'new_task',
-              ].includes(n.type)
+            // ✅ DEBUG LOG — open DevTools console to see the exact type strings
+            //    your backend sends, then add any missing ones to TASK_TYPES above
+            console.log(
+              '[NotifSound] new notifications:',
+              newOnes.map(n => ({ type: n.type, msg: n.message?.slice(0, 50) }))
             )
-            const kind = hasMeeting ? 'meeting' : hasTask ? 'task' : 'general'
 
-            playSoundFor(kind)
+            const hasMeeting = newOnes.some(n => MEETING_TYPES.includes(n.type))
+            const hasTask    = newOnes.some(n => TASK_TYPES.includes(n.type))
+            const kind       = hasMeeting ? 'meeting' : hasTask ? 'task' : 'general'
+
+            // Check if audio context is ready; show banner if blocked
+            const ctx = window.__notifAudioCtx
+            if (!ctx || ctx.state !== 'running') setAudioBlocked(true)
+
+            await playSoundFor(kind)
 
             if (!openRef.current) {
               const label = hasMeeting ? '📅 New meeting invitation!'
@@ -384,8 +401,9 @@ export default function NotificationBell() {
 
             prevNotifIds.current = new Set(incoming.map(n => n._id))
           }
-        } catch {
-          playSoundFor('general')
+        } catch (err) {
+          console.warn('[NotifSound] inner fetch error:', err)
+          await playSoundFor('general')
         }
       }
 
@@ -408,8 +426,7 @@ export default function NotificationBell() {
       const incoming = data.data ?? []
       setNotifs(incoming)
       prevNotifIds.current = new Set(incoming.map(n => n._id))
-      const unreadCount = incoming.filter(n => !n.is_read).length
-      prevUnread.current = unreadCount
+      prevUnread.current = incoming.filter(n => !n.is_read).length
     } catch {}
     finally { setLoading(false) }
   }
@@ -420,8 +437,7 @@ export default function NotificationBell() {
   useEffect(() => {
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false)
-        setShowSettings(false)
+        setOpen(false); setShowSettings(false)
       }
     }
     document.addEventListener('mousedown', handler)
@@ -433,18 +449,15 @@ export default function NotificationBell() {
     try {
       await api.patch('/notifications/mark-all-read')
       setNotifs(n => n.map(x => ({ ...x, is_read: true })))
-      setUnread(0)
-      prevUnread.current = 0
+      setUnread(0); prevUnread.current = 0
     } catch { toast.error('Failed') }
   }
 
   const clearAll = async () => {
     try {
       await api.delete('/notifications/clear-all')
-      setNotifs([])
-      setUnread(0)
-      prevUnread.current = 0
-      prevNotifIds.current = new Set()
+      setNotifs([]); setUnread(0)
+      prevUnread.current = 0; prevNotifIds.current = new Set()
     } catch { toast.error('Failed') }
   }
 
@@ -458,9 +471,7 @@ export default function NotificationBell() {
     setReplying(true)
     try {
       await api.post('/notifications/send', {
-        user_ids: [recipientId],
-        message:  replyText.trim(),
-        type:     'general',
+        user_ids: [recipientId], message: replyText.trim(), type: 'general',
       })
       toast.success('Reply sent!')
       cancelReply()
@@ -469,11 +480,47 @@ export default function NotificationBell() {
     } finally { setReplying(false) }
   }
 
+  // ── manually enable audio (for the blocked banner) ────────────────────────
+  const enableAudio = async () => {
+    try {
+      if (!window.__notifAudioCtx || window.__notifAudioCtx.state === 'closed') {
+        window.__notifAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
+      }
+      await window.__notifAudioCtx.resume()
+      setAudioBlocked(false)
+      const cfg = loadSoundConfig()
+      await playSound(cfg.taskSound, cfg.volume) // play a test sound to confirm
+    } catch {}
+  }
+
   const soundCfg = loadSoundConfig()
 
   // ── render ────────────────────────────────────────────────────────────────
   return (
     <div className="relative" ref={ref}>
+
+      {/* ✅ Amber banner shown if browser blocked audio autoplay */}
+      {audioBlocked && (
+        <div className="absolute right-0 top-11 z-50 w-72 bg-amber-950 border border-amber-700/50 rounded-xl px-4 py-3 shadow-xl text-xs text-amber-200 space-y-2">
+          <p className="font-semibold">🔇 Notification sounds blocked</p>
+          <p className="text-amber-300/80">Your browser requires a click to enable audio. Tap below to activate.</p>
+          <div className="flex gap-2">
+            <button
+              onClick={enableAudio}
+              className="flex-1 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium transition-colors"
+            >
+              Enable Sounds
+            </button>
+            <button
+              onClick={() => setAudioBlocked(false)}
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-amber-200 rounded-lg transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Bell button */}
       <button
         onClick={() => { setOpen(o => !o); setShowSettings(false) }}
@@ -489,9 +536,7 @@ export default function NotificationBell() {
       </button>
 
       {/* Sound Settings Panel */}
-      {showSettings && (
-        <SoundSettingsPanel onClose={() => setShowSettings(false)} />
-      )}
+      {showSettings && <SoundSettingsPanel onClose={() => setShowSettings(false)} />}
 
       {/* Notification Panel */}
       {open && !showSettings && (
@@ -564,11 +609,8 @@ export default function NotificationBell() {
             ) : notifs.length === 0 ? (
               <div className="text-center py-8 text-slate-500 text-sm">No notifications</div>
             ) : notifs.map(n => {
-              const isMeeting  = n.type === 'meeting_invite'
-              const isTask     = [
-                'task_assigned', 'task_assign', 'task_updated',
-                'task_update', 'task_completed', 'task_complete', 'new_task',
-              ].includes(n.type)
+              const isMeeting  = MEETING_TYPES.includes(n.type)
+              const isTask     = TASK_TYPES.includes(n.type)
               const joinLink   = isMeeting ? extractLink(n.message) : null
               const displayMsg = isMeeting && joinLink
                 ? n.message.replace(/Join:\s*https?:\/\/[^\s]+/, '').trim()
@@ -597,9 +639,7 @@ export default function NotificationBell() {
 
                   {joinLink && (
                     <a
-                      href={joinLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={joinLink} target="_blank" rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 mt-1.5 text-xs text-brand-400 hover:text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 px-2.5 py-1 rounded-lg transition-colors font-medium"
                     >
                       <ExternalLink size={11} /> Join Meeting
@@ -623,8 +663,7 @@ export default function NotificationBell() {
                   {canReply && isReplying && (
                     <div className="mt-2 space-y-1.5">
                       <textarea
-                        autoFocus
-                        rows={2}
+                        autoFocus rows={2}
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
                         placeholder="Type your reply…"
@@ -632,8 +671,7 @@ export default function NotificationBell() {
                       />
                       <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={cancelReply}
-                          disabled={replying}
+                          onClick={cancelReply} disabled={replying}
                           className="text-xs text-slate-500 hover:text-slate-300 px-2 py-1 rounded hover:bg-white/5 flex items-center gap-1 transition-colors"
                         >
                           <X size={11} /> Cancel
