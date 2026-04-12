@@ -1,123 +1,355 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Bell, Check, Trash2, ExternalLink, Reply, Send, X, Volume2, VolumeX } from 'lucide-react'
+import { Bell, Check, Trash2, ExternalLink, Reply, Send, X, Volume2, VolumeX, Settings2, Music, Play, ChevronRight } from 'lucide-react'
 import api from '../../api/axios'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Utility
+// ─────────────────────────────────────────────────────────────────────────────
 function extractLink(message) {
   const match = message?.match(/https?:\/\/[^\s]+/)
   return match ? match[0] : null
 }
 
-// ── Audio helpers ──────────────────────────────────────────────────────────────
-// Uses Web Audio API — no external files needed.
+// ─────────────────────────────────────────────────────────────────────────────
+// Audio Engine  (Web Audio API — no external files needed)
+// ─────────────────────────────────────────────────────────────────────────────
 
-function createAudioContext() {
-  try {
-    return new (window.AudioContext || window.webkitAudioContext)()
-  } catch {
-    return null
+function getOrResumeCtx() {
+  if (!window.__notifAudioCtx || window.__notifAudioCtx.state === 'closed') {
+    try {
+      window.__notifAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
+    } catch { return null }
   }
+  if (window.__notifAudioCtx.state === 'suspended') {
+    window.__notifAudioCtx.resume().catch(() => {})
+  }
+  return window.__notifAudioCtx
 }
 
 /**
- * Play a short notification chime.
- * @param {'task'|'meeting'|'general'} kind
+ * All sound presets.  vol values raised for louder output.
+ * Each preset is an array of { freq, start, dur, vol, type? } note descriptors.
  */
-function playNotificationSound(kind = 'general') {
-  const ctx = createAudioContext()
+const SOUND_PRESETS = {
+  // ── task sounds ──────────────────────────────────────────────────────────
+  chime: {
+    label: 'Chime',
+    category: 'task',
+    notes: [
+      { freq: 523.25, start: 0,    dur: 0.18, vol: 0.75 }, // C5
+      { freq: 659.25, start: 0.15, dur: 0.22, vol: 0.70 }, // E5
+      { freq: 783.99, start: 0.30, dur: 0.28, vol: 0.65 }, // G5
+    ],
+  },
+  pop: {
+    label: 'Pop',
+    category: 'task',
+    notes: [
+      { freq: 800,    start: 0,    dur: 0.06, vol: 0.80, type: 'square' },
+      { freq: 1000,   start: 0.07, dur: 0.10, vol: 0.70, type: 'sine'   },
+    ],
+  },
+  ping: {
+    label: 'Ping',
+    category: 'task',
+    notes: [
+      { freq: 880,    start: 0,    dur: 0.30, vol: 0.80 },
+    ],
+  },
+  double_ping: {
+    label: 'Double Ping',
+    category: 'task',
+    notes: [
+      { freq: 880,    start: 0,    dur: 0.14, vol: 0.80 },
+      { freq: 1046.5, start: 0.20, dur: 0.18, vol: 0.75 },
+    ],
+  },
+  bell: {
+    label: 'Bell',
+    category: 'task',
+    notes: [
+      { freq: 1318.5, start: 0,    dur: 0.08, vol: 0.85, type: 'triangle' },
+      { freq: 659.25, start: 0.05, dur: 0.40, vol: 0.55, type: 'sine'     },
+      { freq: 987.77, start: 0.05, dur: 0.35, vol: 0.40, type: 'sine'     },
+    ],
+  },
+  xylophone: {
+    label: 'Xylophone',
+    category: 'task',
+    notes: [
+      { freq: 523.25, start: 0,    dur: 0.14, vol: 0.80, type: 'triangle' },
+      { freq: 659.25, start: 0.16, dur: 0.14, vol: 0.80, type: 'triangle' },
+      { freq: 783.99, start: 0.32, dur: 0.14, vol: 0.80, type: 'triangle' },
+      { freq: 1046.5, start: 0.48, dur: 0.18, vol: 0.75, type: 'triangle' },
+    ],
+  },
+  // ── meeting sounds ───────────────────────────────────────────────────────
+  fanfare: {
+    label: 'Fanfare',
+    category: 'meeting',
+    notes: [
+      { freq: 523.25, start: 0,    dur: 0.12, vol: 0.80 },
+      { freq: 659.25, start: 0.13, dur: 0.12, vol: 0.80 },
+      { freq: 783.99, start: 0.26, dur: 0.12, vol: 0.80 },
+      { freq: 1046.5, start: 0.39, dur: 0.28, vol: 0.75 },
+    ],
+  },
+  alert: {
+    label: 'Alert',
+    category: 'meeting',
+    notes: [
+      { freq: 440,    start: 0,    dur: 0.10, vol: 0.90, type: 'square' },
+      { freq: 550,    start: 0.15, dur: 0.10, vol: 0.90, type: 'square' },
+      { freq: 440,    start: 0.30, dur: 0.10, vol: 0.85, type: 'square' },
+      { freq: 660,    start: 0.45, dur: 0.20, vol: 0.80, type: 'square' },
+    ],
+  },
+  // ── general sounds ───────────────────────────────────────────────────────
+  soft: {
+    label: 'Soft',
+    category: 'general',
+    notes: [
+      { freq: 440,    start: 0,    dur: 0.28, vol: 0.60 },
+    ],
+  },
+  swoosh: {
+    label: 'Swoosh',
+    category: 'general',
+    notes: [
+      { freq: 300,    start: 0,    dur: 0.05, vol: 0.50, type: 'sawtooth' },
+      { freq: 600,    start: 0.06, dur: 0.12, vol: 0.65, type: 'sine'     },
+      { freq: 900,    start: 0.18, dur: 0.10, vol: 0.55, type: 'sine'     },
+    ],
+  },
+}
+
+/**
+ * Core playback.  Accepts a preset key string.
+ * Volume is scaled by `masterVol` (0–1, default 1).
+ */
+function playSound(presetKey = 'chime', masterVol = 1) {
+  const preset = SOUND_PRESETS[presetKey]
+  if (!preset) return
+  const ctx = getOrResumeCtx()
   if (!ctx) return
 
   const now = ctx.currentTime
 
-  const presets = {
-    // Two ascending tones — friendly "new task" ping
-    task: [
-      { freq: 523.25, start: 0,    dur: 0.12, vol: 0.45 }, // C5
-      { freq: 659.25, start: 0.13, dur: 0.18, vol: 0.40 }, // E5
-    ],
-    // Three-note chime — attention-grabbing "meeting" alert
-    meeting: [
-      { freq: 523.25, start: 0,    dur: 0.12, vol: 0.50 }, // C5
-      { freq: 659.25, start: 0.13, dur: 0.12, vol: 0.50 }, // E5
-      { freq: 783.99, start: 0.26, dur: 0.22, vol: 0.45 }, // G5
-    ],
-    // Single soft ping — subtle "general" nudge
-    general: [
-      { freq: 440,    start: 0,    dur: 0.20, vol: 0.35 }, // A4
-    ],
-  }
+  // Master gain node for volume scaling
+  const masterGain = ctx.createGain()
+  masterGain.gain.setValueAtTime(Math.min(1, Math.max(0, masterVol)), now)
+  masterGain.connect(ctx.destination)
 
-  const notes = presets[kind] ?? presets.general
-
-  notes.forEach(({ freq, start, dur, vol }) => {
+  preset.notes.forEach(({ freq, start, dur, vol, type = 'sine' }) => {
     const osc  = ctx.createOscillator()
     const gain = ctx.createGain()
 
     osc.connect(gain)
-    gain.connect(ctx.destination)
+    gain.connect(masterGain)
 
-    osc.type = 'sine'
+    osc.type = type
     osc.frequency.setValueAtTime(freq, now + start)
 
     gain.gain.setValueAtTime(0, now + start)
-    gain.gain.linearRampToValueAtTime(vol, now + start + 0.01)
+    gain.gain.linearRampToValueAtTime(vol, now + start + 0.012)
     gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur)
 
     osc.start(now + start)
     osc.stop(now + start + dur + 0.05)
   })
-
-  // Release AudioContext after last note
-  const totalDur = Math.max(...notes.map(n => n.start + n.dur)) + 0.2
-  setTimeout(() => ctx.close(), totalDur * 1000 + 200)
 }
 
-function soundKindFor(type) {
-  if (type === 'meeting_invite') return 'meeting'
-  if (['task_assigned', 'task_updated', 'task_completed'].includes(type)) return 'task'
-  return 'general'
+// ─────────────────────────────────────────────────────────────────────────────
+// Default sound config stored in localStorage
+// ─────────────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'notif_sound_config'
+
+function loadSoundConfig() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return {
+    enabled:      true,
+    volume:       0.85,       // 0–1
+    taskSound:    'chime',
+    meetingSound: 'fanfare',
+    generalSound: 'soft',
+  }
 }
 
-// ── Component ──────────────────────────────────────────────────────────────────
+function saveSoundConfig(cfg) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg))
+}
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Sound Settings Panel (sub-component)
+// ─────────────────────────────────────────────────────────────────────────────
+function SoundSettingsPanel({ onClose }) {
+  const [cfg, setCfg] = useState(loadSoundConfig)
+
+  const update = (patch) => {
+    setCfg(prev => {
+      const next = { ...prev, ...patch }
+      saveSoundConfig(next)
+      return next
+    })
+  }
+
+  const previewSound = (key) => {
+    playSound(key, cfg.volume)
+  }
+
+  const categoryPresets = (cat) =>
+    Object.entries(SOUND_PRESETS).filter(([, v]) => v.category === cat)
+
+  const SoundRow = ({ label, configKey, category }) => (
+    <div className="mb-4">
+      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
+      <div className="grid grid-cols-2 gap-1.5">
+        {categoryPresets(category).map(([key, preset]) => {
+          const selected = cfg[configKey] === key
+          return (
+            <div
+              key={key}
+              className={`flex items-center justify-between px-2.5 py-2 rounded-lg border cursor-pointer transition-all ${
+                selected
+                  ? 'border-brand-500/70 bg-brand-500/15 text-brand-300'
+                  : 'border-white/8 bg-white/3 text-slate-400 hover:border-white/20 hover:text-slate-200'
+              }`}
+              onClick={() => update({ [configKey]: key })}
+            >
+              <span className="text-xs font-medium">{preset.label}</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); previewSound(key) }}
+                className="p-0.5 rounded hover:text-white transition-colors"
+                title="Preview"
+              >
+                <Play size={10} />
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="absolute right-0 top-11 w-80 bg-surface-100 border border-white/10 rounded-2xl shadow-2xl z-50 animate-slide-up overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-white/2">
+        <div className="flex items-center gap-2">
+          <Music size={14} className="text-brand-400" />
+          <span className="text-sm font-semibold text-white">Sound Settings</span>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors"
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      <div className="p-4 max-h-[480px] overflow-y-auto space-y-5">
+        {/* Master toggle + volume */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-slate-300">Enable Sounds</span>
+            <button
+              onClick={() => update({ enabled: !cfg.enabled })}
+              className={`relative w-9 h-5 rounded-full transition-colors ${cfg.enabled ? 'bg-brand-500' : 'bg-white/15'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${cfg.enabled ? 'translate-x-4' : ''}`} />
+            </button>
+          </div>
+
+          {/* Volume slider */}
+          <div className={`transition-opacity ${cfg.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] text-slate-400">Volume</span>
+              <span className="text-[11px] text-brand-400 font-medium">{Math.round(cfg.volume * 100)}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <VolumeX size={12} className="text-slate-600 shrink-0" />
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={cfg.volume}
+                onChange={e => update({ volume: parseFloat(e.target.value) })}
+                className="flex-1 accent-brand-500 h-1 rounded-full cursor-pointer"
+              />
+              <Volume2 size={12} className="text-slate-400 shrink-0" />
+            </div>
+          </div>
+        </div>
+
+        <div className={`space-y-1 transition-opacity ${cfg.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          <div className="h-px bg-white/6 mb-4" />
+
+          <SoundRow label="📋 Task Notifications" configKey="taskSound"    category="task"    />
+          <SoundRow label="📅 Meeting Invitations" configKey="meetingSound" category="meeting" />
+          <SoundRow label="🔔 General Alerts"      configKey="generalSound" category="general" />
+        </div>
+
+        {/* Test all button */}
+        <button
+          onClick={() => {
+            if (!cfg.enabled) return
+            playSound(cfg.generalSound, cfg.volume)
+            setTimeout(() => playSound(cfg.taskSound,    cfg.volume), 800)
+            setTimeout(() => playSound(cfg.meetingSound, cfg.volume), 1600)
+          }}
+          disabled={!cfg.enabled}
+          className="w-full py-2 rounded-xl bg-brand-600/20 hover:bg-brand-600/30 border border-brand-500/30 text-brand-300 text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+        >
+          <Play size={11} /> Preview All Sounds
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────────────────────
 export default function NotificationBell() {
   const { user } = useAuth()
   const canReply = user?.role
     ? ['admin', 'manager'].includes(user.role.toLowerCase())
     : false
 
-  const [open,      setOpen]      = useState(false)
-  const [notifs,    setNotifs]    = useState([])
-  const [unread,    setUnread]    = useState(0)
-  const [loading,   setLoading]   = useState(false)
-  const [replyId,   setReplyId]   = useState(null)
-  const [replyText, setReplyText] = useState('')
-  const [replying,  setReplying]  = useState(false)
-  const [soundOn,   setSoundOn]   = useState(() => {
-    const saved = localStorage.getItem('notif_sound')
-    return saved === null ? true : saved === 'true'
-  })
+  const [open,         setOpen]         = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [notifs,       setNotifs]       = useState([])
+  const [unread,       setUnread]       = useState(0)
+  const [loading,      setLoading]      = useState(false)
+  const [replyId,      setReplyId]      = useState(null)
+  const [replyText,    setReplyText]    = useState('')
+  const [replying,     setReplying]     = useState(false)
 
-  const ref            = useRef(null)
-  const prevUnread     = useRef(undefined)
-  const prevNotifIds   = useRef(new Set())
-  const openRef        = useRef(open)
+  const ref          = useRef(null)
+  const prevUnread   = useRef(undefined)
+  const prevNotifIds = useRef(new Set())
+  const openRef      = useRef(open)
 
   useEffect(() => { openRef.current = open }, [open])
 
-  // ── sound toggle ──────────────────────────────────────────────────────────
-  const toggleSound = () => {
-    setSoundOn(prev => {
-      const next = !prev
-      localStorage.setItem('notif_sound', String(next))
-      if (next) playNotificationSound('general')
-      return next
-    })
-  }
+  // ── helper: play based on current config ──────────────────────────────────
+  const playSoundFor = useCallback((kind = 'general') => {
+    const cfg = loadSoundConfig()
+    if (!cfg.enabled) return
+    const key = kind === 'meeting' ? cfg.meetingSound
+              : kind === 'task'    ? cfg.taskSound
+              :                      cfg.generalSound
+    playSound(key, cfg.volume)
+  }, [])
 
-  // ── poll unread count ─────────────────────────────────────────────────────
+  // ── poll unread count every 15 s ──────────────────────────────────────────
   const fetchCount = useCallback(async () => {
     try {
       const { data } = await api.get('/notifications/unread-count')
@@ -130,24 +362,18 @@ export default function NotificationBell() {
           const newOnes  = incoming.filter(n => !prevNotifIds.current.has(n._id))
 
           if (newOnes.length > 0) {
-            // Determine the most important sound
             const hasMeeting = newOnes.some(n => n.type === 'meeting_invite')
             const hasTask    = newOnes.some(n =>
               ['task_assigned', 'task_updated', 'task_completed'].includes(n.type)
             )
             const kind = hasMeeting ? 'meeting' : hasTask ? 'task' : 'general'
 
-            // Play sound (read from ref to get current value without re-creating callback)
-            const soundEnabled = localStorage.getItem('notif_sound') !== 'false'
-            if (soundEnabled) playNotificationSound(kind)
+            playSoundFor(kind)
 
-            // Toast only when panel is closed
             if (!openRef.current) {
-              const label = hasMeeting
-                ? '📅 New meeting invitation!'
-                : hasTask
-                  ? '✅ New task assigned!'
-                  : '🔔 New notification!'
+              const label = hasMeeting ? '📅 New meeting invitation!'
+                          : hasTask    ? '✅ New task assigned!'
+                          :              '🔔 New notification!'
               toast(label, {
                 duration: 4000,
                 style: {
@@ -162,19 +388,18 @@ export default function NotificationBell() {
             prevNotifIds.current = new Set(incoming.map(n => n._id))
           }
         } catch {
-          const soundEnabled = localStorage.getItem('notif_sound') !== 'false'
-          if (soundEnabled) playNotificationSound('general')
+          playSoundFor('general')
         }
       }
 
       prevUnread.current = newCount
       setUnread(newCount)
     } catch {}
-  }, []) // stable — reads sound pref from localStorage directly
+  }, [playSoundFor])
 
   useEffect(() => {
     fetchCount()
-    const t = setInterval(fetchCount, 30000)
+    const t = setInterval(fetchCount, 15_000)   // tighter poll: 15 s
     return () => clearInterval(t)
   }, [fetchCount])
 
@@ -182,10 +407,13 @@ export default function NotificationBell() {
   const fetchNotifs = async () => {
     setLoading(true)
     try {
-      const { data } = await api.get('/notifications?limit=10')
+      const { data } = await api.get('/notifications?limit=20')
       const incoming = data.data ?? []
       setNotifs(incoming)
+      // Sync both refs so next poll diff is correct
       prevNotifIds.current = new Set(incoming.map(n => n._id))
+      const unreadCount = incoming.filter(n => !n.is_read).length
+      prevUnread.current = unreadCount
     } catch {}
     finally { setLoading(false) }
   }
@@ -195,7 +423,10 @@ export default function NotificationBell() {
   // ── close on outside click ────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false)
+        setShowSettings(false)
+      }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -228,7 +459,6 @@ export default function NotificationBell() {
     if (!replyText.trim()) { toast.error('Enter a reply message'); return }
     const recipientId = notif.sender_id || notif.user_id
     if (!recipientId) { toast.error('Cannot determine reply recipient'); return }
-
     setReplying(true)
     try {
       await api.post('/notifications/send', {
@@ -240,45 +470,66 @@ export default function NotificationBell() {
       cancelReply()
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to send reply')
-    } finally {
-      setReplying(false)
-    }
+    } finally { setReplying(false) }
   }
+
+  const soundCfg = loadSoundConfig()
 
   // ── render ────────────────────────────────────────────────────────────────
   return (
     <div className="relative" ref={ref}>
-      {/* Bell button */}
+      {/* ── Bell button ── */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { setOpen(o => !o); setShowSettings(false) }}
         className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
         title="Notifications"
       >
         <Bell size={18} />
         {unread > 0 && (
-          <span className="absolute top-1 right-1 w-4 h-4 bg-brand-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+          <span className="absolute top-1 right-1 w-4 h-4 bg-brand-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center animate-pulse">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
       </button>
 
-      {open && (
+      {/* ── Sound Settings Panel ── */}
+      {showSettings && (
+        <SoundSettingsPanel onClose={() => setShowSettings(false)} />
+      )}
+
+      {/* ── Notification Panel ── */}
+      {open && !showSettings && (
         <div className="absolute right-0 top-11 w-80 bg-surface-100 border border-white/10 rounded-2xl shadow-2xl z-50 animate-slide-up">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <span className="text-sm font-semibold text-white">Notifications</span>
             <div className="flex items-center gap-1">
-              {/* Sound toggle button */}
+
+              {/* Sound settings gear */}
               <button
-                onClick={toggleSound}
-                title={soundOn ? 'Mute notification sounds' : 'Enable notification sounds'}
+                onClick={() => { setOpen(false); setShowSettings(true) }}
+                title="Sound Settings"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-brand-400 hover:bg-white/5 transition-colors"
+              >
+                <Settings2 size={13} />
+              </button>
+
+              {/* Quick mute/unmute */}
+              <button
+                onClick={() => {
+                  const cfg = loadSoundConfig()
+                  saveSoundConfig({ ...cfg, enabled: !cfg.enabled })
+                  // force re-render
+                  setNotifs(n => [...n])
+                }}
+                title={soundCfg.enabled ? 'Mute sounds' : 'Unmute sounds'}
                 className={`p-1.5 rounded-lg transition-colors ${
-                  soundOn
+                  soundCfg.enabled
                     ? 'text-brand-400 hover:text-brand-300 hover:bg-white/5'
                     : 'text-slate-600 hover:text-slate-400 hover:bg-white/5'
                 }`}
               >
-                {soundOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
+                {soundCfg.enabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
               </button>
 
               {unread > 0 && (
@@ -299,14 +550,22 @@ export default function NotificationBell() {
           </div>
 
           {/* Sound status bar */}
-          <div className={`px-4 py-1.5 border-b border-white/5 flex items-center gap-1 text-[10px] ${soundOn ? 'text-brand-400/70' : 'text-slate-600'}`}>
-            {soundOn
-              ? <><Volume2 size={9} /> Sound alerts active — you'll hear chimes for new notifications</>
-              : <><VolumeX size={9} /> Sound alerts muted</>
-            }
+          <div className={`px-4 py-1.5 border-b border-white/5 flex items-center justify-between text-[10px] ${soundCfg.enabled ? 'text-brand-400/70' : 'text-slate-600'}`}>
+            <div className="flex items-center gap-1">
+              {soundCfg.enabled
+                ? <><Volume2 size={9} /> Sound active — {Math.round(soundCfg.volume * 100)}% volume</>
+                : <><VolumeX size={9} /> Sound muted</>
+              }
+            </div>
+            <button
+              onClick={() => { setOpen(false); setShowSettings(true) }}
+              className="flex items-center gap-0.5 hover:text-brand-400 transition-colors"
+            >
+              Customize <ChevronRight size={9} />
+            </button>
           </div>
 
-          {/* List */}
+          {/* Notification list */}
           <div className="max-h-80 overflow-y-auto">
             {loading ? (
               <div className="flex justify-center py-6">
@@ -358,7 +617,6 @@ export default function NotificationBell() {
                     <p className="text-xs text-slate-500">
                       {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                     </p>
-
                     {canReply && !isReplying && (
                       <button
                         onClick={() => openReply(n)}
