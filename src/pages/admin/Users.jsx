@@ -11,7 +11,20 @@ import { Users, UserCheck, UserX } from 'lucide-react'
 
 const ROLES       = ['admin', 'manager', 'employee']
 const STATUSES    = ['active', 'inactive', 'on-leave']
-const DEPARTMENTS = ['Engineering', 'Design', 'Marketing', 'HR', 'Finance', 'Operations', 'Sales']
+const DEPARTMENTS = [
+  'SEO',
+  'Performance Marketing',
+  'Social Media Marketing',
+  'Content Marketing',
+  'Email Marketing',
+  'Web Design & Development',
+  'Graphic Design',
+  'Video & Creative Production',
+  'Analytics & Reporting',
+  'Business Development',
+  'Account Management',
+  'HR & Admin',
+]
 
 const emptyForm = { name: '', email: '', password: '', phone: '', role: 'employee', department: '', designation: '', status: 'active' }
 
