@@ -13,9 +13,18 @@ import { format } from 'date-fns'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DEPARTMENTS = [
-  'SEO', 'Web Development', 'PPC / Paid Ads', 'Content Writing',
-  'Graphic Design', 'Social Media', 'Email Marketing', 'Analytics & Reporting',
-  'UI/UX Design', 'Mobile Development', 'DevOps', 'QA Testing', 'Other',
+  'SEO',
+  'Performance Marketing',
+  'Social Media Marketing',
+  'Content Marketing',
+  'Email Marketing',
+  'Web Design & Development',
+  'Graphic Design',
+  'Video & Creative Production',
+  'Analytics & Reporting',
+  'Business Development',
+  'Account Management',
+  'HR & Admin',
 ]
 const PRIORITIES  = ['low', 'medium', 'high', 'critical']
 const STATUSES    = ['planning', 'active', 'on-hold', 'completed', 'cancelled']
