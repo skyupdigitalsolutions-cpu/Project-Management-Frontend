@@ -17,31 +17,28 @@ function extractLink(message) {
 // Audio Engine  (Web Audio API — no external files needed)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function getOrResumeCtx() {
+// ✅ FIX 1: Made async so resume() is properly awaited before returning context
+async function getOrResumeCtx() {
   if (!window.__notifAudioCtx || window.__notifAudioCtx.state === 'closed') {
     try {
       window.__notifAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
     } catch { return null }
   }
   if (window.__notifAudioCtx.state === 'suspended') {
-    window.__notifAudioCtx.resume().catch(() => {})
+    await window.__notifAudioCtx.resume() // ✅ properly awaited
   }
   return window.__notifAudioCtx
 }
 
-/**
- * All sound presets.  vol values raised for louder output.
- * Each preset is an array of { freq, start, dur, vol, type? } note descriptors.
- */
 const SOUND_PRESETS = {
   // ── task sounds ──────────────────────────────────────────────────────────
   chime: {
     label: 'Chime',
     category: 'task',
     notes: [
-      { freq: 523.25, start: 0,    dur: 0.18, vol: 0.75 }, // C5
-      { freq: 659.25, start: 0.15, dur: 0.22, vol: 0.70 }, // E5
-      { freq: 783.99, start: 0.30, dur: 0.28, vol: 0.65 }, // G5
+      { freq: 523.25, start: 0,    dur: 0.18, vol: 0.75 },
+      { freq: 659.25, start: 0.15, dur: 0.22, vol: 0.70 },
+      { freq: 783.99, start: 0.30, dur: 0.28, vol: 0.65 },
     ],
   },
   pop: {
@@ -126,19 +123,15 @@ const SOUND_PRESETS = {
   },
 }
 
-/**
- * Core playback.  Accepts a preset key string.
- * Volume is scaled by `masterVol` (0–1, default 1).
- */
-function playSound(presetKey = 'chime', masterVol = 1) {
+// ✅ FIX 1: Made async so AudioContext is fully resumed before scheduling notes
+async function playSound(presetKey = 'chime', masterVol = 1) {
   const preset = SOUND_PRESETS[presetKey]
   if (!preset) return
-  const ctx = getOrResumeCtx()
+  const ctx = await getOrResumeCtx() // ✅ awaited
   if (!ctx) return
 
   const now = ctx.currentTime
 
-  // Master gain node for volume scaling
   const masterGain = ctx.createGain()
   masterGain.gain.setValueAtTime(Math.min(1, Math.max(0, masterVol)), now)
   masterGain.connect(ctx.destination)
@@ -174,7 +167,7 @@ function loadSoundConfig() {
   } catch {}
   return {
     enabled:      true,
-    volume:       0.85,       // 0–1
+    volume:       0.85,
     taskSound:    'chime',
     meetingSound: 'fanfare',
     generalSound: 'soft',
@@ -186,7 +179,7 @@ function saveSoundConfig(cfg) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sound Settings Panel (sub-component)
+// Sound Settings Panel
 // ─────────────────────────────────────────────────────────────────────────────
 function SoundSettingsPanel({ onClose }) {
   const [cfg, setCfg] = useState(loadSoundConfig)
@@ -199,9 +192,7 @@ function SoundSettingsPanel({ onClose }) {
     })
   }
 
-  const previewSound = (key) => {
-    playSound(key, cfg.volume)
-  }
+  const previewSound = (key) => playSound(key, cfg.volume)
 
   const categoryPresets = (cat) =>
     Object.entries(SOUND_PRESETS).filter(([, v]) => v.category === cat)
@@ -239,7 +230,6 @@ function SoundSettingsPanel({ onClose }) {
 
   return (
     <div className="absolute right-0 top-11 w-80 bg-surface-100 border border-white/10 rounded-2xl shadow-2xl z-50 animate-slide-up overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-white/2">
         <div className="flex items-center gap-2">
           <Music size={14} className="text-brand-400" />
@@ -254,7 +244,6 @@ function SoundSettingsPanel({ onClose }) {
       </div>
 
       <div className="p-4 max-h-[480px] overflow-y-auto space-y-5">
-        {/* Master toggle + volume */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-slate-300">Enable Sounds</span>
@@ -266,7 +255,6 @@ function SoundSettingsPanel({ onClose }) {
             </button>
           </div>
 
-          {/* Volume slider */}
           <div className={`transition-opacity ${cfg.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] text-slate-400">Volume</span>
@@ -275,10 +263,7 @@ function SoundSettingsPanel({ onClose }) {
             <div className="flex items-center gap-2">
               <VolumeX size={12} className="text-slate-600 shrink-0" />
               <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
+                type="range" min="0" max="1" step="0.05"
                 value={cfg.volume}
                 onChange={e => update({ volume: parseFloat(e.target.value) })}
                 className="flex-1 accent-brand-500 h-1 rounded-full cursor-pointer"
@@ -290,13 +275,11 @@ function SoundSettingsPanel({ onClose }) {
 
         <div className={`space-y-1 transition-opacity ${cfg.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
           <div className="h-px bg-white/6 mb-4" />
-
           <SoundRow label="📋 Task Notifications" configKey="taskSound"    category="task"    />
           <SoundRow label="📅 Meeting Invitations" configKey="meetingSound" category="meeting" />
           <SoundRow label="🔔 General Alerts"      configKey="generalSound" category="general" />
         </div>
 
-        {/* Test all button */}
         <button
           onClick={() => {
             if (!cfg.enabled) return
@@ -333,7 +316,9 @@ export default function NotificationBell() {
   const [replying,     setReplying]     = useState(false)
 
   const ref          = useRef(null)
-  const prevUnread   = useRef(undefined)
+  // ✅ FIX 3: Initialised to 0 (not undefined) so the very first poll can
+  //           detect new notifications immediately on page load.
+  const prevUnread   = useRef(0)
   const prevNotifIds = useRef(new Set())
   const openRef      = useRef(open)
 
@@ -346,7 +331,7 @@ export default function NotificationBell() {
     const key = kind === 'meeting' ? cfg.meetingSound
               : kind === 'task'    ? cfg.taskSound
               :                      cfg.generalSound
-    playSound(key, cfg.volume)
+    playSound(key, cfg.volume) // async — fire and forget is fine here
   }, [])
 
   // ── poll unread count every 15 s ──────────────────────────────────────────
@@ -355,16 +340,28 @@ export default function NotificationBell() {
       const { data } = await api.get('/notifications/unread-count')
       const newCount = data.unread_count ?? 0
 
-      if (prevUnread.current !== undefined && newCount > prevUnread.current) {
+      // ✅ FIX 3: Removed `prevUnread.current !== undefined` guard —
+      //           prevUnread starts at 0 so comparison works on first poll.
+      if (newCount > prevUnread.current) {
         try {
           const { data: nd } = await api.get('/notifications?limit=10')
           const incoming = nd.data ?? []
           const newOnes  = incoming.filter(n => !prevNotifIds.current.has(n._id))
 
           if (newOnes.length > 0) {
+            // ✅ FIX 2: Extended task type list to catch all common backend strings.
+            //    Add your backend's actual type values here if still not matching.
             const hasMeeting = newOnes.some(n => n.type === 'meeting_invite')
             const hasTask    = newOnes.some(n =>
-              ['task_assigned', 'task_updated', 'task_completed'].includes(n.type)
+              [
+                'task_assigned',
+                'task_assign',
+                'task_updated',
+                'task_update',
+                'task_completed',
+                'task_complete',
+                'new_task',
+              ].includes(n.type)
             )
             const kind = hasMeeting ? 'meeting' : hasTask ? 'task' : 'general'
 
@@ -399,7 +396,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchCount()
-    const t = setInterval(fetchCount, 15_000)   // tighter poll: 15 s
+    const t = setInterval(fetchCount, 15_000)
     return () => clearInterval(t)
   }, [fetchCount])
 
@@ -410,7 +407,6 @@ export default function NotificationBell() {
       const { data } = await api.get('/notifications?limit=20')
       const incoming = data.data ?? []
       setNotifs(incoming)
-      // Sync both refs so next poll diff is correct
       prevNotifIds.current = new Set(incoming.map(n => n._id))
       const unreadCount = incoming.filter(n => !n.is_read).length
       prevUnread.current = unreadCount
@@ -478,7 +474,7 @@ export default function NotificationBell() {
   // ── render ────────────────────────────────────────────────────────────────
   return (
     <div className="relative" ref={ref}>
-      {/* ── Bell button ── */}
+      {/* Bell button */}
       <button
         onClick={() => { setOpen(o => !o); setShowSettings(false) }}
         className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
@@ -492,20 +488,18 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* ── Sound Settings Panel ── */}
+      {/* Sound Settings Panel */}
       {showSettings && (
         <SoundSettingsPanel onClose={() => setShowSettings(false)} />
       )}
 
-      {/* ── Notification Panel ── */}
+      {/* Notification Panel */}
       {open && !showSettings && (
         <div className="absolute right-0 top-11 w-80 bg-surface-100 border border-white/10 rounded-2xl shadow-2xl z-50 animate-slide-up">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <span className="text-sm font-semibold text-white">Notifications</span>
             <div className="flex items-center gap-1">
-
-              {/* Sound settings gear */}
               <button
                 onClick={() => { setOpen(false); setShowSettings(true) }}
                 title="Sound Settings"
@@ -513,13 +507,10 @@ export default function NotificationBell() {
               >
                 <Settings2 size={13} />
               </button>
-
-              {/* Quick mute/unmute */}
               <button
                 onClick={() => {
                   const cfg = loadSoundConfig()
                   saveSoundConfig({ ...cfg, enabled: !cfg.enabled })
-                  // force re-render
                   setNotifs(n => [...n])
                 }}
                 title={soundCfg.enabled ? 'Mute sounds' : 'Unmute sounds'}
@@ -531,7 +522,6 @@ export default function NotificationBell() {
               >
                 {soundCfg.enabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
               </button>
-
               {unread > 0 && (
                 <button
                   onClick={markAll}
@@ -575,7 +565,10 @@ export default function NotificationBell() {
               <div className="text-center py-8 text-slate-500 text-sm">No notifications</div>
             ) : notifs.map(n => {
               const isMeeting  = n.type === 'meeting_invite'
-              const isTask     = ['task_assigned', 'task_updated', 'task_completed'].includes(n.type)
+              const isTask     = [
+                'task_assigned', 'task_assign', 'task_updated',
+                'task_update', 'task_completed', 'task_complete', 'new_task',
+              ].includes(n.type)
               const joinLink   = isMeeting ? extractLink(n.message) : null
               const displayMsg = isMeeting && joinLink
                 ? n.message.replace(/Join:\s*https?:\/\/[^\s]+/, '').trim()
