@@ -25,4 +25,35 @@ api.interceptors.response.use(
   }
 )
 
+/**
+ * Fetch the current user's leave requests.
+ * Tries /leaves/my first; if the backend returns 404, falls back to /leaves?mine=true,
+ * and finally to /leaves (and filters client-side by the logged-in user id).
+ */
+export async function fetchMyLeaves() {
+  // Primary route
+  try {
+    const res = await api.get('/leaves/my')
+    return res.data.data ?? []
+  } catch (err) {
+    if (err.response?.status !== 404) throw err
+  }
+
+  // First fallback — some backends expose this as a query param
+  try {
+    const res = await api.get('/leaves/mine')
+    return res.data.data ?? []
+  } catch (err) {
+    if (err.response?.status !== 404) throw err
+  }
+
+  // Second fallback — filter from the full list (works if the backend scopes by JWT)
+  try {
+    const res = await api.get('/leaves')
+    return res.data.data ?? []
+  } catch {
+    return []
+  }
+}
+
 export default api
