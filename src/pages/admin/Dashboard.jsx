@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Users, FolderKanban, CheckSquare, TrendingUp } from 'lucide-react'
+import { Users, FolderKanban, CheckSquare, TrendingUp, CalendarOff } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import api from '../../api/axios'
 import { StatCard, Spinner, StatusBadge, PriorityBadge } from '../../components/common/UI'
@@ -33,16 +33,20 @@ export default function AdminDashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [leavePending, setLeavePending] = useState(0)
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setError(null)
-        const [usersRes, projectsRes, tasksRes] = await Promise.all([
+        const [usersRes, projectsRes, tasksRes, leavesRes] = await Promise.all([
           api.get('/users/stats'),
           api.get('/projects/stats'),
           api.get('/tasks/stats'),
+          api.get('/leaves', { params: { status: 'pending' } }).catch(() => ({ data: { data: [] } })),
         ])
+        const pendingLeaves = leavesRes?.data?.data ?? []
+        setLeavePending(pendingLeaves.length)
 
         setData({
           users: usersRes?.data?.data ?? {},
@@ -107,6 +111,17 @@ export default function AdminDashboard() {
           Here's what's happening across your organization today.
         </p>
       </div>
+
+      {/* Leave pending banner */}
+      {leavePending > 0 && (
+        <a href="/admin/attendance" className="flex items-center gap-3 px-4 py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl hover:bg-amber-500/10 transition-all">
+          <CalendarOff size={16} className="text-amber-400 flex-shrink-0" />
+          <p className="text-sm text-amber-300 flex-1">
+            <span className="font-semibold">{leavePending} leave request{leavePending !== 1 ? 's' : ''}</span> pending your approval
+          </p>
+          <span className="text-xs text-amber-400">Review →</span>
+        </a>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
