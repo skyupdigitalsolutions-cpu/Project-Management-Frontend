@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { LogIn, LogOut, Clock, Users, CalendarOff, Upload, X, FileText, Image, CheckCircle2, XCircle, AlertCircle, RefreshCw, UserMinus } from 'lucide-react'
-import api from '../../api/axios'
+import { LogIn, LogOut, Clock, Users, CalendarOff, Upload, X, FileText, Image, CheckCircle2, XCircle, AlertCircle, RefreshCw, UserMinus, Wand2 } from 'lucide-react'
+import api, { fetchMyLeaves } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { format, parseISO } from 'date-fns'
 import { PageHeader, SelectInput, Modal, StatusBadge, Spinner, EmptyState, StatCard } from '../../components/common/UI'
@@ -169,7 +169,7 @@ function MyLeavesTab({ onApply }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/leaves/my').then(r => setLeaves(r.data.data ?? [])).catch(() => {}).finally(() => setLoading(false))
+    fetchMyLeaves().then(data => setLeaves(data)).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   if (loading) return <div className="flex justify-center py-12"><Spinner /></div>
@@ -321,6 +321,26 @@ function TeamAttendanceTab() {
   )
 }
 
+// ─── Tone rewriter ───────────────────────────────────────────────────────────
+async function rewriteReason(reason, tone, leaveType) {
+  const instructions = {
+    casual: 'Rewrite this leave request reason in a casual, friendly, and informal tone — like messaging a colleague. Keep the facts the same but make it relaxed and conversational.',
+    formal: 'Rewrite this leave request reason in a professional, formal tone suitable for official HR documentation. Keep the same facts but elevate the register.',
+  }
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 300,
+      messages: [{ role: 'user', content: `${instructions[tone]}\n\nLeave type: ${leaveType || 'general'}\nOriginal reason: "${reason}"\n\nReturn ONLY the rewritten reason text — no preamble, no quotes, no explanation.` }],
+    }),
+  })
+  const data = await response.json()
+  return data.content?.[0]?.text?.trim() ?? reason
+}
+
+
 function ApplyLeaveModal({ onClose, onSuccess }) {
   const fileInputRef = useRef(null)
   const [step, setStep]   = useState(1)
@@ -329,6 +349,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
   const [files, setFiles] = useState([])
   const [dragOver, setDragOver] = useState(false)
   const [errors, setErrors] = useState({})
+  const [toneLoading, setToneLoading] = useState(null)
 
   const days = form.from_date && form.to_date ? Math.max(0, Math.ceil((new Date(form.to_date) - new Date(form.from_date)) / 86400000) + 1) : 0
 
@@ -366,6 +387,19 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
 
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }))
   const selectedType = LEAVE_TYPES.find(t => t.value === form.leave_type)
+
+  const handleTone = async (tone) => {
+    if (!form.reason || form.reason.trim().length < 10) {
+      toast.error('Write at least a few words before applying a tone'); return
+    }
+    setToneLoading(tone)
+    try {
+      const rewritten = await rewriteReason(form.reason, tone, form.leave_type)
+      setForm(p => ({ ...p, reason: rewritten }))
+      toast.success(`Reason rewritten in ${tone} tone ✨`)
+    } catch { toast.error('Failed to rewrite reason. Please try again.') }
+    finally { setToneLoading(null) }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
@@ -436,12 +470,29 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
           {step === 2 && (
             <>
               <div>
-                <label className="label">Reason for Leave <span className="text-red-400">*</span></label>
-                <textarea value={form.reason} onChange={e => f('reason', e.target.value)} rows={4} placeholder="Provide a detailed reason (minimum 20 characters)..." className="input resize-none" />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="label mb-0">Reason for Leave <span className="text-red-400">*</span></label>
+                  <div className="flex items-center gap-1.5">
+                    <Wand2 size={12} className="text-slate-500" />
+                    <span className="text-xs text-slate-500 mr-1">Rewrite as:</span>
+                    <button type="button" onClick={() => handleTone('casual')} disabled={!!toneLoading}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${toneLoading === 'casual' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 cursor-wait' : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'}`}>
+                      {toneLoading === 'casual' ? <Spinner size="xs" /> : '🌴'} Casual
+                    </button>
+                    <button type="button" onClick={() => handleTone('formal')} disabled={!!toneLoading}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${toneLoading === 'formal' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300 cursor-wait' : 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'}`}>
+                      {toneLoading === 'formal' ? <Spinner size="xs" /> : '💼'} Formal
+                    </button>
+                  </div>
+                </div>
+                <textarea value={form.reason} onChange={e => f('reason', e.target.value)} rows={4}
+                  placeholder="Write your reason here — then use the Casual or Formal buttons to adjust the tone..."
+                  className="input resize-none" />
                 <div className="flex justify-between mt-1">
                   {errors.reason ? <p className="text-red-400 text-xs">{errors.reason}</p> : <span />}
                   <p className={`text-xs ${form.reason.length < 20 ? 'text-red-400' : 'text-slate-500'}`}>{form.reason.length} / 20 min</p>
                 </div>
+                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1"><Wand2 size={10} /> Use the tone buttons above to auto-rewrite your reason as casual or formal.</p>
               </div>
               <div>
                 <label className="label">Emergency Contact During Leave</label>
