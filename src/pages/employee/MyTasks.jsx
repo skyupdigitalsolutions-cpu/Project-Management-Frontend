@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { RefreshCw, CheckSquare } from 'lucide-react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -7,7 +7,142 @@ import {
   PageHeader, SelectInput, StatusBadge, PriorityBadge, Spinner, EmptyState, StatCard
 } from '../../components/common/UI'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Inline sound helpers (mirrors the logic in NotificationBell so MyTasks is
+// self-contained — no prop-drilling needed)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'notif_sound_config'
+
+function loadSoundConfig() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return {
+    enabled:      true,
+    volume:       0.85,
+    taskSound:    'chime',
+    useCustomTask: false,
+  }
+}
+
+function getOrResumeCtx() {
+  if (!window.__notifAudioCtx || window.__notifAudioCtx.state === 'closed') {
+    try {
+      window.__notifAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
+    } catch { return null }
+  }
+  if (window.__notifAudioCtx.state === 'suspended') {
+    window.__notifAudioCtx.resume().catch(() => {})
+  }
+  return window.__notifAudioCtx
+}
+
+const SOUND_PRESETS = {
+  chime: {
+    notes: [
+      { freq: 523.25, start: 0,    dur: 0.18, vol: 0.75 },
+      { freq: 659.25, start: 0.15, dur: 0.22, vol: 0.70 },
+      { freq: 783.99, start: 0.30, dur: 0.28, vol: 0.65 },
+    ],
+  },
+  pop: {
+    notes: [
+      { freq: 800,  start: 0,    dur: 0.06, vol: 0.80, type: 'square' },
+      { freq: 1000, start: 0.07, dur: 0.10, vol: 0.70, type: 'sine'   },
+    ],
+  },
+  ping: {
+    notes: [{ freq: 880, start: 0, dur: 0.30, vol: 0.80 }],
+  },
+  double_ping: {
+    notes: [
+      { freq: 880,    start: 0,    dur: 0.14, vol: 0.80 },
+      { freq: 1046.5, start: 0.20, dur: 0.18, vol: 0.75 },
+    ],
+  },
+  bell: {
+    notes: [
+      { freq: 1318.5, start: 0,    dur: 0.08, vol: 0.85, type: 'triangle' },
+      { freq: 659.25, start: 0.05, dur: 0.40, vol: 0.55, type: 'sine'     },
+      { freq: 987.77, start: 0.05, dur: 0.35, vol: 0.40, type: 'sine'     },
+    ],
+  },
+  xylophone: {
+    notes: [
+      { freq: 523.25, start: 0,    dur: 0.14, vol: 0.80, type: 'triangle' },
+      { freq: 659.25, start: 0.16, dur: 0.14, vol: 0.80, type: 'triangle' },
+      { freq: 783.99, start: 0.32, dur: 0.14, vol: 0.80, type: 'triangle' },
+      { freq: 1046.5, start: 0.48, dur: 0.18, vol: 0.75, type: 'triangle' },
+    ],
+  },
+  soft: {
+    notes: [{ freq: 440, start: 0, dur: 0.28, vol: 0.60 }],
+  },
+}
+
+function playSound(presetKey = 'chime', masterVol = 1) {
+  const preset = SOUND_PRESETS[presetKey]
+  if (!preset) return
+  const ctx = getOrResumeCtx()
+  if (!ctx) return
+
+  const now        = ctx.currentTime
+  const masterGain = ctx.createGain()
+  masterGain.gain.setValueAtTime(Math.min(1, Math.max(0, masterVol)), now)
+  masterGain.connect(ctx.destination)
+
+  preset.notes.forEach(({ freq, start, dur, vol, type = 'sine' }) => {
+    const osc  = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(masterGain)
+    osc.type = type
+    osc.frequency.setValueAtTime(freq, now + start)
+    gain.gain.setValueAtTime(0, now + start)
+    gain.gain.linearRampToValueAtTime(vol, now + start + 0.012)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur)
+    osc.start(now + start)
+    osc.stop(now + start + dur + 0.05)
+  })
+}
+
+function playCustomRingtone(dataUrl, volume = 1) {
+  try {
+    const audio = new Audio(dataUrl)
+    audio.volume = Math.min(1, Math.max(0, volume))
+    audio.play().catch(() => {})
+  } catch {}
+}
+
+/** Play the user's configured task sound (preset or custom). */
+function playTaskSound() {
+  const cfg = loadSoundConfig()
+  if (!cfg.enabled) return
+
+  if (cfg.useCustomTask) {
+    try {
+      const raw = localStorage.getItem('notif_custom_ringtone_task')
+      if (raw) {
+        const { dataUrl } = JSON.parse(raw)
+        if (dataUrl) { playCustomRingtone(dataUrl, cfg.volume); return }
+      }
+    } catch {}
+  }
+
+  playSound(cfg.taskSound || 'chime', cfg.volume)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
+
 const STATUSES = ['todo', 'in-progress', 'completed', 'on-hold', 'cancelled']
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function EmployeeMyTasks() {
   const [tasks,    setTasks]    = useState([])
@@ -15,41 +150,101 @@ export default function EmployeeMyTasks() {
   const [statusF,  setStatusF]  = useState('')
   const [updating, setUpdating] = useState(null)
 
+  /**
+   * knownTaskIds tracks the IDs we've already seen so we can detect
+   * genuinely new tasks on subsequent polls — without firing on first load.
+   *
+   * Using a ref (not state) avoids triggering re-renders on every poll tick.
+   */
+  const knownTaskIds  = useRef(null)   // null = "not yet initialised"
+  const pollInterval  = useRef(null)
+
+  // ── fetch helpers ──────────────────────────────────────────────────────────
+
+  const fetchTasks = useCallback(async (params = {}) => {
+    const { data } = await api.get('/tasks', { params })
+    return data.data ?? []
+  }, [])
+
+  // ── initial load (sets up the baseline known-ID set) ───────────────────────
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const params = {}
       if (statusF) params.status = statusF
-      // NOTE: /tasks/stats is admin/manager only — compute stats from the
-      // tasks list instead to avoid a 403 that would crash the whole page.
-      const { data } = await api.get('/tasks', { params })
-      setTasks(data.data ?? [])
+      const fetched = await fetchTasks(params)
+      setTasks(fetched)
+
+      // Establish baseline — no sound on first load
+      knownTaskIds.current = new Set(fetched.map(t => t._id))
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to load tasks')
     } finally {
       setLoading(false)
     }
-  }, [statusF])
+  }, [statusF, fetchTasks])
 
   useEffect(() => { load() }, [load])
 
-  // Compute stats locally — no extra API call needed
-  const stats = {
-    total:         tasks.length,
-    todo:          tasks.filter(t => t.status === 'todo').length,
-    'in-progress': tasks.filter(t => t.status === 'in-progress').length,
-    completed:     tasks.filter(t => t.status === 'completed').length,
-    overdue:       tasks.filter(t =>
-      t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed'
-    ).length,
-  }
+  // ── background poll every 15 s for new task assignments ───────────────────
+
+  const poll = useCallback(async () => {
+    // Skip if baseline hasn't been established yet (avoids false positives
+    // if the interval fires before the initial load finishes)
+    if (knownTaskIds.current === null) return
+
+    try {
+      // Always poll without the status filter so we catch any new assignment
+      // regardless of what filter the user has selected
+      const fetched = await fetchTasks()
+
+      const newTasks = fetched.filter(t => !knownTaskIds.current.has(t._id))
+
+      if (newTasks.length > 0) {
+        // ── THIS IS THE FIX: play sound for new task notifications ──────────
+        playTaskSound()
+
+        // Show a toast for each new task (up to 3 to avoid spam)
+        newTasks.slice(0, 3).forEach(t => {
+          toast(`✅ New task assigned: ${t.title}`, {
+            duration: 5000,
+            style: {
+              background: '#1e293b',
+              color:      '#e2e8f0',
+              border:     '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '12px',
+            },
+          })
+        })
+
+        // Update the known-ID set
+        knownTaskIds.current = new Set(fetched.map(t => t._id))
+
+        // Refresh visible list if the new task matches the current filter
+        const matchesFilter = (t) => !statusF || t.status === statusF
+        const hasVisibleNew = newTasks.some(matchesFilter)
+        if (hasVisibleNew) {
+          setTasks(fetched.filter(matchesFilter))
+        }
+      }
+    } catch {
+      // Silently swallow poll errors — don't disrupt the UI
+    }
+  }, [statusF, fetchTasks])
+
+  useEffect(() => {
+    pollInterval.current = setInterval(poll, 15_000)
+    return () => clearInterval(pollInterval.current)
+  }, [poll])
+
+  // ── status update ──────────────────────────────────────────────────────────
 
   const updateStatus = async (taskId, newStatus) => {
     setUpdating(taskId)
     try {
       await api.patch(`/tasks/${taskId}`, { status: newStatus })
       toast.success('Status updated')
-      // Optimistically update local state — no full reload needed
       setTasks(prev =>
         prev.map(t => t._id === taskId ? { ...t, status: newStatus } : t)
       )
@@ -60,6 +255,20 @@ export default function EmployeeMyTasks() {
     }
   }
 
+  // ── derived stats ──────────────────────────────────────────────────────────
+
+  const stats = {
+    total:         tasks.length,
+    todo:          tasks.filter(t => t.status === 'todo').length,
+    'in-progress': tasks.filter(t => t.status === 'in-progress').length,
+    completed:     tasks.filter(t => t.status === 'completed').length,
+    overdue:       tasks.filter(t =>
+      t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed'
+    ).length,
+  }
+
+  // ── render ─────────────────────────────────────────────────────────────────
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
@@ -69,9 +278,9 @@ export default function EmployeeMyTasks() {
 
       {/* Stats — computed from tasks array, no restricted API call */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total"       value={stats.total}           icon={CheckSquare} color="brand" />
-        <StatCard label="Todo"        value={stats.todo}            icon={CheckSquare} color="blue" />
-        <StatCard label="In Progress" value={stats['in-progress']}  icon={CheckSquare} color="amber" />
+        <StatCard label="Total"       value={stats.total}           icon={CheckSquare} color="brand"   />
+        <StatCard label="Todo"        value={stats.todo}            icon={CheckSquare} color="blue"    />
+        <StatCard label="In Progress" value={stats['in-progress']}  icon={CheckSquare} color="amber"   />
         <StatCard label="Completed"   value={stats.completed}       icon={CheckSquare} color="emerald" />
       </div>
 
@@ -110,9 +319,9 @@ export default function EmployeeMyTasks() {
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     {/* Priority colour bar */}
                     <div className={`w-1.5 h-10 rounded-full flex-shrink-0 mt-1 ${
-                      t.priority === 'critical' ? 'bg-red-500'     :
-                      t.priority === 'high'     ? 'bg-orange-500'  :
-                      t.priority === 'medium'   ? 'bg-yellow-500'  : 'bg-emerald-500'
+                      t.priority === 'critical' ? 'bg-red-500'    :
+                      t.priority === 'high'     ? 'bg-orange-500' :
+                      t.priority === 'medium'   ? 'bg-yellow-500' : 'bg-emerald-500'
                     }`} />
 
                     <div className="flex-1 min-w-0">
