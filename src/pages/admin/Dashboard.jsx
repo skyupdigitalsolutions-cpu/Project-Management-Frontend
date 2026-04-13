@@ -35,7 +35,6 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    // FIX 1: Renamed from `fetch` to `fetchStats` to avoid shadowing the global fetch API
     const fetchStats = async () => {
       try {
         setError(null)
@@ -45,14 +44,12 @@ export default function AdminDashboard() {
           api.get('/tasks/stats'),
         ])
 
-        // FIX 2: Safely extract data with fallback at each level to prevent undefined errors
         setData({
           users: usersRes?.data?.data ?? {},
           projects: projectsRes?.data?.data ?? {},
           tasks: tasksRes?.data?.data ?? {},
         })
       } catch (err) {
-        // FIX 3: Actually capture and surface errors instead of swallowing them silently
         console.error('Dashboard fetch error:', err)
         setError(err?.response?.data?.message || 'Failed to load dashboard data.')
       } finally {
@@ -73,23 +70,28 @@ export default function AdminDashboard() {
     </div>
   )
 
-  // FIX 4: Use nullish coalescing at every level so missing keys never cause render crashes
   const u = data?.users ?? {}
   const p = data?.projects ?? {}
   const t = data?.tasks ?? {}
 
-  // Build chart data — safely convert whatever the API returns
-  const taskChart = Object.entries(t?.by_status ?? {}).map(([k, v]) => ({ name: k, count: v }))
-  const projectChart = Object.entries(p?.by_status ?? {}).map(([k, v]) => ({ name: k, value: v }))
+  // FIX: Backend returns nested by_role / by_status — extract them first
+  const byRole   = u.by_role   ?? {}
+  const byStat   = u.by_status ?? {}
+  const pByStat  = p.by_status ?? {}
+  const tByStat  = t.by_status ?? {}
 
-  // FIX 5: `u.admin` etc. may come back as strings from some backends — coerce to Number
+  // Build chart data from nested keys
+  const taskChart    = Object.entries(tByStat).map(([k, v]) => ({ name: k, count: v }))
+  const projectChart = Object.entries(pByStat).map(([k, v]) => ({ name: k, value: v }))
+
+  // FIX: Read from byRole, not flat u
   const userByRole = [
-    { name: 'Admin',    value: Number(u.admin    ?? 0) },
-    { name: 'Manager',  value: Number(u.manager  ?? 0) },
-    { name: 'Employee', value: Number(u.employee ?? 0) },
+    { name: 'Admin',    value: Number(byRole.admin    ?? 0) },
+    { name: 'Manager',  value: Number(byRole.manager  ?? 0) },
+    { name: 'Employee', value: Number(byRole.employee ?? 0) },
   ]
 
-  // FIX 6: Safely compute completion rate — guard against zero total
+  // Completion rate from task stats
   const total     = Number(t.total     ?? 0)
   const completed = Number(t.completed ?? 0)
   const completionRate = total > 0 ? `${Math.round((completed / total) * 100)}%` : '0%'
@@ -113,14 +115,15 @@ export default function AdminDashboard() {
           value={u.total ?? 0}
           icon={Users}
           color="brand"
-          trend={`${u.active ?? 0} active`}
+          // FIX: was u.active (flat) → now byStat.active (nested)
+          trend={`${byStat.active ?? 0} active`}
         />
         <StatCard
           label="Total Projects"
           value={p.total ?? 0}
           icon={FolderKanban}
           color="emerald"
-          trend={`${p.active ?? 0} in progress`}
+          trend={`${pByStat.active ?? pByStat['in-progress'] ?? 0} in progress`}
         />
         <StatCard
           label="Total Tasks"
@@ -206,14 +209,12 @@ export default function AdminDashboard() {
           <h3 className="text-sm font-semibold text-white mb-4">Quick Stats</h3>
           <div className="space-y-3">
             {[
-              // FIX 7: Use `??` instead of `||` so a legitimate 0 value is preserved
-              { label: 'Active users',      val: u.active          ?? 0, color: 'text-emerald-400' },
-              // FIX 8: `u['on-leave']` must stay hyphenated to match the API key; kept as-is
-              { label: 'On leave',          val: u['on-leave']     ?? 0, color: 'text-amber-400'   },
-              { label: 'Inactive',          val: u.inactive        ?? 0, color: 'text-slate-400'   },
-              // FIX 9: `t['in-progress']` — same; also try `t.in_progress` if your API uses underscores
-              { label: 'Tasks in progress', val: t['in-progress']  ?? 0, color: 'text-blue-400'    },
-              { label: 'Overdue tasks',     val: t.overdue         ?? 0, color: 'text-red-400'     },
+              // FIX: All user stats now read from byStat (by_status) and byRole (by_role)
+              { label: 'Active users',      val: byStat.active          ?? 0, color: 'text-emerald-400' },
+              { label: 'On leave',          val: byStat['on-leave']     ?? 0, color: 'text-amber-400'   },
+              { label: 'Inactive',          val: byStat.inactive        ?? 0, color: 'text-slate-400'   },
+              { label: 'Tasks in progress', val: tByStat['in-progress'] ?? tByStat.in_progress ?? 0, color: 'text-blue-400' },
+              { label: 'Overdue tasks',     val: t.overdue              ?? 0, color: 'text-red-400'     },
             ].map(row => (
               <div key={row.label} className="flex items-center justify-between py-1">
                 <span className="text-sm text-slate-400">{row.label}</span>
