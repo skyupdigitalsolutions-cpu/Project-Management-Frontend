@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CheckSquare, Clock, FolderKanban, TrendingUp, LogIn, LogOut, CalendarOff, Bell, AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
-import api from '../../api/axios'
+import api, { fetchMyLeaves } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { StatCard, Spinner, StatusBadge, PriorityBadge } from '../../components/common/UI'
 import { useAuth } from '../../context/AuthContext'
@@ -23,7 +23,7 @@ export default function EmployeeDashboard() {
         api.get('/tasks?limit=5&sort=-createdAt'),
         api.get('/attendance/today'),
         api.get('/tasks/stats'),
-        api.get('/leaves/my'),
+        fetchMyLeaves().then(data => ({ data: { data } })),
         api.get('/projects?limit=3'),
       ])
       if (t.status  === 'fulfilled') setTasks(t.value.data.data ?? [])
