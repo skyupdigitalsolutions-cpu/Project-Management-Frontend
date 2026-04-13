@@ -59,7 +59,7 @@ export default function AdminDailyReports() {
               <select
                 value={filters.user_id}
                 onChange={e => setFilter('user_id', e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 appearance-none"
+                className="w-full border border-white/10 rounded-lg pl-8 pr-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 appearance-none"
               >
                 <option value="">All Employees</option>
                 {users.filter(u => u.role === 'employee').map(u => (
