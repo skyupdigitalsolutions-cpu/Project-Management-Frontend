@@ -20,15 +20,53 @@ export default function EmployeeDashboard() {
     setLoading(true)
     try {
       const [t, att, ts, p] = await Promise.allSettled([
-        api.get('/tasks?limit=5&sort=-createdAt'),
+        api.get('/tasks?limit=100&sort=-createdAt'),
         api.get('/attendance/today'),
         api.get('/tasks/stats'),
         api.get('/projects?limit=3'),
       ])
-      if (t.status   === 'fulfilled') setTasks(t.value.data.data ?? [])
+
+      // Fetch all tasks (used both for display and as stats fallback)
+      const allTasks = t.status === 'fulfilled' ? (t.value.data.data ?? []) : []
+      setTasks(allTasks.slice(0, 5))
+
       if (att.status === 'fulfilled') setToday(att.value.data.data)
-      if (ts.status  === 'fulfilled') setStats(ts.value.data.data)
       if (p.status   === 'fulfilled') setProjects(p.value.data.data ?? [])
+
+      // Normalize stats — handle multiple possible API response shapes,
+      // then fall back to deriving counts from the fetched tasks array.
+      if (ts.status === 'fulfilled') {
+        const raw = ts.value.data.data ?? ts.value.data ?? {}
+        // Normalise key variants the backend might use
+        const normalized = {
+          total:         raw.total        ?? raw.totalTasks    ?? raw.count       ?? null,
+          'in-progress': raw['in-progress'] ?? raw.inProgress  ?? raw.in_progress ?? null,
+          completed:     raw.completed    ?? raw.done          ?? null,
+          todo:          raw.todo         ?? raw.pending       ?? raw.open        ?? null,
+        }
+        // If any key is still null, derive from fetched tasks
+        const derived = {
+          total:         allTasks.length,
+          'in-progress': allTasks.filter(t => t.status === 'in-progress').length,
+          completed:     allTasks.filter(t => t.status === 'completed').length,
+          todo:          allTasks.filter(t => t.status === 'todo').length,
+        }
+        setStats({
+          total:         normalized.total         ?? derived.total,
+          'in-progress': normalized['in-progress'] ?? derived['in-progress'],
+          completed:     normalized.completed      ?? derived.completed,
+          todo:          normalized.todo           ?? derived.todo,
+        })
+      } else {
+        // Stats endpoint failed — derive entirely from task list
+        setStats({
+          total:         allTasks.length,
+          'in-progress': allTasks.filter(t => t.status === 'in-progress').length,
+          completed:     allTasks.filter(t => t.status === 'completed').length,
+          todo:          allTasks.filter(t => t.status === 'todo').length,
+        })
+      }
+
       // fetchMyLeaves never throws — returns [] if backend unsupported
       const myLeaves = await fetchMyLeaves()
       setLeaves(myLeaves)
@@ -98,10 +136,10 @@ export default function EmployeeDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="My Tasks"    value={s.total}               icon={CheckSquare} color="brand"   />
+        <StatCard label="My Tasks"    value={s.total         ?? 0} icon={CheckSquare} color="brand"   />
         <StatCard label="In Progress" value={s['in-progress'] ?? 0} icon={TrendingUp}  color="amber"   />
-        <StatCard label="Completed"   value={s.completed ?? 0}      icon={CheckSquare} color="emerald" />
-        <StatCard label="Pending"     value={s.todo ?? 0}           icon={Clock}       color="blue"    />
+        <StatCard label="Completed"   value={s.completed     ?? 0} icon={CheckSquare} color="emerald" />
+        <StatCard label="Pending"     value={s.todo          ?? 0} icon={Clock}       color="blue"    />
       </div>
 
       {/* Leave status alerts */}
