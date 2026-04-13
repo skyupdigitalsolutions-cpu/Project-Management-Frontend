@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Users, FolderKanban, CheckSquare, TrendingUp, CalendarOff } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
-import api from '../../api/axios'
+import api, { fetchAllLeaves } from '../../api/axios'
 import { StatCard, Spinner, StatusBadge, PriorityBadge } from '../../components/common/UI'
 import { useAuth } from '../../context/AuthContext'
 
@@ -43,9 +43,9 @@ export default function AdminDashboard() {
           api.get('/users/stats'),
           api.get('/projects/stats'),
           api.get('/tasks/stats'),
-          api.get('/leaves', { params: { status: 'pending' } }).catch(() => ({ data: { data: [] } })),
+          fetchAllLeaves({ status: 'pending' }).catch(() => []),
         ])
-        const pendingLeaves = leavesRes?.data?.data ?? []
+        const pendingLeaves = Array.isArray(leavesRes) ? leavesRes : []
         setLeavePending(pendingLeaves.length)
 
         setData({
