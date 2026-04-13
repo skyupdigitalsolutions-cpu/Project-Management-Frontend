@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { LogIn, LogOut, Clock, CalendarOff, Upload, X, FileText, Image, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
-import api from '../../api/axios'
+import { LogIn, LogOut, Clock, CalendarOff, Upload, X, FileText, Image, CheckCircle2, XCircle, AlertCircle, Wand2 } from 'lucide-react'
+import api, { fetchMyLeaves } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { format, parseISO } from 'date-fns'
 import { PageHeader, StatusBadge, Spinner, EmptyState, StatCard } from '../../components/common/UI'
@@ -15,9 +15,9 @@ const LEAVE_TYPES = [
 ]
 
 const LEAVE_STATUS_CONFIG = {
-  pending:  { color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',   icon: AlertCircle  },
+  pending:  { color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       icon: AlertCircle  },
   approved: { color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icon: CheckCircle2 },
-  rejected: { color: 'text-red-400 bg-red-500/10 border-red-500/20',        icon: XCircle      },
+  rejected: { color: 'text-red-400 bg-red-500/10 border-red-500/20',             icon: XCircle      },
 }
 
 export default function EmployeeAttendance() {
@@ -32,14 +32,16 @@ export default function EmployeeAttendance() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [t, h, l] = await Promise.allSettled([
+      const [t, h] = await Promise.allSettled([
         api.get('/attendance/today'),
         api.get('/attendance/my?limit=30'),
-        api.get('/leaves/my'),
       ])
       if (t.status === 'fulfilled') setToday(t.value.data.data)
       if (h.status === 'fulfilled') setHistory(h.value.data.data ?? [])
-      if (l.status === 'fulfilled') setLeaves(l.value.data.data ?? [])
+
+      // Use the resilient helper that handles 404 with fallbacks
+      const myLeaves = await fetchMyLeaves()
+      setLeaves(myLeaves)
     } catch { toast.error('Failed to load') }
     finally { setLoading(false) }
   }, [])
@@ -260,6 +262,34 @@ function LeaveHistoryTab({ leaves, loading, onApply }) {
   )
 }
 
+// ─── Tone rewriter using Anthropic API ───────────────────────────────────────
+async function rewriteReason(reason, tone, leaveType) {
+  const toneInstructions = {
+    casual: `Rewrite this leave request reason in a casual, friendly, and informal tone — like you're messaging a colleague or friend. Keep it natural, warm, and conversational. Keep the same facts but make it sound relaxed and approachable.`,
+    formal: `Rewrite this leave request reason in a professional, formal tone suitable for official HR documentation. Use proper grammar, polite language, and a respectful tone. Keep the same facts but elevate the register to be office-appropriate.`,
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content: `${toneInstructions[tone]}
+
+Leave type: ${leaveType || 'general'}
+Original reason: "${reason}"
+
+Return ONLY the rewritten reason text — no preamble, no quotes, no explanation.`,
+      }],
+    }),
+  })
+  const data = await response.json()
+  return data.content?.[0]?.text?.trim() ?? reason
+}
+
 function ApplyLeaveModal({ onClose, onSuccess }) {
   const fileInputRef = useRef(null)
   const [step, setStep]   = useState(1)
@@ -268,6 +298,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
   const [files, setFiles] = useState([])
   const [dragOver, setDragOver] = useState(false)
   const [errors, setErrors] = useState({})
+  const [toneLoading, setToneLoading] = useState(null) // 'casual' | 'formal' | null
 
   const days = form.from_date && form.to_date
     ? Math.max(0, Math.ceil((new Date(form.to_date) - new Date(form.from_date)) / 86400000) + 1) : 0
@@ -281,6 +312,23 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
     if (!form.reason || form.reason.trim().length < 20) e.reason = 'Reason must be at least 20 characters'
     setErrors(e)
     return Object.keys(e).length === 0
+  }
+
+  const handleTone = async (tone) => {
+    if (!form.reason || form.reason.trim().length < 10) {
+      toast.error('Write at least a few words before applying a tone')
+      return
+    }
+    setToneLoading(tone)
+    try {
+      const rewritten = await rewriteReason(form.reason, tone, form.leave_type)
+      setForm(p => ({ ...p, reason: rewritten }))
+      toast.success(`Reason rewritten in ${tone} tone ✨`)
+    } catch {
+      toast.error('Failed to rewrite reason. Please try again.')
+    } finally {
+      setToneLoading(null)
+    }
   }
 
   const addFiles = (newFiles) => {
@@ -396,14 +444,50 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
           {step === 2 && (
             <>
               <div>
-                <label className="label">Reason for Leave <span className="text-red-400">*</span></label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="label mb-0">Reason for Leave <span className="text-red-400">*</span></label>
+                  {/* ── Tone selector ── */}
+                  <div className="flex items-center gap-1.5">
+                    <Wand2 size={12} className="text-slate-500" />
+                    <span className="text-xs text-slate-500 mr-1">Rewrite as:</span>
+                    <button
+                      type="button"
+                      onClick={() => handleTone('casual')}
+                      disabled={!!toneLoading}
+                      title="Rewrite in casual, friendly tone"
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                        toneLoading === 'casual'
+                          ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 cursor-wait'
+                          : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
+                      }`}
+                    >
+                      {toneLoading === 'casual' ? <Spinner size="xs" /> : '🌴'} Casual
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTone('formal')}
+                      disabled={!!toneLoading}
+                      title="Rewrite in formal, professional tone"
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                        toneLoading === 'formal'
+                          ? 'bg-blue-500/20 border-blue-500/40 text-blue-300 cursor-wait'
+                          : 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'
+                      }`}
+                    >
+                      {toneLoading === 'formal' ? <Spinner size="xs" /> : '💼'} Formal
+                    </button>
+                  </div>
+                </div>
                 <textarea value={form.reason} onChange={e => f('reason', e.target.value)} rows={4}
-                  placeholder="Please provide a detailed reason (minimum 20 characters)..."
+                  placeholder="Write your reason here — then use the Casual or Formal buttons to adjust the tone..."
                   className="input resize-none" />
                 <div className="flex justify-between mt-1">
                   {errors.reason ? <p className="text-red-400 text-xs">{errors.reason}</p> : <span />}
                   <p className={`text-xs ${form.reason.length < 20 ? 'text-red-400' : 'text-slate-500'}`}>{form.reason.length} / 20 min</p>
                 </div>
+                <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                  <Wand2 size={10} /> Use the tone buttons above to auto-rewrite your reason as casual or formal.
+                </p>
               </div>
               <div>
                 <label className="label">Emergency Contact During Leave</label>
@@ -481,6 +565,12 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                     </>
                   ))}
                 </div>
+                {form.reason && (
+                  <div className="mt-3 pt-3 border-t border-white/5">
+                    <p className="text-xs text-slate-500 mb-1">Reason</p>
+                    <p className="text-xs text-slate-300 leading-relaxed">{form.reason}</p>
+                  </div>
+                )}
               </div>
             </>
           )}
