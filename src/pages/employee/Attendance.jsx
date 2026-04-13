@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { LogIn, LogOut, Clock, CalendarOff, Upload, X, FileText, Image, CheckCircle2, XCircle, AlertCircle, Wand2 } from 'lucide-react'
-import api, { fetchMyLeaves } from '../../api/axios'
+import api, { fetchMyLeaves, submitLeave } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { format, parseISO } from 'date-fns'
 import { PageHeader, StatusBadge, Spinner, EmptyState, StatCard } from '../../components/common/UI'
@@ -344,19 +344,25 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
     if (!validate()) return
     setSaving(true)
     try {
+      let result
       if (files.length > 0) {
         const fd = new FormData()
         Object.entries(form).forEach(([k, v]) => fd.append(k, v))
         fd.append('days', days)
         files.forEach(f => fd.append('documents', f))
-        await api.post('/leaves', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        result = await submitLeave(fd, true)
       } else {
-        await api.post('/leaves', { ...form, days })
+        result = await submitLeave({ ...form, days })
       }
-      toast.success('Leave application submitted!')
-      onSuccess()
-    } catch (e) { toast.error(e.response?.data?.message || 'Submission failed') }
-    finally { setSaving(false) }
+      if (result.ok) {
+        toast.success('Leave application submitted!')
+        onSuccess()
+      } else if (result.unsupported) {
+        toast.error('Leave requests are not yet available on this server.')
+      } else {
+        toast.error(result.message)
+      }
+    } finally { setSaving(false) }
   }
 
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }))
