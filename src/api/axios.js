@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+import axios from 'axios'
+
 const api = axios.create({
-  baseURL: 'https://project-management-backend-gvpy.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL + '/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
