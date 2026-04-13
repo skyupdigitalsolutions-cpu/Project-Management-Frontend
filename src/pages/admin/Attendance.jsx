@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { RefreshCw, UserMinus, Pencil, Clock, CalendarOff, CheckCircle2, XCircle, AlertCircle, Eye, Users } from 'lucide-react'
-import api from '../../api/axios'
+import api, { fetchAllLeaves, updateLeaveStatus } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { format, parseISO } from 'date-fns'
 import { PageHeader, StatCard, SelectInput, Modal, FormField, StatusBadge, Spinner, EmptyState } from '../../components/common/UI'
@@ -35,8 +35,8 @@ export default function AdminAttendance() {
   const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
-    api.get('/leaves', { params: { status: 'pending' } })
-      .then(r => setPendingCount((r.data.data ?? []).length))
+    fetchAllLeaves({ status: 'pending' })
+      .then(data => setPendingCount(data.filter(l => l.status === 'pending').length))
       .catch(() => {})
   }, [])
 
@@ -207,8 +207,7 @@ function LeaveApprovalTab({ onCountChange }) {
       const params = {}
       if (statusF) params.status = statusF
       if (roleF)   params.role   = roleF
-      const r = await api.get('/leaves', { params })
-      const data = r.data.data ?? []
+      const data = await fetchAllLeaves(params)
       setLeaves(data)
       if (statusF === 'pending' || !statusF) {
         onCountChange(data.filter(l => l.status === 'pending').length)
@@ -221,10 +220,18 @@ function LeaveApprovalTab({ onCountChange }) {
   const handleAction = async () => {
     setSaving(true)
     try {
-      await api.patch(`/leaves/${actionModal.leave._id}`, { status: actionModal.action === 'approve' ? 'approved' : 'rejected', admin_note: adminNote })
-      toast.success(`Leave ${actionModal.action === 'approve' ? 'approved' : 'rejected'} successfully`)
-      setActionModal(null); setAdminNote(''); load()
-    } catch (e) { toast.error(e.response?.data?.message || 'Action failed') } finally { setSaving(false) }
+      const newStatus = actionModal.action === 'approve' ? 'approved' : 'rejected'
+      const result = await updateLeaveStatus(actionModal.leave._id, newStatus, adminNote)
+      if (result.ok) {
+        toast.success(`Leave ${actionModal.action === 'approve' ? 'approved' : 'rejected'} successfully`)
+        setActionModal(null); setAdminNote(''); load()
+      } else if (result.unsupported) {
+        toast.error('Leave management is not yet enabled on this server.')
+        setActionModal(null)
+      } else {
+        toast.error(result.message)
+      }
+    } finally { setSaving(false) }
   }
 
   const pendingCount = leaves.filter(l => l.status === 'pending').length
@@ -256,7 +263,9 @@ function LeaveApprovalTab({ onCountChange }) {
           <div className="card flex flex-col items-center justify-center py-16 text-center">
             <CalendarOff size={40} className="text-slate-600 mb-4" />
             <p className="text-slate-400 font-medium">No leave requests found</p>
-            <p className="text-slate-500 text-sm mt-1">Try changing the filters above</p>
+            <p className="text-slate-500 text-sm mt-1">
+              {statusF === 'pending' ? 'No pending requests — all clear!' : 'Try changing the filters above'}
+            </p>
           </div>
         ) : leaves.map(leave => {
           const cfg = LEAVE_STATUS_CONFIG[leave.status] ?? LEAVE_STATUS_CONFIG.pending
