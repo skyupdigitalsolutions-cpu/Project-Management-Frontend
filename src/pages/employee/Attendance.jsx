@@ -303,13 +303,17 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
   const days = form.from_date && form.to_date
     ? Math.max(0, Math.ceil((new Date(form.to_date) - new Date(form.from_date)) / 86400000) + 1) : 0
 
-  const validate = () => {
+  const validate = (currentStep = step) => {
     const e = {}
-    if (!form.leave_type) e.leave_type = 'Please select a leave type'
-    if (!form.from_date)  e.from_date  = 'Start date is required'
-    if (!form.to_date)    e.to_date    = 'End date is required'
-    if (form.from_date && form.to_date && form.to_date < form.from_date) e.to_date = 'End date must be after start date'
-    if (!form.reason || form.reason.trim().length < 20) e.reason = 'Reason must be at least 20 characters'
+    if (currentStep === 1) {
+      if (!form.leave_type) e.leave_type = 'Please select a leave type'
+      if (!form.from_date)  e.from_date  = 'Start date is required'
+      if (!form.to_date)    e.to_date    = 'End date is required'
+      if (form.from_date && form.to_date && form.to_date < form.from_date) e.to_date = 'End date must be after start date'
+    }
+    if (currentStep === 2) {
+      if (!form.reason || form.reason.trim().length < 20) e.reason = 'Reason must be at least 20 characters'
+    }
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -341,7 +345,15 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
   }
 
   const handleSubmit = async () => {
-    if (!validate()) return
+    // Validate both step 1 and step 2 fields before final submit
+    const e = {}
+    if (!form.leave_type) e.leave_type = 'Please select a leave type'
+    if (!form.from_date)  e.from_date  = 'Start date is required'
+    if (!form.to_date)    e.to_date    = 'End date is required'
+    if (form.from_date && form.to_date && form.to_date < form.from_date) e.to_date = 'End date must be after start date'
+    if (!form.reason || form.reason.trim().length < 20) e.reason = 'Reason must be at least 20 characters'
+    setErrors(e)
+    if (Object.keys(e).length > 0) return
     setSaving(true)
     try {
       let result
@@ -587,7 +599,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
           <div className="flex gap-3">
             <button onClick={onClose} className="btn-secondary">Cancel</button>
             {step < 3 ? (
-              <button onClick={() => { if (step === 1 && !validate()) return; setStep(s => s + 1) }} className="btn-primary">Next →</button>
+              <button onClick={() => { if (!validate(step)) return; setStep(s => s + 1) }} className="btn-primary">Next →</button>
             ) : (
               <button onClick={handleSubmit} disabled={saving} className="btn-primary">
                 {saving ? <Spinner size="sm" /> : <CheckCircle2 size={16} />} Submit Application
