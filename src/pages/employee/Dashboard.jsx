@@ -19,18 +19,19 @@ export default function EmployeeDashboard() {
   const load = async () => {
     setLoading(true)
     try {
-      const [t, att, ts, l, p] = await Promise.allSettled([
+      const [t, att, ts, p] = await Promise.allSettled([
         api.get('/tasks?limit=5&sort=-createdAt'),
         api.get('/attendance/today'),
         api.get('/tasks/stats'),
-        fetchMyLeaves().then(data => ({ data: { data } })),
         api.get('/projects?limit=3'),
       ])
-      if (t.status  === 'fulfilled') setTasks(t.value.data.data ?? [])
+      if (t.status   === 'fulfilled') setTasks(t.value.data.data ?? [])
       if (att.status === 'fulfilled') setToday(att.value.data.data)
       if (ts.status  === 'fulfilled') setStats(ts.value.data.data)
-      if (l.status   === 'fulfilled') setLeaves(l.value.data.data ?? [])
       if (p.status   === 'fulfilled') setProjects(p.value.data.data ?? [])
+      // fetchMyLeaves never throws — returns [] if backend unsupported
+      const myLeaves = await fetchMyLeaves()
+      setLeaves(myLeaves)
     } catch {} finally { setLoading(false) }
   }
 
