@@ -27,32 +27,65 @@ api.interceptors.response.use(
 
 /**
  * Fetch the current user's leave requests.
- * Tries /leaves/my first; if the backend returns 404, falls back to /leaves?mine=true,
- * and finally to /leaves (and filters client-side by the logged-in user id).
+ * Silently returns [] if the backend doesn't support leaves yet.
  */
 export async function fetchMyLeaves() {
-  // Primary route
+  const routes = ['/leaves/my', '/leaves/mine', '/leaves']
+  for (const route of routes) {
+    try {
+      const res = await api.get(route)
+      return res.data.data ?? []
+    } catch (err) {
+      if (err.response?.status !== 404) break
+    }
+  }
+  return []
+}
+
+/**
+ * Fetch all leave requests (admin/manager view).
+ * Returns [] silently if the backend doesn't support leaves yet.
+ */
+export async function fetchAllLeaves(params = {}) {
   try {
-    const res = await api.get('/leaves/my')
+    const res = await api.get('/leaves', { params })
     return res.data.data ?? []
   } catch (err) {
-    if (err.response?.status !== 404) throw err
+    if (err.response?.status === 404) return []
+    throw err
   }
+}
 
-  // First fallback — some backends expose this as a query param
+/**
+ * Submit a leave application.
+ * Returns { ok: true } on success, or { ok: false, unsupported, message } on failure.
+ */
+export async function submitLeave(payload, isMultipart = false) {
   try {
-    const res = await api.get('/leaves/mine')
-    return res.data.data ?? []
+    const config = isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
+    await api.post('/leaves', payload, config)
+    return { ok: true }
   } catch (err) {
-    if (err.response?.status !== 404) throw err
+    if (err.response?.status === 404) {
+      return { ok: false, unsupported: true, message: 'Leave requests are not yet enabled on this server.' }
+    }
+    return { ok: false, message: err.response?.data?.message || 'Submission failed' }
   }
+}
 
-  // Second fallback — filter from the full list (works if the backend scopes by JWT)
+/**
+ * Approve or reject a leave (admin).
+ * Returns { ok: true } on success, or { ok: false, unsupported, message } on failure.
+ */
+export async function updateLeaveStatus(leaveId, status, adminNote = '') {
   try {
-    const res = await api.get('/leaves')
-    return res.data.data ?? []
-  } catch {
-    return []
+    await api.patch(`/leaves/${leaveId}`, { status, admin_note: adminNote })
+    return { ok: true }
+  } catch (err) {
+    if (err.response?.status === 404) {
+      return { ok: false, unsupported: true, message: 'Leave management is not yet enabled on this server.' }
+    }
+    return { ok: false, message: err.response?.data?.message || 'Action failed' }
   }
 }
 
