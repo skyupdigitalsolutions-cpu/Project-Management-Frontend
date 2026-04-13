@@ -166,13 +166,13 @@ export default function EmployeeDashboard() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-white flex items-center gap-2"><CalendarOff size={14} className="text-brand-400" /> My Leave Requests</h3>
-            <a href="/attendance" className="text-xs text-brand-400 hover:text-brand-300 transition-colors">View all →</a>
+            <a href="/employee/attendance" className="text-xs text-brand-400 hover:text-brand-300 transition-colors">View all →</a>
           </div>
           {leaves.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center">
               <CalendarOff size={32} className="text-slate-600 mb-3" />
               <p className="text-slate-500 text-sm">No leave requests</p>
-              <a href="/attendance" className="text-xs text-brand-400 mt-2 hover:text-brand-300 transition-colors">Apply for leave →</a>
+              <a href="/employee/attendance" className="text-xs text-brand-400 mt-2 hover:text-brand-300 transition-colors">Apply for leave →</a>
             </div>
           ) : (
             <div className="space-y-2">
