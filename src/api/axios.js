@@ -25,66 +25,33 @@ api.interceptors.response.use(
   }
 )
 
-/**
- * Fetch the current user's leave requests.
- * Silently returns [] if the backend doesn't support leaves yet.
- */
-export async function fetchMyLeaves() {
-  const routes = ['/leaves/my', '/leaves/mine', '/leaves']
-  for (const route of routes) {
-    try {
-      const res = await api.get(route)
-      return res.data.data ?? []
-    } catch (err) {
-      if (err.response?.status !== 404) break
-    }
-  }
-  return []
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// LEAVES FEATURE FLAG
+// The /leaves endpoint does not exist on this backend yet.
+// Set this to true once the backend exposes /leaves routes.
+// While false, ALL leave helpers return empty data immediately —
+// no HTTP requests are made, so there are zero 404 errors in the console.
+// ─────────────────────────────────────────────────────────────────────────────
+export const LEAVES_ENABLED = true
 
-/**
- * Fetch all leave requests (admin/manager view).
- * Returns [] silently if the backend doesn't support leaves yet.
- */
-export async function fetchAllLeaves(params = {}) {
-  try {
-    const res = await api.get('/leaves', { params })
-    return res.data.data ?? []
-  } catch (err) {
-    if (err.response?.status === 404) return []
-    throw err
-  }
-}
-
-/**
- * Submit a leave application.
- * Returns { ok: true } on success, or { ok: false, unsupported, message } on failure.
- */
+export async function fetchMyLeaves()               { if (!LEAVES_ENABLED) return []; try { const r = await api.get('/leaves/my'); return r.data.data ?? [] } catch { return [] } }
+export async function fetchAllLeaves(params = {})   { if (!LEAVES_ENABLED) return []; try { const r = await api.get('/leaves', { params }); return r.data.data ?? [] } catch { return [] } }
 export async function submitLeave(payload, isMultipart = false) {
+  if (!LEAVES_ENABLED) return { ok: false, unsupported: true, message: 'Leave requests are not yet available.' }
   try {
     const config = isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}
     await api.post('/leaves', payload, config)
     return { ok: true }
   } catch (err) {
-    if (err.response?.status === 404) {
-      return { ok: false, unsupported: true, message: 'Leave requests are not yet enabled on this server.' }
-    }
     return { ok: false, message: err.response?.data?.message || 'Submission failed' }
   }
 }
-
-/**
- * Approve or reject a leave (admin).
- * Returns { ok: true } on success, or { ok: false, unsupported, message } on failure.
- */
 export async function updateLeaveStatus(leaveId, status, adminNote = '') {
+  if (!LEAVES_ENABLED) return { ok: false, unsupported: true, message: 'Leave management is not yet available.' }
   try {
     await api.patch(`/leaves/${leaveId}`, { status, admin_note: adminNote })
     return { ok: true }
   } catch (err) {
-    if (err.response?.status === 404) {
-      return { ok: false, unsupported: true, message: 'Leave management is not yet enabled on this server.' }
-    }
     return { ok: false, message: err.response?.data?.message || 'Action failed' }
   }
 }
