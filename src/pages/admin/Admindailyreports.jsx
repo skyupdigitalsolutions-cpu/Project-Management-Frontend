@@ -56,15 +56,16 @@ export default function AdminDailyReports() {
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Employee</label>
             <div className="relative">
               <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <select
-                value={filters.user_id}
-                onChange={e => setFilter('user_id', e.target.value)}
-                className="w-full bg-white/10 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 appearance-none"
-              >
-                <option value="">All Employees</option>
-                {users.filter(u => u.role === 'employee').map(u => (
-                  <option key={u._id} value={u._id}>{u.name}</option>
-                ))}
+               <select
+                    value={filters.user_id}
+                    onChange={e => setFilter('user_id', e.target.value)}
+                  className="w-full border border-white/10 rounded-lg pl-8 pr-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 appearance-none"
+                  style={{ backgroundColor: '#1e2535' }}
+                  >
+              <option value="" style={{ backgroundColor: '#1e2535', color: '#fff' }}>All Employees</option>
+              {users.filter(u => u.role === 'employee').map(u => (
+              <option key={u._id} value={u._id} style={{ backgroundColor: '#1e2535', color: '#fff' }}>{u.name}</option>
+              ))}
               </select>
             </div>
           </div>
