@@ -103,13 +103,13 @@ export default function ManagerAttendance() {
       />
 
       <div className="flex gap-1 bg-white/5 p-1 rounded-xl w-fit">
-        <TabBtn active={activeTab === 'my'}     onClick={() => setActiveTab('my')}}>
+        <TabBtn active={activeTab === 'my'} onClick={() => setActiveTab('my')}>
           <Clock size={14} /> My Attendance
         </TabBtn>
         <TabBtn active={activeTab === 'leaves'} onClick={() => setActiveTab('leaves')}>
           <CalendarOff size={14} /> My Leaves
         </TabBtn>
-        <TabBtn active={activeTab === 'team'}   onClick={() => setActiveTab('team')}>
+        <TabBtn active={activeTab === 'team'} onClick={() => setActiveTab('team')}>
           <Users size={14} /> Team Attendance
         </TabBtn>
       </div>
