@@ -205,6 +205,7 @@ export default function AutoAssignProject() {
                   onChange={(e) => updateProject("title", e.target.value)}
                   placeholder="e.g. Company Website Redesign"
                   className={INPUT}
+                  style={IS}
                 />
               </FormField>
             </div>
@@ -215,6 +216,7 @@ export default function AutoAssignProject() {
                   onChange={(e) => updateProject("description", e.target.value)}
                   rows={2} placeholder="Project overview..."
                   className={INPUT}
+                  style={IS}
                 />
               </FormField>
             </div>
@@ -224,10 +226,11 @@ export default function AutoAssignProject() {
                 required value={project.project_type}
                 onChange={(e) => updateProject("project_type", e.target.value)}
                 className={INPUT}
+                style={IS}
               >
                 {PROJECT_TYPES.map((t) => (
                   <option key={t.value} value={t.value}
-                    style={{ backgroundColor: '#0f172a', color: '#052b5d' }}>
+                    style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}>
                     {t.label}
                   </option>
                 ))}
@@ -244,10 +247,11 @@ export default function AutoAssignProject() {
                 required value={project.priority}
                 onChange={(e) => updateProject("priority", e.target.value)}
                 className={INPUT}
+                style={IS}
               >
                 {PRIORITIES.map((p) => (
                   <option key={p} value={p}
-                    style={{ backgroundColor: '#0f172a', color: '#052b5d' }}>
+                    style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </option>
                 ))}
@@ -259,13 +263,14 @@ export default function AutoAssignProject() {
                 value={project.manager_id}
                 onChange={(e) => updateProject("manager_id", e.target.value)}
                 className={INPUT}
+                style={IS}
               >
-                <option value="" style={{ backgroundColor: '#0f172a', color: '#052b5d' }}>
+                <option value="" style={{ backgroundColor: '#0f172a', color: '#94a3b8' }}>
                   Select manager...
                 </option>
                 {managers.map((m) => (
                   <option key={m._id} value={m._id}
-                    style={{ backgroundColor: '#0f172a', color: '#052b5d' }}>
+                    style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}>
                     {m.name} ({m.designation})
                   </option>
                 ))}
@@ -275,13 +280,13 @@ export default function AutoAssignProject() {
             <FormField label="Start Date *">
               <input type="date" required value={project.start_date}
                 onChange={(e) => updateProject("start_date", e.target.value)}
-                className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                className={INPUT} style={IS} />
             </FormField>
 
             <FormField label="End Date *">
               <input type="date" required value={project.end_date}
                 onChange={(e) => updateProject("end_date", e.target.value)}
-                className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                className={INPUT} style={IS} />
             </FormField>
           </div>
         </Section>
@@ -321,23 +326,23 @@ export default function AutoAssignProject() {
                   <input required value={asgn.title}
                     onChange={(e) => updateAssignment(aIdx, "title", e.target.value)}
                     placeholder="e.g. Frontend Development Phase"
-                    className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                    className={INPUT} style={IS} />
                 </FormField>
                 <FormField label="Department *">
                   <input required value={asgn.department}
                     onChange={(e) => updateAssignment(aIdx, "department", e.target.value)}
                     placeholder="e.g. Web Development"
-                    className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                    className={INPUT} style={IS} />
                 </FormField>
                 <FormField label="Start Date *">
                   <input type="date" required value={asgn.start_date}
                     onChange={(e) => updateAssignment(aIdx, "start_date", e.target.value)}
-                    className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                    className={INPUT} style={IS} />
                 </FormField>
                 <FormField label="End Date *">
                   <input type="date" required value={asgn.end_date}
                     onChange={(e) => updateAssignment(aIdx, "end_date", e.target.value)}
-                    className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                    className={INPUT} style={IS} />
                 </FormField>
               </div>
 
@@ -375,13 +380,13 @@ export default function AutoAssignProject() {
                           <input required value={task.title}
                             onChange={(e) => updateTask(aIdx, tIdx, "title", e.target.value)}
                             placeholder="e.g. Design Homepage"
-                            className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                            className={INPUT} style={IS} />
                         </FormField>
                         <FormField label="Required Role">
                           <input value={task.required_role}
                             onChange={(e) => updateTask(aIdx, tIdx, "required_role", e.target.value)}
                             placeholder="e.g. frontend developer"
-                            className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                            className={INPUT} style={IS} />
                           {autoAssign && (
                             <p className="text-xs text-blue-400 mt-0.5">Used for auto-matching</p>
                           )}
@@ -389,7 +394,7 @@ export default function AutoAssignProject() {
                         <FormField label="Priority">
                           <select value={task.priority}
                             onChange={(e) => updateTask(aIdx, tIdx, "priority", e.target.value)}
-                            className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }}>
+                            className={INPUT} style={IS}>
                             {TASK_PRIORITIES.map((p) => (
                               <option key={p} value={p}
                                 style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}>
@@ -401,13 +406,13 @@ export default function AutoAssignProject() {
                         <FormField label="Due Date *">
                           <input type="date" required value={task.due_date}
                             onChange={(e) => updateTask(aIdx, tIdx, "due_date", e.target.value)}
-                            className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                            className={INPUT} style={IS} />
                         </FormField>
                         <FormField label="Est. Hours">
                           <input type="number" min="0" value={task.estimated_hours}
                             onChange={(e) => updateTask(aIdx, tIdx, "estimated_hours", e.target.value)}
                             placeholder="e.g. 8"
-                            className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                            className={INPUT} style={IS} />
                         </FormField>
                         <FormField label="Requires Admin Permission">
                           <div className="flex items-center gap-2 pt-2">
@@ -429,7 +434,7 @@ export default function AutoAssignProject() {
                               <input value={task.permission_description}
                                 onChange={(e) => updateTask(aIdx, tIdx, "permission_description", e.target.value)}
                                 placeholder="What access is needed?"
-                                className={INPUT} style={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.12)", colorScheme: "dark" }} />
+                                className={INPUT} style={IS} />
                             </FormField>
                           </div>
                         )}
@@ -468,13 +473,14 @@ const INPUT = [
   "placeholder:text-slate-600",
 ].join(" ");
 
-// Override via inline style so bg + border are always dark regardless of Tailwind purge
-const inputStyle = {
+// Shared inline dark style — applied to every input/select/textarea
+const IS = {
   backgroundColor: '#0f172a',
   border: '1px solid rgba(255,255,255,0.12)',
-  colorScheme: 'dark',          // makes date pickers dark
+  colorScheme: 'dark',
 };
 
+// ─── Section ──────────────────────────────────────────────────────────────────
 
 function Section({ title, children }) {
   return (
