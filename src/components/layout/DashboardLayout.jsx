@@ -3,21 +3,24 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, Clock,
-  Bell, LogOut, Menu, X, User, Briefcase, UserCheck, Video, ClipboardList
+  Bell, LogOut, Menu, X, User, Briefcase, UserCheck, Video, ClipboardList,
+  GitBranch, Bot
 } from 'lucide-react'
 import NotificationBell from '../common/NotificationBell'
 import api from '../../api/axios'
 
 const NAV = {
   admin: [
-    { to: '/admin',               label: 'Dashboard',     icon: LayoutDashboard, end: true },
-    { to: '/admin/users',         label: 'Users',         icon: Users },
-    { to: '/admin/projects',      label: 'Projects',      icon: FolderKanban },
-    { to: '/admin/tasks',         label: 'Tasks',         icon: CheckSquare },
-    { to: '/admin/attendance',    label: 'Attendance',    icon: Clock },
-    { to: '/admin/meetings',      label: 'Meetings',       icon: Video },
-    { to: '/admin/notifications', label: 'Notifications',  icon: Bell },
-    { to: '/admin/daily-reports', label: 'Daily Reports',  icon: ClipboardList },
+    { to: '/admin',               label: 'Dashboard',          icon: LayoutDashboard, end: true },
+    { to: '/admin/users',         label: 'Users',              icon: Users },
+    { to: '/admin/projects',      label: 'Projects',           icon: FolderKanban },
+    { to: '/admin/tasks',         label: 'Tasks',              icon: CheckSquare },
+    { to: '/admin/attendance',    label: 'Attendance',         icon: Clock },
+    { to: '/admin/meetings',      label: 'Meetings',           icon: Video },
+    { to: '/admin/notifications', label: 'Notifications',      icon: Bell },
+    { to: '/admin/daily-reports', label: 'Daily Reports',      icon: ClipboardList },
+    { to: '/admin/workflow',      label: 'Workflow Dashboard', icon: GitBranch },
+    { to: '/admin/auto-assign',   label: 'Create Project',     icon: Bot },
   ],
   manager: [
     { to: '/manager',                label: 'Dashboard',     icon: LayoutDashboard, end: true },
@@ -25,17 +28,17 @@ const NAV = {
     { to: '/manager/tasks',          label: 'Tasks',         icon: CheckSquare },
     { to: '/manager/team',           label: 'My Team',       icon: UserCheck },
     { to: '/manager/attendance',     label: 'Attendance',    icon: Clock },
-    { to: '/manager/meetings',       label: 'Meetings',       icon: Video },
-    { to: '/manager/notifications',  label: 'Notifications',  icon: Bell },
-    { to: '/manager/daily-reports',  label: 'Daily Reports',  icon: ClipboardList },
+    { to: '/manager/meetings',       label: 'Meetings',      icon: Video },
+    { to: '/manager/notifications',  label: 'Notifications', icon: Bell },
+    { to: '/manager/daily-reports',  label: 'Daily Reports', icon: ClipboardList },
   ],
   employee: [
-    { to: '/employee',            label: 'Dashboard',  icon: LayoutDashboard, end: true },
-    { to: '/employee/tasks',      label: 'My Tasks',   icon: CheckSquare, taskBadge: true },
-    { to: '/employee/projects',   label: 'Projects',   icon: FolderKanban },
-    { to: '/employee/attendance',    label: 'Attendance',     icon: Clock },
-    { to: '/employee/meetings',      label: 'Meetings',       icon: Video },
-    { to: '/employee/daily-report',  label: 'Daily Report',   icon: ClipboardList },
+    { to: '/employee',               label: 'Dashboard',    icon: LayoutDashboard, end: true },
+    { to: '/employee/my-tasks',      label: 'My Tasks',     icon: CheckSquare, taskBadge: true },
+    { to: '/employee/projects',      label: 'Projects',     icon: FolderKanban },
+    { to: '/employee/attendance',    label: 'Attendance',   icon: Clock },
+    { to: '/employee/meetings',      label: 'Meetings',     icon: Video },
+    { to: '/employee/daily-report',  label: 'Daily Report', icon: ClipboardList },
   ],
 }
 
@@ -67,21 +70,21 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Task badge state — only used for employees
-  const [newTaskCount, setNewTaskCount]   = useState(0)   // total unseen
-  const [hasUrgent,    setHasUrgent]      = useState(false) // any unseen critical/high
+  const [newTaskCount, setNewTaskCount] = useState(0)
+  const [hasUrgent,    setHasUrgent]    = useState(false)
 
-  const isEmployee = user?.role === 'employee'
-  const onTasksPage = location.pathname === '/employee/tasks'
+  const isEmployee  = user?.role === 'employee'
+  const onTasksPage = location.pathname === '/employee/my-tasks'
 
-  // Poll for new tasks every 60 seconds (lightweight — just the list, no stats)
+  // Poll for new tasks every 60 seconds
   const checkNewTasks = useCallback(async () => {
     if (!isEmployee) return
     try {
       const { data } = await api.get('/tasks')
       const tasks = data.data ?? []
-      const seen = getSeenIds()
+      const seen  = getSeenIds()
 
-      const unseen = tasks.filter(t => !seen.has(t._id))
+      const unseen       = tasks.filter(t => !seen.has(t._id))
       const urgentUnseen = unseen.filter(
         t => t.priority === 'critical' || t.priority === 'high'
       )
@@ -105,7 +108,7 @@ export default function DashboardLayout() {
     ;(async () => {
       try {
         const { data } = await api.get('/tasks')
-        const tasks = data.data ?? []
+        const tasks  = data.data ?? []
         const allIds = new Set(tasks.map(t => t._id))
         saveSeenIds(allIds)
         setNewTaskCount(0)
@@ -123,7 +126,7 @@ export default function DashboardLayout() {
     navigate('/login')
   }
 
-  // Badge component rendered next to nav label
+  // Badge rendered next to "My Tasks" nav label
   const TaskBadge = () => {
     if (newTaskCount === 0) return null
 
@@ -163,7 +166,7 @@ export default function DashboardLayout() {
       <div className="p-5 border-b border-white/5">
         <div className="flex items-center gap-3">
           <div className="">
-           <img src='/images/skyup_logo.webp'/>
+            <img src='/images/skyup_logo.webp' alt="Logo" />
           </div>
         </div>
       </div>
@@ -196,7 +199,6 @@ export default function DashboardLayout() {
           >
             <Icon size={17} />
             <span>{label}</span>
-            {/* Show badge only on the My Tasks link for employees */}
             {taskBadge && isEmployee && <TaskBadge />}
           </NavLink>
         ))}
