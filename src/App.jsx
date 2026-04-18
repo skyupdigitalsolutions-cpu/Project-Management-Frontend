@@ -2,6 +2,9 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import DashboardLayout from './components/layout/DashboardLayout'
 import Login from './pages/Login'
+import AutoAssignProject from './pages/admin/AutoAssignProject'
+import WorkflowDashboard from './pages/admin/WorkflowDashboard'
+import MyTasksEnhanced   from './pages/employee/MyTasksEnhanced'
 
 // Shared
 import CreateProject from './pages/shared/CreateProject'
@@ -25,13 +28,16 @@ import ManagerNotifications from './pages/manager/Notifications'
 
 // Employee
 import EmployeeDashboard   from './pages/employee/Dashboard'
-import EmployeeMyTasks     from './pages/employee/MyTasks'
 import EmployeeProjects    from './pages/employee/Projects'
 import EmployeeAttendance  from './pages/employee/Attendance'
 import EmployeeDailyReport from './pages/employee/Dailyreport'
+
+// Meetings
 import AdminMeetings    from './pages/admin/AdminMeetings'
 import ManagerMeetings  from './pages/manager/ManagerMeeting'
 import EmployeeMeetings from './pages/employee/EmployeeMeetings'
+
+// Daily Reports
 import AdminDailyReports   from './pages/admin/Admindailyreports'
 import ManagerDailyReports from './pages/manager/Managerdailyreports'
 
@@ -44,17 +50,20 @@ const ProtectedRoute = ({ children, roles }) => {
   if (roles && !roles.includes(user.role)) return <Navigate to={`/${user.role}`} replace />
   return children
 }
+
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth()
   if (loading) return <FullPageSpinner />
   if (user) return <Navigate to={`/${user.role}`} replace />
   return children
 }
+
 const FullPageSpinner = () => (
   <div className="min-h-screen flex items-center justify-center bg-surface">
     <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
   </div>
 )
+
 const RoleRedirect = () => {
   const { user } = useAuth()
   return user ? <Navigate to={`/${user.role}`} replace /> : <Navigate to="/login" replace />
@@ -69,46 +78,50 @@ export default function App() {
 
         {/* ── Admin ── */}
         <Route path="/admin" element={<ProtectedRoute roles={['admin']}><DashboardLayout /></ProtectedRoute>}>
-          <Route index                          element={<AdminDashboard />} />
-          <Route path="users"                   element={<AdminUsers />} />
-          <Route path="projects"                element={<AdminProjects />} />
-          <Route path="projects/create"         element={<CreateProject />} />
-          <Route path="projects/:id"            element={<ProjectDetail />} />
-          <Route path="projects/edit/:id"       element={<CreateProject editMode />} />
-          <Route path="tasks"                   element={<AdminTasks />} />
-          <Route path="attendance"              element={<AdminAttendance />} />
-          <Route path="meetings"                element={<AdminMeetings />} />
-          <Route path="notifications"           element={<AdminNotifications />} />
-          <Route path="daily-reports"           element={<AdminDailyReports />} />
-          <Route path="profile"                 element={<Profile />} />
+          <Route index                    element={<AdminDashboard />} />
+          <Route path="users"             element={<AdminUsers />} />
+          <Route path="projects"          element={<AdminProjects />} />
+          <Route path="projects/create"   element={<CreateProject />} />
+          <Route path="projects/:id"      element={<ProjectDetail />} />
+          <Route path="projects/edit/:id" element={<CreateProject editMode />} />
+          <Route path="tasks"             element={<AdminTasks />} />
+          <Route path="attendance"        element={<AdminAttendance />} />
+          <Route path="meetings"          element={<AdminMeetings />} />
+          <Route path="notifications"     element={<AdminNotifications />} />
+          <Route path="daily-reports"     element={<AdminDailyReports />} />
+          <Route path="profile"           element={<Profile />} />
+          {/* ✅ Relative paths (no leading slash) inside nested Routes */}
+          <Route path="workflow"          element={<WorkflowDashboard />} />
+          <Route path="auto-assign"       element={<AutoAssignProject />} />
         </Route>
 
         {/* ── Manager ── */}
         <Route path="/manager" element={<ProtectedRoute roles={['manager']}><DashboardLayout /></ProtectedRoute>}>
-          <Route index                          element={<ManagerDashboard />} />
-          <Route path="projects"                element={<ManagerProjects />} />
-          <Route path="projects/create"         element={<CreateProject />} />
-          <Route path="projects/:id"            element={<ProjectDetail />} />
-          <Route path="projects/edit/:id"       element={<CreateProject editMode />} />
-          <Route path="tasks"                   element={<ManagerTasks />} />
-          <Route path="team"                    element={<ManagerTeam />} />
-          <Route path="attendance"              element={<ManagerAttendance />} />
-          <Route path="meetings"                element={<ManagerMeetings />} />
-          <Route path="notifications"           element={<ManagerNotifications />} />
-          <Route path="daily-reports"           element={<ManagerDailyReports />} />
-          <Route path="profile"                 element={<Profile />} />
+          <Route index                    element={<ManagerDashboard />} />
+          <Route path="projects"          element={<ManagerProjects />} />
+          <Route path="projects/create"   element={<CreateProject />} />
+          <Route path="projects/:id"      element={<ProjectDetail />} />
+          <Route path="projects/edit/:id" element={<CreateProject editMode />} />
+          <Route path="tasks"             element={<ManagerTasks />} />
+          <Route path="team"              element={<ManagerTeam />} />
+          <Route path="attendance"        element={<ManagerAttendance />} />
+          <Route path="meetings"          element={<ManagerMeetings />} />
+          <Route path="notifications"     element={<ManagerNotifications />} />
+          <Route path="daily-reports"     element={<ManagerDailyReports />} />
+          <Route path="profile"           element={<Profile />} />
         </Route>
 
         {/* ── Employee ── */}
         <Route path="/employee" element={<ProtectedRoute roles={['employee']}><DashboardLayout /></ProtectedRoute>}>
-          <Route index                          element={<EmployeeDashboard />} />
-          <Route path="tasks"                   element={<EmployeeMyTasks />} />
-          <Route path="projects"                element={<EmployeeProjects />} />
-          <Route path="projects/:id"            element={<ProjectDetail />} />
-          <Route path="attendance"              element={<EmployeeAttendance />} />
-          <Route path="meetings"                element={<EmployeeMeetings />} />
-          <Route path="daily-report"            element={<EmployeeDailyReport />} />
-          <Route path="profile"                 element={<Profile />} />
+          <Route index                element={<EmployeeDashboard />} />
+          {/* ✅ Relative path — matches nav link /employee/my-tasks */}
+          <Route path="my-tasks"      element={<MyTasksEnhanced />} />
+          <Route path="projects"      element={<EmployeeProjects />} />
+          <Route path="projects/:id"  element={<ProjectDetail />} />
+          <Route path="attendance"    element={<EmployeeAttendance />} />
+          <Route path="meetings"      element={<EmployeeMeetings />} />
+          <Route path="daily-report"  element={<EmployeeDailyReport />} />
+          <Route path="profile"       element={<Profile />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
