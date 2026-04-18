@@ -20,7 +20,7 @@ const NAV = {
     { to: '/admin/notifications', label: 'Notifications',      icon: Bell },
     { to: '/admin/daily-reports', label: 'Daily Reports',      icon: ClipboardList },
     { to: '/admin/workflow',      label: 'Workflow Dashboard', icon: GitBranch },
-    { to: '/admin/auto-assign',   label: 'Create Project',     icon: Bot },
+  
   ],
   manager: [
     { to: '/manager',                label: 'Dashboard',     icon: LayoutDashboard, end: true },
