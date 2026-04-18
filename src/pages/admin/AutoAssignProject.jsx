@@ -227,7 +227,7 @@ export default function AutoAssignProject() {
               >
                 {PROJECT_TYPES.map((t) => (
                   <option key={t.value} value={t.value}
-                    style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}>
+                    style={{ backgroundColor: '#0f172a', color: '#052b5d' }}>
                     {t.label}
                   </option>
                 ))}
@@ -247,7 +247,7 @@ export default function AutoAssignProject() {
               >
                 {PRIORITIES.map((p) => (
                   <option key={p} value={p}
-                    style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}>
+                    style={{ backgroundColor: '#0f172a', color: '#052b5d' }}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </option>
                 ))}
@@ -260,12 +260,12 @@ export default function AutoAssignProject() {
                 onChange={(e) => updateProject("manager_id", e.target.value)}
                 className={INPUT}
               >
-                <option value="" style={{ backgroundColor: '#0f172a', color: '#94a3b8' }}>
+                <option value="" style={{ backgroundColor: '#0f172a', color: '#052b5d' }}>
                   Select manager...
                 </option>
                 {managers.map((m) => (
                   <option key={m._id} value={m._id}
-                    style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}>
+                    style={{ backgroundColor: '#0f172a', color: '#052b5d' }}>
                     {m.name} ({m.designation})
                   </option>
                 ))}
@@ -475,13 +475,6 @@ const inputStyle = {
   colorScheme: 'dark',          // makes date pickers dark
 };
 
-// Monkey-patch: wrap every <input>/<select>/<textarea> rendered via INPUT
-// so the style is applied automatically without touching every call site.
-// We do this by re-exporting patched versions used inside Section / FormField children.
-// Actually simpler: apply style directly in JSX — see each input above.
-// The INPUT class string above is used for className; add style={inputStyle} to each element.
-
-// ─── Section ──────────────────────────────────────────────────────────────────
 
 function Section({ title, children }) {
   return (
