@@ -2,34 +2,34 @@ import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axios";
 
 const PRIORITY_COLOR = {
-  critical: "bg-red-100 text-red-700 border border-red-300",
-  high:     "bg-orange-100 text-orange-700 border border-orange-300",
-  medium:   "bg-yellow-100 text-yellow-700 border border-yellow-300",
-  low:      "bg-green-100 text-green-700 border border-green-300",
+  critical: "bg-red-500/20 text-red-400 border border-red-500/30",
+  high:     "bg-orange-500/20 text-orange-400 border border-orange-500/30",
+  medium:   "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
+  low:      "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
 };
 
 const STATUS_COLOR = {
-  "todo":        "bg-gray-100 text-gray-600",
-  "in-progress": "bg-blue-100 text-blue-700",
-  "completed":   "bg-green-100 text-green-700",
-  "on-hold":     "bg-yellow-100 text-yellow-700",
-  "cancelled":   "bg-red-100 text-red-600",
-  "blocked":     "bg-purple-100 text-purple-700",
+  "todo":        "bg-slate-500/20 text-slate-400",
+  "in-progress": "bg-blue-500/20 text-blue-400",
+  "completed":   "bg-emerald-500/20 text-emerald-400",
+  "on-hold":     "bg-yellow-500/20 text-yellow-400",
+  "cancelled":   "bg-red-500/20 text-red-400",
+  "blocked":     "bg-purple-500/20 text-purple-400",
 };
 
 export default function WorkflowDashboard() {
-  const [tasks,         setTasks]         = useState([]);
-  const [stats,         setStats]         = useState({});
-  const [workload,      setWorkload]       = useState([]);
-  const [delayedTasks,  setDelayedTasks]  = useState([]);
-  const [pendingPerms,  setPendingPerms]  = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [activeTab,     setActiveTab]     = useState("overview");
-  const [delayModal,    setDelayModal]    = useState(null);
-  const [delayReason,   setDelayReason]   = useState("");
-  const [newDueDate,    setNewDueDate]    = useState("");
-  const [submitting,    setSubmitting]    = useState(false);
-  const [msg,           setMsg]           = useState("");
+  const [tasks,        setTasks]        = useState([]);
+  const [stats,        setStats]        = useState({});
+  const [workload,     setWorkload]     = useState([]);
+  const [delayedTasks, setDelayedTasks] = useState([]);
+  const [pendingPerms, setPendingPerms] = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [activeTab,    setActiveTab]    = useState("overview");
+  const [delayModal,   setDelayModal]   = useState(null);
+  const [delayReason,  setDelayReason]  = useState("");
+  const [newDueDate,   setNewDueDate]   = useState("");
+  const [submitting,   setSubmitting]   = useState(false);
+  const [msg,          setMsg]          = useState("");
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -88,62 +88,75 @@ export default function WorkflowDashboard() {
     }
   }
 
-  const totalTasks = Object.values(stats.by_status || {}).reduce((a, b) => a + b, 0);
-  const completedCount = stats.by_status?.completed || 0;
+  const totalTasks      = Object.values(stats.by_status || {}).reduce((a, b) => a + b, 0);
+  const completedCount  = stats.by_status?.completed || 0;
   const overallProgress = totalTasks ? Math.round((completedCount / totalTasks) * 100) : 0;
 
   const TABS = [
-    { id: "overview",    label: "📊 Overview"    },
+    { id: "overview",    label: "📊 Overview" },
     { id: "delayed",     label: `⚠️ Delayed (${delayedTasks.length})` },
     { id: "permissions", label: `🔐 Permissions (${pendingPerms.length})` },
-    { id: "workload",    label: "👥 Workload"    },
+    { id: "workload",    label: "👥 Workload" },
   ];
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
     </div>
   );
 
   return (
     <div className="p-6 space-y-6">
+
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Workflow Dashboard</h1>
-        <button onClick={fetchAll} className="text-sm px-3 py-1.5 bg-white border rounded-lg hover:bg-gray-50 text-gray-600">
+        <h1 className="text-2xl font-bold text-white">Workflow Dashboard</h1>
+        <button
+          onClick={fetchAll}
+          className="text-sm px-3 py-1.5 rounded-lg text-slate-300 hover:text-white transition-colors"
+          style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
           🔄 Refresh
         </button>
       </div>
 
+      {/* Message banner */}
       {msg && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700 flex justify-between">
+        <div
+          className="rounded-lg px-4 py-3 text-sm text-blue-400 flex justify-between items-center"
+          style={{ backgroundColor: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}
+        >
           {msg}
-          <button onClick={() => setMsg("")} className="text-blue-400 hover:text-blue-600">✕</button>
+          <button onClick={() => setMsg("")} className="text-blue-500 hover:text-blue-300 ml-4">✕</button>
         </div>
       )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KPICard label="Total Tasks"     value={totalTasks}                   color="blue"   icon="📋" />
-        <KPICard label="Completed"        value={completedCount}               color="green"  icon="✅" />
-        <KPICard label="Delayed"          value={delayedTasks.length}          color="red"    icon="⚠️" />
-        <KPICard label="Pending Permissions" value={pendingPerms.length}       color="purple" icon="🔐" />
+        <KPICard label="Total Tasks"         value={totalTasks}          color="blue"   icon="📋" />
+        <KPICard label="Completed"           value={completedCount}      color="green"  icon="✅" />
+        <KPICard label="Delayed"             value={delayedTasks.length} color="red"    icon="⚠️" />
+        <KPICard label="Pending Permissions" value={pendingPerms.length} color="purple" icon="🔐" />
       </div>
 
       {/* Overall Progress */}
-      <div className="bg-white rounded-xl border p-5">
+      <div
+        className="rounded-xl p-5"
+        style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
         <div className="flex justify-between mb-2">
-          <span className="font-semibold text-gray-700">Overall Project Progress</span>
-          <span className="font-bold text-blue-700">{overallProgress}%</span>
+          <span className="font-semibold text-slate-300">Overall Project Progress</span>
+          <span className="font-bold text-blue-400">{overallProgress}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div className="w-full rounded-full h-3" style={{ backgroundColor: '#0f172a' }}>
           <div
-            className="bg-blue-600 h-3 rounded-full transition-all"
-            style={{ width: `${overallProgress}%` }}
+            className="h-3 rounded-full transition-all"
+            style={{ width: `${overallProgress}%`, backgroundColor: '#3b82f6' }}
           />
         </div>
         <div className="flex flex-wrap gap-3 mt-3">
           {Object.entries(stats.by_status || {}).map(([status, count]) => (
-            <span key={status} className={`text-xs px-2 py-1 rounded-full ${STATUS_COLOR[status] || "bg-gray-100"}`}>
+            <span key={status} className={`text-xs px-2 py-1 rounded-full ${STATUS_COLOR[status] || "bg-slate-500/20 text-slate-400"}`}>
               {status}: {count}
             </span>
           ))}
@@ -151,17 +164,22 @@ export default function WorkflowDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-xl border overflow-hidden">
-        <div className="flex border-b overflow-x-auto">
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        {/* Tab bar */}
+        <div className="flex overflow-x-auto" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-5 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
+              className="px-5 py-3 text-sm font-medium whitespace-nowrap transition-colors"
+              style={
                 activeTab === t.id
-                  ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:bg-gray-50"
-              }`}
+                  ? { backgroundColor: 'rgba(59,130,246,0.1)', color: '#60a5fa', borderBottom: '2px solid #3b82f6' }
+                  : { color: '#64748b' }
+              }
             >
               {t.label}
             </button>
@@ -169,10 +187,11 @@ export default function WorkflowDashboard() {
         </div>
 
         <div className="p-5">
+
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-500 mb-3">Recent tasks sorted by priority</p>
+              <p className="text-sm text-slate-500 mb-3">Recent tasks sorted by priority</p>
               {tasks.slice(0, 15).map((task) => (
                 <TaskRow key={task._id} task={task} onLogDelay={() => setDelayModal(task)} />
               ))}
@@ -183,34 +202,39 @@ export default function WorkflowDashboard() {
           {activeTab === "delayed" && (
             <div className="space-y-3">
               {delayedTasks.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">🎉 No delayed tasks!</p>
+                <p className="text-center text-slate-500 py-8">🎉 No delayed tasks!</p>
               ) : (
                 delayedTasks.map((task) => (
-                  <div key={task._id} className="border border-red-200 bg-red-50 rounded-lg p-4">
+                  <div
+                    key={task._id}
+                    className="rounded-lg p-4"
+                    style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-800">{task.title}</span>
+                          <span className="font-semibold text-white">{task.title}</span>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLOR[task.priority]}`}>
                             {task.priority}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
-                          Assigned to: <strong>{task.assigned_to?.name || "—"}</strong> ·
-                          Due: <strong className="text-red-600">{new Date(task.due_date).toLocaleDateString()}</strong>
+                        <p className="text-xs text-slate-500">
+                          Assigned to: <strong className="text-slate-300">{task.assigned_to?.name || "—"}</strong> ·
+                          Due: <strong className="text-red-400">{new Date(task.due_date).toLocaleDateString()}</strong>
                         </p>
                         {task.delay_reason && (
-                          <p className="mt-1 text-xs text-red-700 bg-red-100 rounded px-2 py-1">
+                          <p className="mt-1 text-xs text-red-400 rounded px-2 py-1" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
                             Last reason: {task.delay_reason}
                           </p>
                         )}
                         {task.delay_logs?.length > 0 && (
-                          <p className="text-xs text-gray-400 mt-1">{task.delay_logs.length} delay log(s)</p>
+                          <p className="text-xs text-slate-500 mt-1">{task.delay_logs.length} delay log(s)</p>
                         )}
                       </div>
                       <button
                         onClick={() => setDelayModal(task)}
-                        className="text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                        className="text-xs px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors"
+                        style={{ backgroundColor: '#ef4444' }}
                       >
                         Log Delay
                       </button>
@@ -225,23 +249,27 @@ export default function WorkflowDashboard() {
           {activeTab === "permissions" && (
             <div className="space-y-3">
               {pendingPerms.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">No pending permission requests</p>
+                <p className="text-center text-slate-500 py-8">No pending permission requests</p>
               ) : (
                 pendingPerms.map((task) => (
-                  <div key={task._id} className="border border-purple-200 bg-purple-50 rounded-lg p-4">
+                  <div
+                    key={task._id}
+                    className="rounded-lg p-4"
+                    style={{ backgroundColor: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)' }}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-800">{task.title}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-300">
+                          <span className="font-semibold text-white">{task.title}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
                             {task.permission_status}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
-                          Assigned to: <strong>{task.assigned_to?.name || "—"}</strong>
+                        <p className="text-xs text-slate-500">
+                          Assigned to: <strong className="text-slate-300">{task.assigned_to?.name || "—"}</strong>
                         </p>
                         {task.permission_description && (
-                          <p className="mt-1 text-xs text-purple-800 bg-purple-100 rounded px-2 py-1">
+                          <p className="mt-1 text-xs text-purple-400 rounded px-2 py-1" style={{ backgroundColor: 'rgba(168,85,247,0.1)' }}>
                             {task.permission_description}
                           </p>
                         )}
@@ -249,13 +277,15 @@ export default function WorkflowDashboard() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => grantPermission(task._id, "grant")}
-                          className="text-xs px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                          className="text-xs px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors"
+                          style={{ backgroundColor: '#10b981' }}
                         >
                           ✅ Grant
                         </button>
                         <button
                           onClick={() => grantPermission(task._id, "deny")}
-                          className="text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                          className="text-xs px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors"
+                          style={{ backgroundColor: '#ef4444' }}
                         >
                           ❌ Deny
                         </button>
@@ -270,9 +300,9 @@ export default function WorkflowDashboard() {
           {/* Workload Tab */}
           {activeTab === "workload" && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-500 mb-3">Active task load per employee (higher score = more loaded)</p>
+              <p className="text-sm text-slate-500 mb-3">Active task load per employee (higher score = more loaded)</p>
               {workload.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">No workload data</p>
+                <p className="text-center text-slate-500 py-8">No workload data</p>
               ) : (
                 workload
                   .sort((a, b) => b.workload_score - a.workload_score)
@@ -282,50 +312,60 @@ export default function WorkflowDashboard() {
               )}
             </div>
           )}
+
         </div>
       </div>
 
       {/* Delay Modal */}
       {delayModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-md p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+          <div
+            className="w-full max-w-md rounded-xl p-6 space-y-4"
+            style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
             <div className="flex justify-between items-start">
-              <h3 className="font-bold text-gray-800 text-lg">Log Delay</h3>
-              <button onClick={() => setDelayModal(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+              <h3 className="font-bold text-white text-lg">Log Delay</h3>
+              <button onClick={() => setDelayModal(null)} className="text-slate-400 hover:text-white text-xl transition-colors">✕</button>
             </div>
-            <p className="text-sm text-gray-600">Task: <strong>{delayModal.title}</strong></p>
+            <p className="text-sm text-slate-400">
+              Task: <strong className="text-white">{delayModal.title}</strong>
+            </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Delay *</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Reason for Delay *</label>
               <textarea
                 value={delayReason}
                 onChange={(e) => setDelayReason(e.target.value)}
                 rows={3}
                 placeholder="Explain why this task is delayed (min 10 characters)..."
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                style={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.12)' }}
               />
-              <p className="text-xs text-gray-400 mt-1">{delayReason.length}/10 min characters</p>
+              <p className="text-xs text-slate-500 mt-1">{delayReason.length}/10 min characters</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Due Date (optional)</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">New Due Date (optional)</label>
               <input
                 type="date"
                 value={newDueDate}
                 onChange={(e) => setNewDueDate(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', colorScheme: 'dark' }}
               />
             </div>
-            {msg && <p className="text-sm text-red-600">{msg}</p>}
+            {msg && <p className="text-sm text-red-400">{msg}</p>}
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => { setDelayModal(null); setDelayReason(""); setNewDueDate(""); setMsg(""); }}
-                className="flex-1 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2 rounded-lg text-sm text-slate-400 hover:text-white transition-colors"
+                style={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)' }}
               >
                 Cancel
               </button>
               <button
                 onClick={submitDelay}
                 disabled={submitting}
-                className="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 py-2 text-white rounded-lg text-sm hover:opacity-90 disabled:opacity-50 transition-colors"
+                style={{ backgroundColor: '#ef4444' }}
               >
                 {submitting ? "Logging..." : "Log Delay"}
               </button>
@@ -337,38 +377,45 @@ export default function WorkflowDashboard() {
   );
 }
 
+// ─── KPI Card ─────────────────────────────────────────────────────────────────
+
 function KPICard({ label, value, color, icon }) {
-  const colors = {
-    blue:   "bg-blue-50   border-blue-200  text-blue-700",
-    green:  "bg-green-50  border-green-200 text-green-700",
-    red:    "bg-red-50    border-red-200   text-red-700",
-    purple: "bg-purple-50 border-purple-200 text-purple-700",
+  const styles = {
+    blue:   { backgroundColor: 'rgba(59,130,246,0.1)',  border: '1px solid rgba(59,130,246,0.2)',  color: '#60a5fa'  },
+    green:  { backgroundColor: 'rgba(16,185,129,0.1)',  border: '1px solid rgba(16,185,129,0.2)',  color: '#34d399'  },
+    red:    { backgroundColor: 'rgba(239,68,68,0.1)',   border: '1px solid rgba(239,68,68,0.2)',   color: '#f87171'  },
+    purple: { backgroundColor: 'rgba(168,85,247,0.1)',  border: '1px solid rgba(168,85,247,0.2)',  color: '#c084fc'  },
   };
   return (
-    <div className={`rounded-xl border p-4 ${colors[color]}`}>
+    <div className="rounded-xl p-4" style={styles[color]}>
       <div className="text-2xl mb-1">{icon}</div>
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs opacity-70 mt-0.5">{label}</div>
+      <div className="text-2xl font-bold" style={{ color: styles[color].color }}>{value}</div>
+      <div className="text-xs text-slate-400 mt-0.5">{label}</div>
     </div>
   );
 }
 
+// ─── Task Row ─────────────────────────────────────────────────────────────────
+
 function TaskRow({ task, onLogDelay }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2 border-b last:border-0">
+    <div
+      className="flex items-center justify-between gap-3 py-3 px-1"
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+    >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm text-gray-800 truncate">{task.title}</span>
+          <span className="font-medium text-sm text-white truncate">{task.title}</span>
           {task.is_delayed && (
-            <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Delayed</span>
+            <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">Delayed</span>
           )}
           {task.requires_permission && task.permission_status !== "granted" && (
-            <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-600 rounded">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
               Needs Permission
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-slate-500 mt-0.5">
           {task.assigned_to?.name || "Unassigned"} · Due {new Date(task.due_date).toLocaleDateString()}
         </p>
       </div>
@@ -376,16 +423,17 @@ function TaskRow({ task, onLogDelay }) {
         <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLOR[task.priority] || ""}`}>
           {task.priority}
         </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[task.status] || "bg-gray-100 text-gray-600"}`}>
+        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[task.status] || "bg-slate-500/20 text-slate-400"}`}>
           {task.status}
         </span>
         {task.progress_percent > 0 && (
-          <span className="text-xs text-gray-500 w-8 text-right">{task.progress_percent}%</span>
+          <span className="text-xs text-slate-500 w-8 text-right">{task.progress_percent}%</span>
         )}
         {!task.is_delayed && task.status !== "completed" && (
           <button
             onClick={onLogDelay}
-            className="text-xs px-2 py-1 border border-red-300 text-red-600 rounded hover:bg-red-50"
+            className="text-xs px-2 py-1 rounded hover:opacity-80 transition-colors"
+            style={{ border: '1px solid rgba(239,68,68,0.35)', color: '#f87171' }}
           >
             Delay
           </button>
@@ -395,25 +443,35 @@ function TaskRow({ task, onLogDelay }) {
   );
 }
 
+// ─── Workload Bar ─────────────────────────────────────────────────────────────
+
 function WorkloadBar({ emp }) {
   const max = 300;
   const pct = Math.min((emp.workload_score / max) * 100, 100);
-  const color = pct > 75 ? "bg-red-500" : pct > 50 ? "bg-orange-400" : "bg-blue-500";
+  const barColor =
+    pct > 75 ? '#ef4444' :
+    pct > 50 ? '#f97316' : '#3b82f6';
 
   return (
-    <div className="bg-white border rounded-lg p-4">
+    <div
+      className="rounded-lg p-4"
+      style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.08)' }}
+    >
       <div className="flex justify-between mb-2">
         <div>
-          <span className="font-medium text-sm text-gray-800">{emp.name}</span>
-          <span className="text-xs text-gray-400 ml-2">{emp.designation} · {emp.department}</span>
+          <span className="font-medium text-sm text-white">{emp.name}</span>
+          <span className="text-xs text-slate-500 ml-2">{emp.designation} · {emp.department}</span>
         </div>
         <div className="text-right">
-          <span className="text-sm font-bold text-gray-700">{emp.task_count} tasks</span>
-          <span className="text-xs text-gray-400 ml-2">score: {emp.workload_score}</span>
+          <span className="text-sm font-bold text-slate-300">{emp.task_count} tasks</span>
+          <span className="text-xs text-slate-500 ml-2">score: {emp.workload_score}</span>
         </div>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2.5">
-        <div className={`h-2.5 rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+      <div className="w-full rounded-full h-2.5" style={{ backgroundColor: '#0f172a' }}>
+        <div
+          className="h-2.5 rounded-full transition-all"
+          style={{ width: `${pct}%`, backgroundColor: barColor }}
+        />
       </div>
     </div>
   );
