@@ -8,8 +8,7 @@ import {
 } from '../../components/common/UI'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Inline sound helpers (mirrors the logic in NotificationBell so MyTasks is
-// self-contained — no prop-drilling needed)
+// Inline sound helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'notif_sound_config'
@@ -116,7 +115,6 @@ function playCustomRingtone(dataUrl, volume = 1) {
   } catch {}
 }
 
-/** Play the user's configured task sound (preset or custom). */
 function playTaskSound() {
   const cfg = loadSoundConfig()
   if (!cfg.enabled) return
@@ -150,13 +148,7 @@ export default function EmployeeMyTasks() {
   const [statusF,  setStatusF]  = useState('')
   const [updating, setUpdating] = useState(null)
 
-  /**
-   * knownTaskIds tracks the IDs we've already seen so we can detect
-   * genuinely new tasks on subsequent polls — without firing on first load.
-   *
-   * Using a ref (not state) avoids triggering re-renders on every poll tick.
-   */
-  const knownTaskIds  = useRef(null)   // null = "not yet initialised"
+  const knownTaskIds  = useRef(null)
   const pollInterval  = useRef(null)
 
   // ── fetch helpers ──────────────────────────────────────────────────────────
@@ -166,7 +158,7 @@ export default function EmployeeMyTasks() {
     return data.data ?? []
   }, [])
 
-  // ── initial load (sets up the baseline known-ID set) ───────────────────────
+  // ── initial load ───────────────────────────────────────────────────────────
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -175,8 +167,6 @@ export default function EmployeeMyTasks() {
       if (statusF) params.status = statusF
       const fetched = await fetchTasks(params)
       setTasks(fetched)
-
-      // Establish baseline — no sound on first load
       knownTaskIds.current = new Set(fetched.map(t => t._id))
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to load tasks')
@@ -187,41 +177,32 @@ export default function EmployeeMyTasks() {
 
   useEffect(() => { load() }, [load])
 
-  // ── background poll every 15 s for new task assignments ───────────────────
+  // ── background poll every 15 s ─────────────────────────────────────────────
 
   const poll = useCallback(async () => {
-    // Skip if baseline hasn't been established yet (avoids false positives
-    // if the interval fires before the initial load finishes)
     if (knownTaskIds.current === null) return
 
     try {
-      // Always poll without the status filter so we catch any new assignment
-      // regardless of what filter the user has selected
       const fetched = await fetchTasks()
-
       const newTasks = fetched.filter(t => !knownTaskIds.current.has(t._id))
 
       if (newTasks.length > 0) {
-        // ── THIS IS THE FIX: play sound for new task notifications ──────────
         playTaskSound()
 
-        // Show a toast for each new task (up to 3 to avoid spam)
         newTasks.slice(0, 3).forEach(t => {
           toast(`✅ New task assigned: ${t.title}`, {
             duration: 5000,
             style: {
-              background: '#1e293b',
-              color:      '#e2e8f0',
-              border:     '1px solid rgba(255,255,255,0.1)',
+              background:   '#1e293b',
+              color:        '#e2e8f0',
+              border:       '1px solid rgba(255,255,255,0.1)',
               borderRadius: '12px',
             },
           })
         })
 
-        // Update the known-ID set
         knownTaskIds.current = new Set(fetched.map(t => t._id))
 
-        // Refresh visible list if the new task matches the current filter
         const matchesFilter = (t) => !statusF || t.status === statusF
         const hasVisibleNew = newTasks.some(matchesFilter)
         if (hasVisibleNew) {
@@ -229,7 +210,7 @@ export default function EmployeeMyTasks() {
         }
       }
     } catch {
-      // Silently swallow poll errors — don't disrupt the UI
+      // silently swallow poll errors
     }
   }, [statusF, fetchTasks])
 
@@ -276,12 +257,12 @@ export default function EmployeeMyTasks() {
         subtitle="View and update the status of your assigned tasks"
       />
 
-      {/* Stats — computed from tasks array, no restricted API call */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total"       value={stats.total}           icon={CheckSquare} color="brand"   />
-        <StatCard label="Todo"        value={stats.todo}            icon={CheckSquare} color="blue"    />
-        <StatCard label="In Progress" value={stats['in-progress']}  icon={CheckSquare} color="amber"   />
-        <StatCard label="Completed"   value={stats.completed}       icon={CheckSquare} color="emerald" />
+        <StatCard label="Total"       value={stats.total}          icon={CheckSquare} color="brand"   />
+        <StatCard label="Todo"        value={stats.todo}           icon={CheckSquare} color="blue"    />
+        <StatCard label="In Progress" value={stats['in-progress']} icon={CheckSquare} color="amber"   />
+        <StatCard label="Completed"   value={stats.completed}      icon={CheckSquare} color="emerald" />
       </div>
 
       {/* Filter bar */}
@@ -293,7 +274,15 @@ export default function EmployeeMyTasks() {
           options={STATUSES.map(s => ({ value: s, label: s }))}
           className="w-44"
         />
-        <button onClick={load} className="btn-secondary px-3">
+        <button
+          onClick={load}
+          className="px-3 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+          style={{
+            backgroundColor: '#1e293b',
+            border:          '1px solid rgba(255,255,255,0.1)',
+            color:           '#94a3b8',
+          }}
+        >
           <RefreshCw size={15} />
         </button>
       </div>
@@ -312,7 +301,14 @@ export default function EmployeeMyTasks() {
           {tasks.map(t => {
             const overdue = t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed'
             return (
-              <div key={t._id} className="card hover:border-white/10 transition-all">
+              <div
+                key={t._id}
+                className="rounded-xl p-4 transition-all"
+                style={{
+                  backgroundColor: '#1e293b',
+                  border:          '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
                 <div className="flex items-start justify-between gap-4 flex-wrap">
 
                   {/* Left — task info */}
@@ -357,16 +353,28 @@ export default function EmployeeMyTasks() {
                         value={t.status}
                         onChange={e => updateStatus(t._id, e.target.value)}
                         disabled={updating === t._id}
-                        className="input text-xs py-1.5 pr-8 pl-2 w-36 appearance-none cursor-pointer"
+                        className="text-xs py-1.5 pr-8 pl-2 w-36 appearance-none cursor-pointer rounded-xl outline-none"
+                        style={{
+                          backgroundColor: '#0f172a',
+                          color:           '#e2e8f0',
+                          border:          '1px solid rgba(255,255,255,0.12)',
+                        }}
                       >
                         {STATUSES.map(s => (
-                          <option key={s} value={s}>{s}</option>
+                          <option key={s} value={s}
+                            style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }}
+                          >
+                            {s}
+                          </option>
                         ))}
                       </select>
 
                       {/* Inline spinner while saving */}
                       {updating === t._id && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-surface-200/80 rounded-xl">
+                        <div
+                          className="absolute inset-0 flex items-center justify-center rounded-xl"
+                          style={{ backgroundColor: 'rgba(15,23,42,0.8)' }}
+                        >
                           <div className="w-3 h-3 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                         </div>
                       )}
