@@ -36,7 +36,7 @@ export default function ManagerTeam() {
       <PageHeader title="My Team" subtitle="View your team members and their current status" />
 
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Total Members" value={users.length} icon={Users}     color="brand" />
+        <StatCard label="Total Members" value={users.length} icon={Users}     color="primary" />
         <StatCard label="Active"        value={active}       icon={UserCheck} color="emerald" />
         <StatCard label="On Leave"      value={onLeave}      icon={Clock}     color="amber" />
       </div>
@@ -59,27 +59,27 @@ export default function ManagerTeam() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {users.map(u => (
-            <div key={u._id} className="card hover:border-white/10 transition-all">
+            <div key={u._id} className="card hover:border-gray-200 transition-all">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                   {u.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold text-white truncate">{u.name}</p>
+                    <p className="font-semibold text-gray-800 truncate">{u.name}</p>
                     <StatusBadge status={u.status} />
                   </div>
-                  <p className="text-sm text-slate-400 mt-0.5">{u.designation}</p>
-                  <p className="text-xs text-slate-500">{u.department}</p>
+                  <p className="text-sm text-neutral mt-0.5">{u.designation}</p>
+                  <p className="text-xs text-neutral">{u.department}</p>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+              <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-neutral">
                   <Mail size={12} className="flex-shrink-0" />
                   <span className="truncate">{u.email}</span>
                 </div>
                 {u.phone && (
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="flex items-center gap-2 text-xs text-neutral">
                     <Phone size={12} className="flex-shrink-0" />
                     <span>{u.phone}</span>
                   </div>

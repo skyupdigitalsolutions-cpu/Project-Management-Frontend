@@ -96,7 +96,7 @@ export default function ManagerTasks() {
 
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total"       value={s.total}               icon={CheckSquare} color="brand" />
+          <StatCard label="Total"       value={s.total}               icon={CheckSquare} color="primary" />
           <StatCard label="In Progress" value={s['in-progress'] ?? 0} icon={CheckSquare} color="amber" />
           <StatCard label="Completed"   value={s.completed ?? 0}      icon={CheckSquare} color="emerald" />
           <StatCard label="On Hold"     value={s['on-hold'] ?? 0}     icon={CheckSquare} color="red" />
@@ -113,7 +113,7 @@ export default function ManagerTasks() {
       <div className="card !p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-surface-200/50">
+            <thead className="bg-gray-100/50">
               <tr>
                 {['Task','Project','Assigned To','Priority','Status','Due Date','Actions'].map(h => (
                   <th key={h} className="table-header text-left">{h}</th>
@@ -130,29 +130,29 @@ export default function ManagerTasks() {
                 return (
                   <tr key={t._id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="table-cell">
-                      <p className="font-medium text-white text-sm line-clamp-1">{t.title}</p>
+                      <p className="font-medium text-gray-800 text-sm line-clamp-1">{t.title}</p>
                     </td>
-                    <td className="table-cell text-slate-400 text-xs">{t.project_id?.title ?? '—'}</td>
+                    <td className="table-cell text-neutral text-xs">{t.project_id?.title ?? '—'}</td>
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-xs">
+                        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs">
                           {(t.assigned_to?.name ?? '?').charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-sm text-slate-300">{t.assigned_to?.name ?? '—'}</span>
+                        <span className="text-sm text-gray-600">{t.assigned_to?.name ?? '—'}</span>
                       </div>
                     </td>
                     <td className="table-cell"><PriorityBadge priority={t.priority}/></td>
                     <td className="table-cell"><StatusBadge status={t.status}/></td>
                     <td className="table-cell">
-                      <span className={`text-xs font-mono ${overdue ? 'text-red-400' : 'text-slate-400'}`}>
+                      <span className={`text-xs font-mono ${overdue ? 'text-red-400' : 'text-neutral'}`}>
                         {t.due_date ? format(new Date(t.due_date), 'dd MMM yyyy') : '—'}
                         {overdue && ' ⚠'}
                       </span>
                     </td>
                     <td className="table-cell">
                       <div className="flex gap-1">
-                        <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"><Pencil size={13}/></button>
-                        <button onClick={() => setDelModal(t)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10"><Trash2 size={13}/></button>
+                        <button onClick={() => openEdit(t)} className="p-1.5 rounded-lg text-neutral hover:text-gray-800 hover:bg-white/10"><Pencil size={13}/></button>
+                        <button onClick={() => setDelModal(t)} className="p-1.5 rounded-lg text-neutral hover:text-red-400 hover:bg-red-500/10"><Trash2 size={13}/></button>
                       </div>
                     </td>
                   </tr>

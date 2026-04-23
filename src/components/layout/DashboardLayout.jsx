@@ -3,10 +3,11 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare, Clock,
-  Bell, LogOut, Menu, X, User, Briefcase, UserCheck, Video, ClipboardList,
-  GitBranch, Bot
+  Bell, LogOut, Menu, X, User, UserCheck, Video, ClipboardList,
+  GitBranch, ChevronLeft, ChevronRight
 } from 'lucide-react'
 import NotificationBell from '../common/NotificationBell'
+import EmailComposer from '../common/EmailComposer'
 import api from '../../api/axios'
 
 const NAV = {
@@ -20,7 +21,6 @@ const NAV = {
     { to: '/admin/notifications', label: 'Notifications',      icon: Bell },
     { to: '/admin/daily-reports', label: 'Daily Reports',      icon: ClipboardList },
     { to: '/admin/workflow',      label: 'Workflow Dashboard', icon: GitBranch },
-  
   ],
   manager: [
     { to: '/manager',                label: 'Dashboard',     icon: LayoutDashboard, end: true },
@@ -42,23 +42,16 @@ const NAV = {
   ],
 }
 
-const ROLE_COLOR = {
-  admin:    'bg-brand-600/20 text-brand-300 border-brand-500/30',
-  manager:  'bg-emerald-600/20 text-emerald-300 border-emerald-500/30',
-  employee: 'bg-amber-600/20 text-amber-300 border-amber-500/30',
+const ROLE_BADGE = {
+  admin:    'bg-purple-100 text-primary',
+  manager:  'bg-green-100 text-green-600',
+  employee: 'bg-yellow-100 text-yellow-600',
 }
 
-// Storage key for tracking which task IDs the employee has already "seen"
 const SEEN_KEY = 'employee_seen_task_ids'
-
 function getSeenIds() {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'))
-  } catch {
-    return new Set()
-  }
+  try { return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]')) } catch { return new Set() }
 }
-
 function saveSeenIds(ids) {
   localStorage.setItem(SEEN_KEY, JSON.stringify([...ids]))
 }
@@ -68,32 +61,26 @@ export default function DashboardLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  // Task badge state — only used for employees
+  const [collapsed, setCollapsed] = useState(false)
   const [newTaskCount, setNewTaskCount] = useState(0)
-  const [hasUrgent,    setHasUrgent]    = useState(false)
+  const [hasUrgent, setHasUrgent] = useState(false)
 
   const isEmployee  = user?.role === 'employee'
+  const isAdmin     = user?.role === 'admin'
+  const isManager   = user?.role === 'manager'
   const onTasksPage = location.pathname === '/employee/my-tasks'
 
-  // Poll for new tasks every 60 seconds
   const checkNewTasks = useCallback(async () => {
     if (!isEmployee) return
     try {
       const { data } = await api.get('/tasks')
       const tasks = data.data ?? []
       const seen  = getSeenIds()
-
       const unseen       = tasks.filter(t => !seen.has(t._id))
-      const urgentUnseen = unseen.filter(
-        t => t.priority === 'critical' || t.priority === 'high'
-      )
-
+      const urgentUnseen = unseen.filter(t => t.priority === 'critical' || t.priority === 'high')
       setNewTaskCount(unseen.length)
       setHasUrgent(urgentUnseen.length > 0)
-    } catch {
-      // Silently ignore — badge is non-critical UI
-    }
+    } catch {}
   }, [isEmployee])
 
   useEffect(() => {
@@ -102,7 +89,6 @@ export default function DashboardLayout() {
     return () => clearInterval(interval)
   }, [checkNewTasks])
 
-  // When employee navigates TO the tasks page, mark all current tasks as seen
   useEffect(() => {
     if (!isEmployee || !onTasksPage) return
     ;(async () => {
@@ -113,172 +99,166 @@ export default function DashboardLayout() {
         saveSeenIds(allIds)
         setNewTaskCount(0)
         setHasUrgent(false)
-      } catch {
-        // ignore
-      }
+      } catch {}
     })()
   }, [isEmployee, onTasksPage])
 
   const navItems = NAV[user?.role] || []
+  const handleLogout = () => { logout(); navigate('/login') }
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
-  // Badge rendered next to "My Tasks" nav label
   const TaskBadge = () => {
     if (newTaskCount === 0) return null
-
-    if (hasUrgent) {
-      return (
-        <span
-          title="Urgent tasks assigned"
-          className="
-            ml-auto flex items-center justify-center
-            min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold
-            bg-red-500 text-white shadow-[0_0_8px_rgba(239,68,68,0.7)]
-            animate-pulse
-          "
-        >
-          {newTaskCount}
-        </span>
-      )
-    }
-
     return (
-      <span
-        title="New tasks assigned"
-        className="
-          ml-auto flex items-center justify-center
-          min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold
-          bg-emerald-500 text-white shadow-[0_0_8px_rgba(16,185,129,0.6)]
-        "
-      >
+      <span className={`ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold text-gray-800 shadow-sm ${hasUrgent ? 'bg-danger animate-pulse' : 'bg-success'}`}>
         {newTaskCount}
       </span>
     )
   }
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+  const SidebarContent = ({ isCollapsed }) => (
+    <div className="flex flex-col h-full font-poppins">
       {/* Logo */}
-      <div className="p-5 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="">
-            <img src='/images/skyup_logo.webp' alt="Logo" />
+      {/* Logo */}
+<div className={`flex items-center border-b border-gray-100 ${isCollapsed ? 'p-4 justify-center' : 'p-5 gap-3'}`}>
+  {isCollapsed
+    ? <img
+        src='/images/skyup_logo1.svg'
+        alt="Logo"
+        className="w-8 h-8 object-contain"
+      />
+    : <img
+        src='/images/skyup_logo.webp'
+        alt="Logo"
+        className="h-8 object-contain"
+      />
+  }
+</div>
+
+      {/* User info */}
+      {!isCollapsed && (
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-center gap-3 px-2 py-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+              {user?.name?.charAt(0)?.toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">{user?.name}</p>
+              <span className={`badge text-xs mt-0.5 ${ROLE_BADGE[user?.role]}`}>{user?.role}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* User card */}
-      <div className="p-4 border-b border-white/5">
-        <div className="flex items-center gap-3 px-2 py-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+      {isCollapsed && (
+        <div className="flex justify-center py-3 border-b border-gray-100">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm">
             {user?.name?.charAt(0)?.toUpperCase()}
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-            <span className={`badge border text-xs mt-0.5 ${ROLE_COLOR[user?.role]}`}>
-              {user?.role}
-            </span>
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-        <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest px-3 py-2">Menu</p>
+        {!isCollapsed && (
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-3 py-2">Menu</p>
+        )}
         {navItems.map(({ to, label, icon: Icon, end, taskBadge }) => (
           <NavLink
-            key={to}
-            to={to}
-            end={end}
+            key={to} to={to} end={end}
             onClick={() => setSidebarOpen(false)}
             className={({ isActive }) => isActive ? 'nav-link-active' : 'nav-link'}
+            title={isCollapsed ? label : undefined}
           >
-            <Icon size={17} />
-            <span>{label}</span>
-            {taskBadge && isEmployee && <TaskBadge />}
+            <Icon size={17} className="flex-shrink-0" />
+            {!isCollapsed && <span>{label}</span>}
+            {!isCollapsed && taskBadge && isEmployee && <TaskBadge />}
           </NavLink>
         ))}
       </nav>
 
-      {/* Bottom actions */}
-      <div className="p-3 border-t border-white/5 space-y-0.5">
+      {/* Bottom */}
+      <div className="p-3 border-t border-gray-100 space-y-0.5">
         <NavLink
           to={`/${user?.role}/profile`}
           onClick={() => setSidebarOpen(false)}
           className={({ isActive }) => isActive ? 'nav-link-active' : 'nav-link'}
+          title={isCollapsed ? 'Profile' : undefined}
         >
-          <User size={17} />
-          <span>Profile</span>
+          <User size={17} className="flex-shrink-0" />
+          {!isCollapsed && <span>Profile</span>}
         </NavLink>
         <button
           onClick={handleLogout}
-          className="nav-link w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
+          className="nav-link w-full text-danger hover:text-red-700 hover:bg-red-50"
+          title={isCollapsed ? 'Sign out' : undefined}
         >
-          <LogOut size={17} />
-          <span>Sign out</span>
+          <LogOut size={17} className="flex-shrink-0" />
+          {!isCollapsed && <span>Sign out</span>}
         </button>
       </div>
     </div>
   )
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-surface-50 border-r border-white/5 flex-shrink-0">
-        <SidebarContent />
+    <div className="flex h-screen overflow-hidden bg-gray-50 font-poppins">
+      {/* Desktop Sidebar */}
+      <aside className={`hidden lg:flex flex-col bg-white border-r border-gray-200 flex-shrink-0 shadow-sm transition-all duration-300 relative ${collapsed ? 'w-16' : 'w-60'}`}>
+        <SidebarContent isCollapsed={collapsed} />
+        {/* Collapse toggle */}
+        <button
+          onClick={() => setCollapsed(c => !c)}
+          className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-neutral hover:text-primary hover:border-primary transition-all duration-200 shadow-sm z-10"
+        >
+          {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        </button>
       </aside>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile Sidebar */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)}
-          />
-          <aside className="relative flex flex-col w-64 bg-surface-50 border-r border-white/5 z-10">
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
-            >
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <aside className="relative flex flex-col w-64 bg-white border-r border-gray-200 z-10 shadow-xl">
+            <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 text-neutral hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100">
               <X size={20} />
             </button>
-            <SidebarContent />
+            <SidebarContent isCollapsed={false} />
           </aside>
         </div>
       )}
 
-      {/* Main area */}
+      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top bar */}
-        <header className="h-14 flex items-center justify-between px-4 lg:px-6 border-b border-white/5 bg-surface-50 flex-shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5"
-          >
-            <Menu size={20} />
-          </button>
-          <div className="hidden lg:block" />
+        {/* Header/Navbar */}
+        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-gray-200 bg-white flex-shrink-0 shadow-sm">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden text-neutral hover:text-primary p-1.5 rounded-lg hover:bg-purple-50 transition-colors"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="hidden lg:block" />
+          </div>
 
           <div className="flex items-center gap-3">
+            {(isAdmin || isManager) && <EmailComposer />}
             <NotificationBell />
-            <div className="h-5 w-px bg-white/10" />
+            <div className="h-5 w-px bg-gray-200" />
             <NavLink
               to={`/${user?.role}/profile`}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-purple-50 transition-colors"
             >
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-xs">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs shadow-sm">
                 {user?.name?.charAt(0)?.toUpperCase()}
               </div>
-              <span className="text-sm font-medium text-slate-300 hidden sm:block">{user?.name}</span>
+              <div className="hidden sm:block text-left">
+                <p className="text-sm font-semibold text-gray-700 leading-none">{user?.name}</p>
+                <p className="text-xs text-neutral mt-0.5 capitalize">{user?.role}</p>
+              </div>
             </NavLink>
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <Outlet />
         </main>

@@ -1,509 +1,443 @@
-import { useState, useEffect } from "react";
-import axiosInstance from "../../api/axios";
+import { useState, useEffect, useCallback } from 'react'
+import {
+  RefreshCw, CheckSquare, FileText, ExternalLink, Clock,
+  Calendar, ShieldAlert, ShieldCheck, ShieldX, ShieldQuestion,
+  Send, AlertTriangle, Lock, X, Loader2
+} from 'lucide-react'
+import api from '../../api/axios'
+import toast from 'react-hot-toast'
+import { format } from 'date-fns'
+import {
+  PageHeader, SelectInput, StatusBadge, PriorityBadge,
+  Spinner, EmptyState, StatCard
+} from '../../components/common/UI'
 
-const PRIORITY_COLOR = {
-  critical: "bg-red-500/20 text-red-400",
-  high:     "bg-orange-500/20 text-orange-400",
-  medium:   "bg-yellow-500/20 text-yellow-400",
-  low:      "bg-emerald-500/20 text-emerald-400",
-};
+const STATUSES = ['todo', 'in-progress', 'completed', 'on-hold', 'cancelled']
 
-const STATUS_COLOR = {
-  "todo":        "bg-slate-500/20 text-slate-400",
-  "in-progress": "bg-blue-500/20 text-blue-400",
-  "completed":   "bg-emerald-500/20 text-emerald-400",
-  "on-hold":     "bg-yellow-500/20 text-yellow-400",
-  "cancelled":   "bg-red-500/20 text-red-400",
-  "blocked":     "bg-purple-500/20 text-purple-400",
-};
+const PERM_CONFIG = {
+  not_required: null,
+  pending:  { label: 'Awaiting Approval',  color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200',  icon: ShieldQuestion },
+  granted:  { label: 'Permission Granted', color: 'text-green-600',  bg: 'bg-green-50 border-green-200',    icon: ShieldCheck    },
+  denied:   { label: 'Permission Denied',  color: 'text-red-600',    bg: 'bg-red-50 border-red-200',        icon: ShieldX        },
+}
 
-export default function EmployeeMyTasksEnhanced() {
-  const [tasks,          setTasks]          = useState([]);
-  const [loading,        setLoading]        = useState(true);
-  const [filter,         setFilter]         = useState("all");
-  const [selectedTask,   setSelectedTask]   = useState(null);
-  const [detailTask,     setDetailTask]     = useState(null);
-  const [progressVal,    setProgressVal]    = useState(0);
-  const [actualHours,    setActualHours]    = useState("");
-  const [delayReason,    setDelayReason]    = useState("");
-  const [newDueDate,     setNewDueDate]     = useState("");
-  const [activeModal,    setActiveModal]    = useState(null);
-  const [submitting,     setSubmitting]     = useState(false);
-  const [msg,            setMsg]            = useState("");
+function PermissionBadge({ status }) {
+  const cfg = PERM_CONFIG[status]
+  if (!cfg) return null
+  const Icon = cfg.icon
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${cfg.bg} ${cfg.color}`}>
+      <Icon size={10} />{cfg.label}
+    </span>
+  )
+}
 
-  useEffect(() => { fetchTasks(); }, []);
+function RequestPermissionModal({ task, onClose, onSuccess }) {
+  const [reason,     setReason]     = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  async function fetchTasks() {
-    setLoading(true);
+  const handleSubmit = async () => {
+    if (reason.trim().length < 5) { toast.error('Please describe why you need permission (min 5 characters)'); return }
+    setSubmitting(true)
     try {
-      const res = await axiosInstance.get("/tasks?limit=100");
-      setTasks(res.data.data || []);
+      await api.post(`/tasks/${task._id}/request-permission`, { reason: reason.trim() })
+      toast.success('Permission request sent to admin!')
+      onSuccess(); onClose()
     } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+      toast.error(e.response?.data?.message || 'Failed to send request')
+    } finally { setSubmitting(false) }
   }
-
-  async function fetchTaskDetail(taskId) {
-    try {
-      const res = await axiosInstance.get(`/tasks/${taskId}`);
-      setDetailTask(res.data.data);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  function openProgressModal(task) {
-    setSelectedTask(task);
-    setProgressVal(task.progress_percent || 0);
-    setActualHours(task.actual_hours || "");
-    setActiveModal("progress");
-  }
-
-  function openDelayModal(task) {
-    setSelectedTask(task);
-    setDelayReason("");
-    setNewDueDate("");
-    setActiveModal("delay");
-  }
-
-  async function openDetail(task) {
-    setActiveModal("detail");
-    setDetailTask(null);
-    await fetchTaskDetail(task._id);
-  }
-
-  function closeModal() {
-    setActiveModal(null);
-    setSelectedTask(null);
-    setDetailTask(null);
-    setMsg("");
-  }
-
-  async function submitProgress() {
-    setSubmitting(true);
-    try {
-      await axiosInstance.patch(`/tasks/${selectedTask._id}/progress`, {
-        progress_percent: progressVal,
-        actual_hours:     actualHours ? Number(actualHours) : undefined,
-      });
-      setMsg("Progress updated!");
-      fetchTasks();
-      setTimeout(closeModal, 1200);
-    } catch (e) {
-      setMsg(e?.response?.data?.message || "Error");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function submitDelay() {
-    if (delayReason.trim().length < 10) {
-      setMsg("Reason must be at least 10 characters");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await axiosInstance.post(`/tasks/${selectedTask._id}/delay`, {
-        reason:       delayReason,
-        new_due_date: newDueDate || undefined,
-      });
-      setMsg("Delay reported to your manager");
-      fetchTasks();
-      setTimeout(closeModal, 1400);
-    } catch (e) {
-      setMsg(e?.response?.data?.message || "Error");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const filtered = tasks.filter((t) => {
-    if (filter === "all")       return true;
-    if (filter === "active")    return ["todo", "in-progress"].includes(t.status);
-    if (filter === "delayed")   return t.is_delayed;
-    if (filter === "blocked")   return t.status === "blocked";
-    if (filter === "completed") return t.status === "completed";
-    return true;
-  });
-
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-    </div>
-  );
 
   return (
-    <div className="p-6 space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">My Tasks</h1>
-        <button
-          onClick={fetchTasks}
-          className="text-sm px-3 py-1.5 rounded-lg text-slate-300 hover:text-white transition-colors"
-          style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }}
-        >
-          🔄 Refresh
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden animate-slide-up">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-yellow-50">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-yellow-100 border border-yellow-200 flex items-center justify-center">
+              <ShieldAlert size={15} className="text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Request Permission</p>
+              <p className="text-[11px] text-neutral truncate max-w-[240px]">{task.title}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-neutral hover:text-gray-700 hover:bg-gray-100 transition-colors">
+            <X size={14} />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 border border-red-200">
+            <Lock size={14} className="text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-red-600">Task is blocked</p>
+              <p className="text-xs text-neutral mt-0.5 leading-relaxed">
+                This task requires admin approval before you can start.
+                {task.permission_description && <span className="block mt-1 text-gray-500 italic">"{task.permission_description}"</span>}
+              </p>
+            </div>
+          </div>
+          <div>
+            <label className="label">Why do you need permission?</label>
+            <textarea
+              autoFocus rows={4} value={reason}
+              onChange={e => setReason(e.target.value)}
+              placeholder="e.g. I need access to the production database to complete this migration task..."
+              className="input resize-none"
+            />
+            <p className="mt-1 text-[11px] text-neutral text-right">{reason.length} chars</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2.5 px-5 py-4 border-t border-gray-100">
+          <button onClick={onClose} className="btn-secondary text-xs">Cancel</button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || reason.trim().length < 5}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-warning text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {submitting ? <><Loader2 size={12} className="animate-spin" /> Sending…</> : <><Send size={12} /> Send Request</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PermissionStatusBanner({ task, onRequestClick }) {
+  const status = task.permission_status
+  if (status === 'not_required' || !task.requires_permission) return null
+
+  if (status === 'granted') return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
+      <ShieldCheck size={15} className="text-green-600 flex-shrink-0" />
+      <div>
+        <p className="text-xs font-semibold text-green-700">Permission Granted</p>
+        <p className="text-xs text-neutral mt-0.5">
+          You have been approved to work on this task.
+          {task.permission_granted_by?.name && <span className="text-gray-500"> Approved by {task.permission_granted_by.name}.</span>}
+        </p>
+      </div>
+    </div>
+  )
+
+  if (status === 'denied') return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-red-50 border border-red-200">
+      <ShieldX size={15} className="text-red-500 flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-red-600">Permission Denied</p>
+        <p className="text-xs text-neutral mt-0.5">Contact your manager or admin for clarification.</p>
+      </div>
+      <button onClick={onRequestClick} className="flex-shrink-0 text-xs px-3 py-1.5 rounded-lg text-yellow-600 border border-yellow-200 bg-yellow-50 hover:bg-yellow-100 transition-colors font-medium">
+        Re-request
+      </button>
+    </div>
+  )
+
+  if (status === 'pending') return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-yellow-50 border border-yellow-200">
+      <ShieldQuestion size={15} className="text-yellow-600 flex-shrink-0 animate-pulse" />
+      <div>
+        <p className="text-xs font-semibold text-yellow-700">Awaiting Admin Approval</p>
+        <p className="text-xs text-neutral mt-0.5">
+          Your permission request has been sent.
+          {task.permission_description && <span className="text-gray-500 italic"> Reason: "{task.permission_description}"</span>}
+        </p>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-red-50 border border-red-200">
+      <Lock size={15} className="text-red-500 flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-red-600">Permission Required</p>
+        <p className="text-xs text-neutral mt-0.5">
+          This task is blocked until an admin grants permission.
+          {task.permission_description && <span className="text-gray-500 italic block mt-0.5">"{task.permission_description}"</span>}
+        </p>
+      </div>
+      <button onClick={onRequestClick} className="flex-shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-yellow-50 text-yellow-600 border border-yellow-200 hover:bg-yellow-100 transition-colors font-semibold">
+        <ShieldAlert size={11} /> Request
+      </button>
+    </div>
+  )
+}
+
+const PRIORITY_DOT = {
+  critical: 'bg-danger',
+  high:     'bg-orange-500',
+  medium:   'bg-warning',
+  low:      'bg-success',
+}
+
+export default function EmployeeMyTasksEnhanced() {
+  const [tasks,      setTasks]      = useState([])
+  const [loading,    setLoading]    = useState(true)
+  const [statusF,    setStatusF]    = useState('')
+  const [updating,   setUpdating]   = useState(null)
+  const [expanded,   setExpanded]   = useState(null)
+  const [permModal,  setPermModal]  = useState(null)
+  const [docLoading, setDocLoading] = useState(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = {}
+      if (statusF) params.status = statusF
+      const { data } = await api.get('/tasks', { params })
+      setTasks(data.data ?? [])
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to load tasks')
+    } finally { setLoading(false) }
+  }, [statusF])
+
+  useEffect(() => { load() }, [load])
+
+  const updateStatus = async (taskId, newStatus) => {
+    const task = tasks.find(t => t._id === taskId)
+    if (task?.requires_permission && task.permission_status !== 'granted' && newStatus !== task.status) {
+      toast.error('This task is blocked. Request permission from admin first.'); return
+    }
+    setUpdating(taskId)
+    try {
+      await api.patch(`/tasks/${taskId}`, { status: newStatus })
+      toast.success('Status updated')
+      setTasks(prev => prev.map(t => t._id === taskId ? { ...t, status: newStatus } : t))
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to update')
+    } finally { setUpdating(null) }
+  }
+
+  const openDocument = async (taskId, projectId) => {
+    setDocLoading(taskId)
+    try {
+      const { data } = await api.get(`/projects/${projectId}/document`, { responseType: 'blob' })
+      const url = URL.createObjectURL(data)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'No document attached to this project')
+    } finally { setDocLoading(null) }
+  }
+
+  const stats = {
+    total:      tasks.length,
+    todo:       tasks.filter(t => t.status === 'todo').length,
+    inProgress: tasks.filter(t => t.status === 'in-progress').length,
+    completed:  tasks.filter(t => t.status === 'completed').length,
+    blocked:    tasks.filter(t => t.requires_permission && t.permission_status !== 'granted').length,
+  }
+
+  return (
+    <div className="space-y-5 animate-fade-in font-poppins">
+      <PageHeader title="My Tasks" subtitle="View and update your assigned tasks" />
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <StatCard label="Total"          value={stats.total}      icon={CheckSquare} color="primary" />
+        <StatCard label="Todo"           value={stats.todo}       icon={CheckSquare} color="info"    />
+        <StatCard label="In Progress"    value={stats.inProgress} icon={CheckSquare} color="amber"   />
+        <StatCard label="Completed"      value={stats.completed}  icon={CheckSquare} color="emerald" />
+        <StatCard label="Needs Approval" value={stats.blocked}    icon={ShieldAlert} color="danger"  />
+      </div>
+
+      {/* Pending banner */}
+      {stats.blocked > 0 && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-yellow-50 border border-yellow-200">
+          <AlertTriangle size={15} className="text-yellow-600 flex-shrink-0" />
+          <p className="text-sm text-yellow-700 font-medium">
+            {stats.blocked} task{stats.blocked > 1 ? 's' : ''} pending admin approval.{' '}
+            <span className="font-normal text-yellow-600">Expand each task and click "Request" to ask for permission.</span>
+          </p>
+        </div>
+      )}
+
+      {/* Filter */}
+      <div className="flex gap-2">
+        <SelectInput
+          value={statusF} onChange={setStatusF} placeholder="All statuses"
+          options={STATUSES.map(s => ({ value: s, label: s }))} className="w-40"
+        />
+        <button onClick={load} className="px-3 py-2 rounded-lg border border-gray-200 text-neutral hover:text-primary hover:border-primary bg-white transition-all">
+          <RefreshCw size={14} />
         </button>
       </div>
 
-      {/* Filter pills */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { key: "all",       label: `All (${tasks.length})` },
-          { key: "active",    label: `Active (${tasks.filter((t) => ["todo","in-progress"].includes(t.status)).length})` },
-          { key: "delayed",   label: `⚠️ Delayed (${tasks.filter((t) => t.is_delayed).length})` },
-          { key: "blocked",   label: `🔐 Blocked (${tasks.filter((t) => t.status === "blocked").length})` },
-          { key: "completed", label: `✅ Done (${tasks.filter((t) => t.status === "completed").length})` },
-        ].map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className="text-sm px-3 py-1 rounded-full transition-colors"
-            style={
-              filter === f.key
-                ? { backgroundColor: '#3b82f6', color: '#fff', border: '1px solid #3b82f6' }
-                : { backgroundColor: '#1e293b', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.1)' }
-            }
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {/* Task list */}
+      {loading ? (
+        <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+      ) : tasks.length === 0 ? (
+        <EmptyState icon={CheckSquare} title="No tasks found" description={statusF ? 'No tasks match this filter' : 'No tasks assigned yet'} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {tasks.map(t => {
+            const overdue      = t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed'
+            const isOpen       = expanded === t._id
+            const project      = t.project_id
+            const needsPerm    = t.requires_permission && t.permission_status !== 'granted'
+            const isBlocked    = t.status === 'blocked' || needsPerm
+            const deliverables = project?.extracted_deliverables || []
 
-      {/* Task List */}
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="text-center text-slate-500 py-12">No tasks found</div>
-        ) : (
-          filtered.map((task) => (
-            <div
-              key={task._id}
-              className="rounded-xl p-4 space-y-3 transition-all"
-              style={{
-                backgroundColor: '#1e293b',
-                border: `1px solid ${
-                  task.is_delayed
-                    ? 'rgba(239,68,68,0.3)'
-                    : task.status === 'blocked'
-                    ? 'rgba(168,85,247,0.3)'
-                    : 'rgba(255,255,255,0.08)'
-                }`,
-              }}
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-white">{task.title}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLOR[task.priority]}`}>
-                      {task.priority}
-                    </span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[task.status]}`}>
-                      {task.status}
-                    </span>
-                    {task.is_auto_assigned && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">🤖 Auto</span>
-                    )}
-                    {task.is_delayed && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">⚠️ Delayed</span>
-                    )}
-                    {task.status === "blocked" && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">🔐 Needs Permission</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Due: {new Date(task.due_date).toLocaleDateString()}
-                    {task.estimated_hours && ` · Est. ${task.estimated_hours}h`}
-                    {task.project_id?.title && ` · ${task.project_id.title}`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              {task.status !== "cancelled" && (
-                <div>
-                  <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>Progress</span>
-                    <span className="font-medium text-slate-300">{task.progress_percent || 0}%</span>
-                  </div>
-                  <div className="w-full rounded-full h-2" style={{ backgroundColor: '#0f172a' }}>
-                    <div
-                      className="h-2 rounded-full transition-all"
-                      style={{
-                        width: `${task.progress_percent || 0}%`,
-                        backgroundColor:
-                          (task.progress_percent || 0) === 100
-                            ? '#10b981'
-                            : task.is_delayed
-                            ? '#f87171'
-                            : '#3b82f6',
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Auto-assign reason */}
-              {task.auto_assign_reason && (
-                <p className="text-xs text-blue-400 rounded px-2 py-1" style={{ backgroundColor: 'rgba(59,130,246,0.1)' }}>
-                  ℹ️ {task.auto_assign_reason}
-                </p>
-              )}
-
-              {/* Delay reason */}
-              {task.delay_reason && (
-                <p className="text-xs text-red-400 rounded px-2 py-1" style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
-                  ⚠️ Last delay reason: {task.delay_reason}
-                </p>
-              )}
-
-              {/* Blocked info */}
-              {task.status === "blocked" && task.permission_description && (
-                <p className="text-xs text-purple-400 rounded px-2 py-1" style={{ backgroundColor: 'rgba(168,85,247,0.1)' }}>
-                  🔐 Waiting for permission: {task.permission_description}
-                </p>
-              )}
-
-              {/* Actions */}
-              <div className="flex gap-2 flex-wrap pt-1">
-                {task.status !== "completed" && task.status !== "cancelled" && task.status !== "blocked" && (
-                  <button
-                    onClick={() => openProgressModal(task)}
-                    className="text-xs px-3 py-1.5 text-white rounded-lg transition-colors hover:opacity-90"
-                    style={{ backgroundColor: '#3b82f6' }}
-                  >
-                    📈 Update Progress
-                  </button>
-                )}
-                {task.status !== "completed" && task.status !== "cancelled" && (
-                  <button
-                    onClick={() => openDelayModal(task)}
-                    className="text-xs px-3 py-1.5 rounded-lg transition-colors hover:opacity-90"
-                    style={{
-                      backgroundColor: 'rgba(239,68,68,0.1)',
-                      border: '1px solid rgba(239,68,68,0.3)',
-                      color: '#f87171',
-                    }}
-                  >
-                    ⚠️ Report Delay
-                  </button>
-                )}
-                <button
-                  onClick={() => openDetail(task)}
-                  className="text-xs px-3 py-1.5 rounded-lg transition-colors hover:opacity-90"
-                  style={{
-                    backgroundColor: '#0f172a',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#94a3b8',
-                  }}
-                >
-                  📋 View Details
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Progress Modal */}
-      {activeModal === "progress" && selectedTask && (
-        <Modal title="Update Progress" onClose={closeModal}>
-          <p className="text-sm text-slate-400 mb-4">Task: <strong className="text-white">{selectedTask.title}</strong></p>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Progress: <strong className="text-blue-400">{progressVal}%</strong>
-              </label>
-              <input
-                type="range" min="0" max="100" step="5"
-                value={progressVal}
-                onChange={(e) => setProgressVal(Number(e.target.value))}
-                className="w-full accent-blue-500"
-              />
-              <div className="flex justify-between text-xs text-slate-500 mt-1">
-                <span>0%</span><span>50%</span><span>100% (Done)</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Actual Hours Spent</label>
-              <input
-                type="number" min="0" value={actualHours}
-                onChange={(e) => setActualHours(e.target.value)}
-                placeholder="e.g. 6"
-                className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.12)' }}
-              />
-            </div>
-          </div>
-          {msg && <p className="text-sm text-blue-400 mt-3">{msg}</p>}
-          <ModalFooter onCancel={closeModal} onSubmit={submitProgress} loading={submitting} submitLabel="Update" />
-        </Modal>
-      )}
-
-      {/* Delay Modal */}
-      {activeModal === "delay" && selectedTask && (
-        <Modal title="Report Delay" onClose={closeModal}>
-          <p className="text-sm text-slate-400 mb-4">Task: <strong className="text-white">{selectedTask.title}</strong></p>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Reason *</label>
-              <textarea
-                value={delayReason}
-                onChange={(e) => setDelayReason(e.target.value)}
-                rows={3}
-                placeholder="Explain why this task is delayed (min 10 characters)..."
-                className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                style={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.12)' }}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Proposed New Due Date (optional)</label>
-              <input
-                type="date" value={newDueDate}
-                onChange={(e) => setNewDueDate(e.target.value)}
-                className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.12)', colorScheme: 'dark' }}
-              />
-            </div>
-          </div>
-          {msg && <p className="text-sm text-red-400 mt-3">{msg}</p>}
-          <ModalFooter onCancel={closeModal} onSubmit={submitDelay} loading={submitting} submitLabel="Report" submitColor="red" />
-        </Modal>
-      )}
-
-      {/* Detail Modal */}
-      {activeModal === "detail" && (
-        <Modal title="Task Details" onClose={closeModal} wide>
-          {!detailTask ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            </div>
-          ) : (
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <InfoRow label="Status" value={
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${STATUS_COLOR[detailTask.status]}`}>
-                    {detailTask.status}
-                  </span>
-                } />
-                <InfoRow label="Priority" value={
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${PRIORITY_COLOR[detailTask.priority]}`}>
-                    {detailTask.priority}
-                  </span>
-                } />
-                <InfoRow label="Due Date"     value={new Date(detailTask.due_date).toLocaleDateString()} />
-                <InfoRow label="Progress"     value={`${detailTask.progress_percent || 0}%`} />
-                <InfoRow label="Est. Hours"   value={detailTask.estimated_hours || "—"} />
-                <InfoRow label="Actual Hours" value={detailTask.actual_hours || "—"} />
-                <InfoRow label="Auto Assigned" value={detailTask.is_auto_assigned ? "Yes 🤖" : "No"} />
-                <InfoRow label="Permission"   value={detailTask.permission_status || "—"} />
-              </div>
-
-              {detailTask.auto_assign_reason && (
-                <div className="rounded-lg p-3 text-blue-400 text-xs" style={{ backgroundColor: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                  <strong>Auto-Assign Reason:</strong> {detailTask.auto_assign_reason}
-                </div>
-              )}
-
-              {/* Delay Logs */}
-              {detailTask.delay_logs?.length > 0 && (
-                <div>
-                  <h4 className="font-semibold text-slate-300 mb-2">⚠️ Delay History</h4>
-                  <div className="space-y-2">
-                    {detailTask.delay_logs.map((log, i) => (
-                      <div key={i} className="rounded-lg p-3 text-xs" style={{ backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                        <p className="text-red-400 font-medium">{log.reason}</p>
-                        <p className="text-slate-500 mt-1">
-                          Reported by {log.reported_by?.name || "—"} on {new Date(log.reported_at).toLocaleDateString()}
-                          {log.new_due_date && ` → New due: ${new Date(log.new_due_date).toLocaleDateString()}`}
-                        </p>
+            return (
+              <div
+                key={t._id}
+                className={`bg-white rounded-xl border transition-all duration-200 overflow-hidden
+                  ${isBlocked
+                    ? 'border-yellow-200 shadow-sm'
+                    : 'border-gray-200 shadow-sm hover:border-primary/40 hover:shadow-md'}`}
+              >
+                {/* Card column layout */}
+                <div className="flex flex-col gap-2 px-4 py-3">
+                  {/* Row 1: priority dot + title + badges */}
+                  <div className="flex items-start gap-2.5">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${PRIORITY_DOT[t.priority] ?? 'bg-neutral'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-semibold text-gray-800">{t.title}</span>
+                        <PriorityBadge priority={t.priority} />
+                        <PermissionBadge status={t.permission_status} />
+                        {isBlocked && t.permission_status === 'not_required' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-red-50 border-red-200 text-red-600">
+                            <Lock size={9} /> Blocked
+                          </span>
+                        )}
                       </div>
-                    ))}
+                    </div>
+                  </div>
+
+                  {/* Row 2: project / module / due date meta */}
+                  <div className="flex items-center gap-2 flex-wrap pl-4">
+                    <span className="text-xs text-neutral">{project?.title ?? '—'}</span>
+                    {t.module_name && <span className="text-xs text-neutral">· {t.module_name}</span>}
+                    {t.due_date && (
+                      <span className={`text-xs font-medium ${overdue ? 'text-danger' : 'text-neutral'}`}>
+                        · Due {format(new Date(t.due_date), 'MMM d')}{overdue && ' ⚠'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Row 3: controls */}
+                  <div className="flex items-center gap-2 flex-wrap pl-4">
+                    {needsPerm && t.permission_status !== 'pending' && (
+                      <button
+                        onClick={() => setPermModal(t)}
+                        className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg font-semibold
+                                   bg-yellow-50 border border-yellow-200 text-yellow-600 hover:bg-yellow-100 transition-all"
+                      >
+                        <ShieldAlert size={11} /> Request
+                      </button>
+                    )}
+
+                    <div className="relative">
+                      <select
+                        value={t.status}
+                        onChange={e => updateStatus(t._id, e.target.value)}
+                        disabled={updating === t._id || isBlocked}
+                        title={isBlocked ? 'Task is blocked — get permission first' : undefined}
+                        className="text-xs py-1.5 pl-2 pr-7 w-32 appearance-none cursor-pointer rounded-lg
+                                   border border-gray-200 bg-white text-gray-700 outline-none
+                                   focus:border-primary focus:ring-1 focus:ring-primary
+                                   disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      {updating === t._id && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/80">
+                          <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => setExpanded(isOpen ? null : t._id)}
+                      className="text-[11px] px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white text-neutral hover:text-primary hover:border-primary transition-all"
+                    >
+                      {isOpen ? 'Less' : 'Details'}
+                    </button>
                   </div>
                 </div>
-              )}
 
-              {/* Reassign Logs */}
-              {detailTask.reassign_logs?.length > 0 && (
-                <div>
-                  <h4 className="font-semibold text-slate-300 mb-2">🔄 Reassignment History</h4>
-                  <div className="space-y-2">
-                    {detailTask.reassign_logs.map((log, i) => (
-                      <div key={i} className="rounded-lg p-3 text-xs" style={{ backgroundColor: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)' }}>
-                        <p className="text-slate-300">
-                          <strong>{log.from_user?.name || "Unknown"}</strong> → <strong>{log.to_user?.name || "—"}</strong>
-                        </p>
-                        <p className="text-slate-500 mt-0.5">{log.reason} · {log.trigger}</p>
-                        <p className="text-slate-600 mt-0.5">{new Date(log.reassigned_at).toLocaleDateString()}</p>
+                {/* Expanded panel */}
+                {isOpen && (
+                  <div className="px-4 pb-4 border-t border-gray-100 space-y-3 pt-3">
+                    {t.requires_permission && (
+                      <PermissionStatusBanner task={t} onRequestClick={() => setPermModal(t)} />
+                    )}
+
+                    {t.description && (
+                      <div>
+                        <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1">Task Details</p>
+                        <p className="text-sm text-gray-600 leading-relaxed">{t.description}</p>
                       </div>
-                    ))}
+                    )}
+
+                    {project?.description && (
+                      <div>
+                        <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1">Project Context</p>
+                        <p className="text-sm text-gray-600 leading-relaxed">{project.extracted_description || project.description}</p>
+                      </div>
+                    )}
+
+                    {deliverables.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Expected Deliverables</p>
+                        <ul className="space-y-1">
+                          {deliverables.map((d, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                              <span className="text-success flex-shrink-0 mt-0.5">✓</span>
+                              <span>{d}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-4">
+                      {t.start_date && (
+                        <div className="flex items-center gap-1.5 text-xs text-neutral">
+                          <Calendar size={11} />Start:
+                          <span className="text-gray-700 ml-1">{format(new Date(t.start_date), 'MMM d, yyyy')}</span>
+                        </div>
+                      )}
+                      {t.end_date && (
+                        <div className="flex items-center gap-1.5 text-xs text-neutral">
+                          <Clock size={11} />End:
+                          <span className="text-gray-700 ml-1">{format(new Date(t.end_date), 'MMM d, yyyy')}</span>
+                        </div>
+                      )}
+                      {t.estimated_days && <div className="text-xs text-neutral">Est: <span className="text-gray-700 ml-1">{t.estimated_days}d</span></div>}
+                      {t.required_role   && <div className="text-xs text-neutral">Role: <span className="text-gray-700 ml-1">{t.required_role}</span></div>}
+                    </div>
+
+                    {project?._id && (
+                      <button
+                        onClick={() => openDocument(t._id, project._id)}
+                        disabled={docLoading === t._id}
+                        className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-neutral hover:text-primary hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {docLoading === t._id
+                          ? <><div className="w-3 h-3 border-2 border-neutral border-t-transparent rounded-full animate-spin" />Loading…</>
+                          : <><FileText size={12} />View Reference Document<ExternalLink size={11} /></>
+                        }
+                      </button>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-        </Modal>
-      )}
-    </div>
-  );
-}
-
-// ─── Modal ───────────────────────────────────────────────────────────────────
-
-function Modal({ title, onClose, children, wide }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
-      <div
-        className={`${wide ? "w-full max-w-xl" : "w-full max-w-md"} rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto`}
-        style={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }}
-      >
-        <div className="flex justify-between items-center">
-          <h3 className="font-bold text-white text-lg">{title}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-xl transition-colors">✕</button>
+                )}
+              </div>
+            )
+          })}
         </div>
-        {children}
-      </div>
+      )}
+
+      {permModal && (
+        <RequestPermissionModal
+          task={permModal}
+          onClose={() => setPermModal(null)}
+          onSuccess={() => setTasks(prev => prev.map(t =>
+            t._id === permModal._id ? { ...t, requires_permission: true, permission_status: 'pending' } : t
+          ))}
+        />
+      )}
     </div>
-  );
-}
-
-// ─── Modal Footer ─────────────────────────────────────────────────────────────
-
-function ModalFooter({ onCancel, onSubmit, loading, submitLabel, submitColor = "blue" }) {
-  const colors = {
-    blue: '#3b82f6',
-    red:  '#ef4444',
-  };
-  return (
-    <div className="flex gap-3 pt-4">
-      <button
-        onClick={onCancel}
-        className="flex-1 py-2 rounded-lg text-sm text-slate-400 hover:text-white transition-colors"
-        style={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.1)' }}
-      >
-        Cancel
-      </button>
-      <button
-        onClick={onSubmit}
-        disabled={loading}
-        className="flex-1 py-2 text-white rounded-lg text-sm disabled:opacity-50 transition-colors hover:opacity-90"
-        style={{ backgroundColor: colors[submitColor] }}
-      >
-        {loading ? "Saving..." : submitLabel}
-      </button>
-    </div>
-  );
-}
-
-// ─── Info Row ─────────────────────────────────────────────────────────────────
-
-function InfoRow({ label, value }) {
-  return (
-    <div>
-      <p className="text-xs text-slate-500">{label}</p>
-      <div className="font-medium text-slate-200 mt-0.5">{value}</div>
-    </div>
-  );
+  )
 }

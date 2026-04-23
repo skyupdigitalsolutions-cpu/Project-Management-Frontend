@@ -114,9 +114,9 @@ export default function AdminUsers() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total"    value={stats.total}             icon={Users}     color="brand" />
+          <StatCard label="Total"    value={stats.total}             icon={Users}     color="primary" />
           <StatCard label="Active"   value={stats.active}            icon={UserCheck} color="emerald" />
-          <StatCard label="Managers" value={stats.manager}           icon={Shield}    color="blue" />
+          <StatCard label="Managers" value={stats.manager}           icon={Shield}    color="info" />
           <StatCard label="On Leave" value={stats['on-leave'] ?? 0}  icon={UserX}     color="amber" />
         </div>
       )}
@@ -135,7 +135,7 @@ export default function AdminUsers() {
       <div className="card !p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-surface-200/50">
+            <thead className="bg-gray-100/50">
               <tr>
                 {['Name', 'Role', 'Department', 'Designation', 'Status', 'Joined', 'Actions'].map(h => (
                   <th key={h} className="table-header text-left">{h}</th>
@@ -151,25 +151,25 @@ export default function AdminUsers() {
                 <tr key={u._id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="table-cell">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                         {u.name?.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium text-white text-sm">{u.name}</p>
-                        <p className="text-xs text-slate-500">{u.email}</p>
+                        <p className="font-medium text-gray-800 text-sm">{u.name}</p>
+                        <p className="text-xs text-neutral">{u.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="table-cell"><span className={`badge border ${roleColor(u.role)}`}>{u.role}</span></td>
-                  <td className="table-cell text-slate-400">{u.department}</td>
-                  <td className="table-cell text-slate-400">{u.designation}</td>
+                  <td className="table-cell text-neutral">{u.department}</td>
+                  <td className="table-cell text-neutral">{u.designation}</td>
                   <td className="table-cell"><StatusBadge status={u.status} /></td>
-                  <td className="table-cell text-slate-500 font-mono text-xs">{u.joining_date ? format(new Date(u.joining_date), 'dd MMM yyyy') : '—'}</td>
+                  <td className="table-cell text-neutral font-mono text-xs">{u.joining_date ? format(new Date(u.joining_date), 'dd MMM yyyy') : '—'}</td>
                   <td className="table-cell">
                     <div className="flex items-center gap-1">
-                      <button onClick={() => openEdit(u)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"><Pencil size={14} /></button>
-                      <button onClick={() => openRole(u)} className="p-1.5 rounded-lg text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 transition-colors"><Shield size={14} /></button>
-                      <button onClick={() => setDelModal(u)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"><Trash2 size={14} /></button>
+                      <button onClick={() => openEdit(u)} className="p-1.5 rounded-lg text-neutral hover:text-gray-800 hover:bg-white/10 transition-colors"><Pencil size={14} /></button>
+                      <button onClick={() => openRole(u)} className="p-1.5 rounded-lg text-neutral hover:text-primary hover:bg-purple-50 transition-colors"><Shield size={14} /></button>
+                      <button onClick={() => setDelModal(u)} className="p-1.5 rounded-lg text-neutral hover:text-red-400 hover:bg-red-500/10 transition-colors"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -260,7 +260,7 @@ export default function AdminUsers() {
 }
 
 const roleColor = r => ({
-  admin:    'bg-brand-500/20 text-brand-300 border-brand-500/30',
+  admin:    'bg-purple-50 text-primary border-primary/30',
   manager:  'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   employee: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
 }[r] ?? '')

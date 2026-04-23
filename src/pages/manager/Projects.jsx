@@ -59,25 +59,25 @@ export default function ManagerProjects() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {projects.map(p => (
-            <div key={p._id} className="card hover:border-white/10 transition-all group flex flex-col">
+            <div key={p._id} className="card hover:border-gray-200 transition-all group flex flex-col">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <StatusBadge status={p.status} />
                   <PriorityBadge priority={p.priority} />
                 </div>
                 <Link to={`/manager/projects/${p._id}`}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 transition-colors opacity-0 group-hover:opacity-100">
+                  className="p-1.5 rounded-lg text-neutral hover:text-primary hover:bg-purple-50 transition-colors opacity-0 group-hover:opacity-100">
                   <Eye size={13}/>
                 </Link>
               </div>
 
-              <h3 className="font-semibold text-white mb-1 line-clamp-1">{p.title}</h3>
+              <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{p.title}</h3>
               {p.client_info?.company && (
-                <p className="text-xs text-brand-400 mb-1">Client: {p.client_info.company}</p>
+                <p className="text-xs text-primary mb-1">Client: {p.client_info.company}</p>
               )}
-              <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-1">{p.description}</p>
+              <p className="text-sm text-neutral line-clamp-2 mb-4 flex-1">{p.description}</p>
 
-              <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-white/5">
+              <div className="flex items-center justify-between text-xs text-neutral pt-3 border-t border-gray-100">
                 <span className="flex items-center gap-1.5">
                   <Users size={11}/> {p.manager_id?.name ?? '—'}
                 </span>

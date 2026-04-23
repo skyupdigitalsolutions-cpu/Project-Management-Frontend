@@ -10,11 +10,11 @@ const Spinner = () => (
 
 const Badge = ({ children, color = 'slate' }) => {
   const colors = {
-    slate:  'bg-slate-700/50 text-slate-300',
+    slate:  'bg-slate-700/50 text-gray-600',
     green:  'bg-emerald-600/20 text-emerald-300',
     yellow: 'bg-amber-600/20  text-amber-300',
     red:    'bg-red-600/20    text-red-300',
-    brand:  'bg-brand-600/20  text-brand-300',
+    brand:  'bg-purple-50  text-primary',
     purple: 'bg-purple-600/20 text-purple-300',
   }
   return (
@@ -50,7 +50,7 @@ function MeetingCard({ meeting }) {
   const platform  = PLATFORMS[meeting.platform] ?? { label: meeting.platform, color: 'slate' }
 
   return (
-    <div className={`bg-surface-50 border rounded-2xl p-5 transition-colors ${live ? 'border-emerald-500/40 ring-1 ring-emerald-500/20' : 'border-white/5 hover:border-white/10'}`}>
+    <div className={`bg-white border rounded-2xl p-5 transition-colors ${live ? 'border-emerald-500/40 ring-1 ring-emerald-500/20' : 'border-gray-100 hover:border-gray-200'}`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-1.5">
@@ -59,14 +59,14 @@ function MeetingCard({ meeting }) {
             {live && <Badge color="green">🔴 Live now</Badge>}
             {meeting.is_broadcast && <Badge color="purple">All staff</Badge>}
           </div>
-          <h3 className="text-white font-semibold text-base leading-snug">{meeting.title}</h3>
+          <h3 className="text-gray-800 font-semibold text-base leading-snug">{meeting.title}</h3>
           {meeting.description && (
-            <p className="text-slate-500 text-sm mt-1 line-clamp-2">{meeting.description}</p>
+            <p className="text-neutral text-sm mt-1 line-clamp-2">{meeting.description}</p>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mb-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral mb-4">
         <span className="flex items-center gap-1">
           <Calendar size={12} />
           {format(new Date(meeting.scheduled_at), 'dd MMM yyyy, hh:mm a')}
@@ -92,10 +92,10 @@ function MeetingCard({ meeting }) {
           rel="noopener noreferrer"
           className={`inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-xl transition-colors ${
             live
-              ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+              ? 'bg-emerald-500 hover:bg-emerald-600 text-gray-800'
               : past
-              ? 'bg-white/5 text-slate-500 hover:text-slate-300 hover:bg-white/10'
-              : 'bg-brand-500 hover:bg-brand-600 text-white'
+              ? 'bg-gray-50 text-neutral hover:text-gray-600 hover:bg-white/10'
+              : 'bg-brand-500 hover:bg-brand-600 text-gray-800'
           }`}
         >
           <ExternalLink size={13} />
@@ -132,28 +132,28 @@ export default function EmployeeMeetings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Video size={22} className="text-brand-400" /> My Meetings
+          <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Video size={22} className="text-primary" /> My Meetings
             {liveCount > 0 && (
               <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                 {liveCount} live
               </span>
             )}
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">Meetings you've been invited to</p>
+          <p className="text-sm text-neutral mt-0.5">Meetings you've been invited to</p>
         </div>
-        <button onClick={load} className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+        <button onClick={load} className="p-2 text-neutral hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-colors">
           <RefreshCw size={16} />
         </button>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 bg-surface-50 border border-white/5 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1 w-fit">
         {tabs.map(t => (
           <button
             key={t}
             onClick={() => setFilter(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${filter === t ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${filter === t ? 'bg-brand-500 text-gray-800' : 'text-neutral hover:text-gray-800'}`}
           >
             {t}
           </button>
@@ -164,7 +164,7 @@ export default function EmployeeMeetings() {
       {loading ? (
         <div className="flex justify-center py-20"><Spinner /></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-slate-500">
+        <div className="text-center py-20 text-neutral">
           <Video size={40} className="mx-auto mb-3 opacity-30" />
           <p>{filter === 'all' ? "You haven't been invited to any meetings yet." : `No ${filter} meetings.`}</p>
         </div>

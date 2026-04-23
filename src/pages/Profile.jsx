@@ -46,7 +46,7 @@ export default function Profile() {
   }
 
   const ROLE_COLOR = {
-    admin:    'bg-brand-600/20 text-brand-300 border-brand-500/30',
+    admin:    'bg-purple-50 text-primary border-primary/30',
     manager:  'bg-emerald-600/20 text-emerald-300 border-emerald-500/30',
     employee: 'bg-amber-600/20 text-amber-300 border-amber-500/30',
   }
@@ -57,17 +57,17 @@ export default function Profile() {
 
       {/* Profile header card */}
       <div className="card flex items-center gap-5 flex-wrap">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
           {user?.name?.charAt(0)?.toUpperCase()}
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">{user?.name}</h2>
-          <p className="text-slate-400 mt-0.5">{user?.email}</p>
+          <h2 className="text-xl font-bold text-gray-800">{user?.name}</h2>
+          <p className="text-neutral mt-0.5">{user?.email}</p>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
             <span className={`badge border ${ROLE_COLOR[user?.role] ?? ''}`}>{user?.role}</span>
             <StatusBadge status={user?.status} />
             {user?.joining_date && (
-              <span className="text-xs text-slate-500 font-mono">
+              <span className="text-xs text-neutral font-mono">
                 Joined {format(new Date(user.joining_date), 'MMM d, yyyy')}
               </span>
             )}
@@ -78,8 +78,8 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Edit profile */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <User size={16} className="text-brand-400"/> Personal Information
+          <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <User size={16} className="text-primary"/> Personal Information
           </h3>
           <div className="space-y-4">
             <FormField label="Full Name">
@@ -110,8 +110,8 @@ export default function Profile() {
 
         {/* Change password */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <Lock size={16} className="text-brand-400"/> Change Password
+          <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <Lock size={16} className="text-primary"/> Change Password
           </h3>
           <div className="space-y-4">
             <FormField label="Current Password">
@@ -123,7 +123,7 @@ export default function Profile() {
                   onChange={e => setPwForm(f => ({ ...f, current_password: e.target.value }))}
                   placeholder="••••••••"
                 />
-                <button onClick={() => setShowPw(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                <button onClick={() => setShowPw(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral hover:text-gray-600">
                   {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
                 </button>
               </div>
@@ -164,7 +164,7 @@ export default function Profile() {
 
       {/* Account info */}
       <div className="card">
-        <h3 className="text-sm font-semibold text-white mb-4">Account Details</h3>
+        <h3 className="text-sm font-semibold text-gray-800 mb-4">Account Details</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { icon: Building,  label: 'Department',  value: user?.department },
@@ -172,12 +172,12 @@ export default function Profile() {
             { icon: Calendar,  label: 'Joined',      value: user?.joining_date ? format(new Date(user.joining_date), 'dd MMM yyyy') : '—' },
             { icon: Mail,      label: 'Email',       value: user?.email },
           ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="bg-surface-200 rounded-xl p-3">
+            <div key={label} className="bg-gray-100 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
-                <Icon size={13} className="text-brand-400"/>
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{label}</p>
+                <Icon size={13} className="text-primary"/>
+                <p className="text-xs text-neutral uppercase tracking-wider font-semibold">{label}</p>
               </div>
-              <p className="text-sm text-white font-medium truncate">{value ?? '—'}</p>
+              <p className="text-sm text-gray-800 font-medium truncate">{value ?? '—'}</p>
             </div>
           ))}
         </div>

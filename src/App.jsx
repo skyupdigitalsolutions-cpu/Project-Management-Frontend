@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import DashboardLayout from './components/layout/DashboardLayout'
 import Login from './pages/Login'
-import AutoAssignProject from './pages/admin/AutoAssignProject'
 import WorkflowDashboard from './pages/admin/WorkflowDashboard'
 import MyTasksEnhanced   from './pages/employee/MyTasksEnhanced'
 
@@ -17,6 +16,13 @@ import AdminProjects      from './pages/admin/Projects'
 import AdminTasks         from './pages/admin/Tasks'
 import AdminAttendance    from './pages/admin/Attendance'
 import AdminNotifications from './pages/admin/Notifications'
+
+// ── NEW: Smart project creator + workload dashboard ──────────────────────────
+// import CreateProjectWithTasks from './pages/admin/CreateProjectWithTasks'
+import WorkloadDashboard      from './pages/admin/Workloaddashboard'
+
+// ── NEW: Employee task dashboard with schedule view ──────────────────────────
+import EmployeeTaskDashboard from './pages/employee/Employeetaskdashboard'
 
 // Manager
 import ManagerDashboard     from './pages/manager/Dashboard'
@@ -59,7 +65,7 @@ const PublicRoute = ({ children }) => {
 }
 
 const FullPageSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-surface">
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
     <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
   </div>
 )
@@ -82,17 +88,20 @@ export default function App() {
           <Route path="users"             element={<AdminUsers />} />
           <Route path="projects"          element={<AdminProjects />} />
           <Route path="projects/create"   element={<CreateProject />} />
-          <Route path="projects/:id"      element={<ProjectDetail />} />
           <Route path="projects/edit/:id" element={<CreateProject editMode />} />
+          {/* ── NEW: Smart project creator with task generation ── */}
+          {/* <Route path="projects/create-smart" element={<CreateProjectWithTasks />} /> */}
+          <Route path="projects/:id"      element={<ProjectDetail />} />
           <Route path="tasks"             element={<AdminTasks />} />
           <Route path="attendance"        element={<AdminAttendance />} />
           <Route path="meetings"          element={<AdminMeetings />} />
           <Route path="notifications"     element={<AdminNotifications />} />
           <Route path="daily-reports"     element={<AdminDailyReports />} />
           <Route path="profile"           element={<Profile />} />
-          {/* ✅ Relative paths (no leading slash) inside nested Routes */}
+          {/* Existing workflow dashboard */}
           <Route path="workflow"          element={<WorkflowDashboard />} />
-          <Route path="auto-assign"       element={<AutoAssignProject />} />
+          {/* ── NEW: Workload distribution dashboard ── */}
+          <Route path="workload"          element={<WorkloadDashboard />} />
         </Route>
 
         {/* ── Manager ── */}
@@ -100,8 +109,8 @@ export default function App() {
           <Route index                    element={<ManagerDashboard />} />
           <Route path="projects"          element={<ManagerProjects />} />
           <Route path="projects/create"   element={<CreateProject />} />
-          <Route path="projects/:id"      element={<ProjectDetail />} />
           <Route path="projects/edit/:id" element={<CreateProject editMode />} />
+          <Route path="projects/:id"      element={<ProjectDetail />} />
           <Route path="tasks"             element={<ManagerTasks />} />
           <Route path="team"              element={<ManagerTeam />} />
           <Route path="attendance"        element={<ManagerAttendance />} />
@@ -114,8 +123,10 @@ export default function App() {
         {/* ── Employee ── */}
         <Route path="/employee" element={<ProtectedRoute roles={['employee']}><DashboardLayout /></ProtectedRoute>}>
           <Route index                element={<EmployeeDashboard />} />
-          {/* ✅ Relative path — matches nav link /employee/my-tasks */}
+          {/* Existing enhanced tasks page */}
           <Route path="my-tasks"      element={<MyTasksEnhanced />} />
+          {/* ── NEW: Smart task dashboard with daily schedule + capacity ── */}
+          <Route path="task-dashboard" element={<EmployeeTaskDashboard />} />
           <Route path="projects"      element={<EmployeeProjects />} />
           <Route path="projects/:id"  element={<ProjectDetail />} />
           <Route path="attendance"    element={<EmployeeAttendance />} />

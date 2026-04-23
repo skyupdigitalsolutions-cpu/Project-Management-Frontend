@@ -20,13 +20,12 @@ const LEAVE_TYPES = [
 ]
 
 const LEAVE_STATUS_CONFIG = {
-  pending:  { color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',       icon: AlertCircle  },
-  approved: { color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', icon: CheckCircle2 },
-  rejected: { color: 'text-red-400 bg-red-500/10 border-red-500/20',             icon: XCircle      },
+  pending:  { color: 'text-amber-600 bg-amber-50 border-amber-200',       icon: AlertCircle  },
+  approved: { color: 'text-emerald-600 bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+  rejected: { color: 'text-red-600 bg-red-50 border-red-200',             icon: XCircle      },
 }
 
 // ─── Break helpers (localStorage-backed) ─────────────────────────────────────
-// Each break entry: { id, start: ISO string, end: ISO string | null }
 
 function breakKey(dateStr) { return `breaks_${dateStr}` }
 function todayStr()        { return format(new Date(), 'yyyy-MM-dd') }
@@ -40,7 +39,6 @@ function saveBreaks(dateStr, breaks) {
   localStorage.setItem(breakKey(dateStr), JSON.stringify(breaks))
 }
 
-/** Sum of all completed (ended) break durations in milliseconds */
 function completedBreakMs(breaks) {
   return breaks.reduce((acc, b) => {
     if (b.start && b.end) return acc + (new Date(b.end) - new Date(b.start))
@@ -48,14 +46,12 @@ function completedBreakMs(breaks) {
   }, 0)
 }
 
-/** Format ms → "Xh Ym" or "Ym" */
 function fmtDuration(ms) {
   const m = Math.max(0, Math.floor(ms / 60000))
   const h = Math.floor(m / 60)
   return h > 0 ? `${h}h ${m % 60}m` : `${m}m`
 }
 
-/** Net working hours = (clockOut - clockIn) - totalBreakMs, returns string like "7.5" */
 function calcNetHours(clockIn, clockOut, breakMs) {
   if (!clockIn || !clockOut) return null
   const gross = new Date(clockOut) - new Date(clockIn)
@@ -63,7 +59,6 @@ function calcNetHours(clockIn, clockOut, breakMs) {
   return (net / 3600000).toFixed(1)
 }
 
-// ─── Live tick hook — re-renders every second while `active` is true ─────────
 function useLiveTick(active) {
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -88,10 +83,8 @@ export default function EmployeeAttendance() {
   const dateKey   = todayStr()
   const onBreak   = breaks.some(b => b.start && !b.end)
 
-  // Tick every second while clocked in but not yet clocked out
   useLiveTick(!!(today?.clock_in && !today?.clock_out))
 
-  // ── data loading ─────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -110,7 +103,6 @@ export default function EmployeeAttendance() {
 
   useEffect(() => { load() }, [load])
 
-  // ── clock in / out ───────────────────────────────────────────────────────────
   const clockIn = async () => {
     setClocking(true)
     try {
@@ -122,7 +114,6 @@ export default function EmployeeAttendance() {
   }
 
   const clockOut = async () => {
-    // Auto-end any open break before clocking out
     if (onBreak) {
       const closed = breaks.map(b => (!b.end ? { ...b, end: new Date().toISOString() } : b))
       saveBreaks(dateKey, closed)
@@ -138,7 +129,6 @@ export default function EmployeeAttendance() {
     finally     { setClocking(false) }
   }
 
-  // ── break in / out ───────────────────────────────────────────────────────────
   const startBreak = () => {
     if (onBreak) return
     setBreaking(true)
@@ -160,7 +150,6 @@ export default function EmployeeAttendance() {
     setBreaking(false)
   }
 
-  // ── derived values ────────────────────────────────────────────────────────────
   const present = history.filter(r => r.status === 'present' || r.status === 'late').length
   const absent  = history.filter(r => r.status === 'absent').length
   const onLeave = history.filter(r => r.status === 'on-leave').length
@@ -168,13 +157,12 @@ export default function EmployeeAttendance() {
 
   const ongoingBreak    = breaks.find(b => b.start && !b.end)
   const ongoingBreakMs  = ongoingBreak ? Math.max(0, new Date() - new Date(ongoingBreak.start)) : 0
-  const totalBreakMs    = completedBreakMs(breaks) + ongoingBreakMs   // includes live ticking
+  const totalBreakMs    = completedBreakMs(breaks) + ongoingBreakMs
 
   const grossMs = today?.clock_in && !today?.clock_out
     ? Math.max(0, new Date() - new Date(today.clock_in))
     : null
 
-  // Net hours for today (live while working, final after clock-out)
   const netHoursToday = isDone
     ? calcNetHours(today.clock_in, today.clock_out, completedBreakMs(breaks))
     : grossMs !== null
@@ -182,7 +170,7 @@ export default function EmployeeAttendance() {
       : null
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in bg-gray-50 min-h-screen p-6">
       <PageHeader
         title="My Attendance"
         subtitle="Track your daily attendance and manage leave requests"
@@ -194,71 +182,65 @@ export default function EmployeeAttendance() {
       />
 
       {/* ── Tab bar ── */}
-      <div className="flex gap-1 bg-white/5 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-white border border-gray-200 p-1 rounded-xl w-fit shadow-sm">
         {[
           { id: 'attendance', label: 'Attendance',    icon: Clock       },
           { id: 'leaves',     label: `Leave Requests${leaves.length > 0 ? ` (${leaves.length})` : ''}`, icon: CalendarOff },
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.id ? 'bg-brand-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              activeTab === tab.id
+                ? 'bg-brand-600 text-gray-800 shadow'
+                : 'text-gray-500 hover:text-gray-800'
             }`}>
             <tab.icon size={14} /> {tab.label}
           </button>
         ))}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════
-          Attendance tab
-      ════════════════════════════════════════════════════════════ */}
       {activeTab === 'attendance' && (
         <>
           {/* ── Today card ── */}
-          <div className="card space-y-5">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
 
-            {/* Time display + action buttons */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                   Today — {format(new Date(), 'EEEE, MMMM d, yyyy')}
                 </p>
 
                 {loading ? <Spinner size="sm" /> : (
                   <div className="mt-2 flex items-center gap-6 flex-wrap">
 
-                    {/* Clock In time */}
                     <div>
-                      <p className="text-xs text-slate-500">Clock In</p>
-                      <p className={`text-2xl font-bold font-mono mt-0.5 ${today?.clock_in ? 'text-emerald-400' : 'text-slate-600'}`}>
+                      <p className="text-xs text-gray-400">Clock In</p>
+                      <p className={`text-2xl font-bold font-mono mt-0.5 ${today?.clock_in ? 'text-emerald-600' : 'text-gray-300'}`}>
                         {today?.clock_in ? format(new Date(today.clock_in), 'HH:mm') : '--:--'}
                       </p>
                     </div>
 
-                    <div className="text-slate-600 text-xl font-thin">→</div>
+                    <div className="text-gray-300 text-xl font-thin">→</div>
 
-                    {/* Clock Out time */}
                     <div>
-                      <p className="text-xs text-slate-500">Clock Out</p>
-                      <p className={`text-2xl font-bold font-mono mt-0.5 ${today?.clock_out ? 'text-amber-400' : 'text-slate-600'}`}>
+                      <p className="text-xs text-gray-400">Clock Out</p>
+                      <p className={`text-2xl font-bold font-mono mt-0.5 ${today?.clock_out ? 'text-amber-500' : 'text-gray-300'}`}>
                         {today?.clock_out ? format(new Date(today.clock_out), 'HH:mm') : '--:--'}
                       </p>
                     </div>
 
-                    {/* Break total (shown once clocked in) */}
                     {today?.clock_in && (
                       <div>
-                        <p className="text-xs text-slate-500">Break</p>
-                        <p className={`text-2xl font-bold font-mono mt-0.5 ${totalBreakMs > 0 ? 'text-orange-400' : 'text-slate-600'}`}>
+                        <p className="text-xs text-gray-400">Break</p>
+                        <p className={`text-2xl font-bold font-mono mt-0.5 ${totalBreakMs > 0 ? 'text-orange-500' : 'text-gray-300'}`}>
                           {totalBreakMs > 0 ? fmtDuration(totalBreakMs) : '0m'}
                         </p>
                       </div>
                     )}
 
-                    {/* Net working hours */}
                     {netHoursToday !== null && (
                       <div>
-                        <p className="text-xs text-slate-500">{isDone ? 'Net Hours' : 'Net (live)'}</p>
-                        <p className="text-2xl font-bold font-mono mt-0.5 text-brand-400">
+                        <p className="text-xs text-gray-400">{isDone ? 'Net Hours' : 'Net (live)'}</p>
+                        <p className="text-2xl font-bold font-mono mt-0.5 text-primary">
                           {netHoursToday}h
                         </p>
                       </div>
@@ -272,25 +254,23 @@ export default function EmployeeAttendance() {
               {/* ── Action buttons ── */}
               <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
                 {!today?.clock_in ? (
-                  /* Not clocked in */
                   <button onClick={clockIn} disabled={clocking} className="btn-primary py-3 px-6 text-base">
                     {clocking ? <Spinner size="sm" /> : <LogIn size={18} />} Clock In
                   </button>
 
                 ) : !today?.clock_out ? (
-                  /* Clocked in — show Break toggle + Clock Out */
                   <>
                     {!onBreak ? (
                       <button
                         onClick={startBreak} disabled={breaking}
-                        className="flex items-center gap-2 py-3 px-5 text-sm font-semibold rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 transition-all"
+                        className="flex items-center gap-2 py-3 px-5 text-sm font-semibold rounded-xl border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 transition-all"
                       >
                         {breaking ? <Spinner size="sm" /> : <Coffee size={16} />} Start Break
                       </button>
                     ) : (
                       <button
                         onClick={endBreak} disabled={breaking}
-                        className="flex items-center gap-2 py-3 px-5 text-sm font-semibold rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all animate-pulse"
+                        className="flex items-center gap-2 py-3 px-5 text-sm font-semibold rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all animate-pulse"
                       >
                         {breaking ? <Spinner size="sm" /> : <PlayCircle size={16} />} End Break
                       </button>
@@ -302,9 +282,8 @@ export default function EmployeeAttendance() {
                   </>
 
                 ) : (
-                  /* Completed */
-                  <div className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                    <p className="text-emerald-400 font-semibold text-sm">✓ Completed for today</p>
+                  <div className="px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <p className="text-emerald-600 font-semibold text-sm">✓ Completed for today</p>
                   </div>
                 )}
               </div>
@@ -312,11 +291,11 @@ export default function EmployeeAttendance() {
 
             {/* ── Live on-break banner ── */}
             {onBreak && ongoingBreak && (
-              <div className="flex items-center gap-3 px-4 py-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-                <Coffee size={16} className="text-orange-400 flex-shrink-0 animate-bounce" />
+              <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 border border-orange-200 rounded-xl">
+                <Coffee size={16} className="text-orange-500 flex-shrink-0 animate-bounce" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-orange-400 font-semibold text-sm">On Break</p>
-                  <p className="text-slate-400 text-xs">
+                  <p className="text-orange-600 font-semibold text-sm">On Break</p>
+                  <p className="text-gray-500 text-xs">
                     Started at {format(new Date(ongoingBreak.start), 'HH:mm')}
                     &nbsp;·&nbsp;
                     Elapsed: {fmtDuration(ongoingBreakMs)}
@@ -324,7 +303,7 @@ export default function EmployeeAttendance() {
                 </div>
                 <button
                   onClick={endBreak}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-all"
                 >
                   <PlayCircle size={13} /> Resume Work
                 </button>
@@ -333,8 +312,8 @@ export default function EmployeeAttendance() {
 
             {/* ── Break log for today ── */}
             {breaks.length > 0 && (
-              <div className="border-t border-white/5 pt-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
                   Today's Break Log
                 </p>
                 <div className="space-y-2">
@@ -345,27 +324,26 @@ export default function EmployeeAttendance() {
                     const dur  = fmtDuration(bMs) + (b.end ? '' : ' (ongoing)')
                     return (
                       <div key={b.id ?? i} className="flex items-center gap-3 text-xs">
-                        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-orange-500/10 text-orange-400 font-bold text-[10px] flex-shrink-0">
+                        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-500 font-bold text-[10px] flex-shrink-0">
                           {i + 1}
                         </span>
-                        <span className="text-slate-400 font-mono">{format(new Date(b.start), 'HH:mm')}</span>
-                        <span className="text-slate-600">→</span>
-                        <span className="text-slate-400 font-mono">{b.end ? format(new Date(b.end), 'HH:mm') : '—'}</span>
-                        <span className={`ml-auto font-semibold tabular-nums ${b.end ? 'text-orange-400' : 'text-amber-400'}`}>
+                        <span className="text-gray-500 font-mono">{format(new Date(b.start), 'HH:mm')}</span>
+                        <span className="text-gray-400">→</span>
+                        <span className="text-gray-500 font-mono">{b.end ? format(new Date(b.end), 'HH:mm') : '—'}</span>
+                        <span className={`ml-auto font-semibold tabular-nums ${b.end ? 'text-orange-500' : 'text-amber-500'}`}>
                           {dur}
                         </span>
                       </div>
                     )
                   })}
 
-                  {/* Summary row */}
-                  <div className="pt-2 border-t border-white/5 grid grid-cols-2 gap-1 text-xs">
-                    <span className="text-slate-500">Total break time</span>
-                    <span className="text-right font-bold text-orange-400">{fmtDuration(totalBreakMs)}</span>
+                  <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-1 text-xs">
+                    <span className="text-gray-400">Total break time</span>
+                    <span className="text-right font-bold text-orange-500">{fmtDuration(totalBreakMs)}</span>
                     {netHoursToday !== null && (
                       <>
-                        <span className="text-slate-500">Net working hours</span>
-                        <span className="text-right font-bold text-brand-400">{netHoursToday}h</span>
+                        <span className="text-gray-400">Net working hours</span>
+                        <span className="text-right font-bold text-primary">{netHoursToday}h</span>
                       </>
                     )}
                   </div>
@@ -382,16 +360,16 @@ export default function EmployeeAttendance() {
           </div>
 
           {/* ── History table ── */}
-          <div className="card !p-0 overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/5">
-              <h3 className="text-sm font-semibold text-white">Attendance History</h3>
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-800">Attendance History</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-surface-200/50">
+                <thead className="bg-gray-50">
                   <tr>
                     {['Date', 'Status', 'Clock In', 'Clock Out', 'Break', 'Net Hours'].map(h => (
-                      <th key={h} className="table-header text-left">{h}</th>
+                      <th key={h} className="table-header text-left text-gray-500">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -406,21 +384,21 @@ export default function EmployeeAttendance() {
                     const rowBreakMs = completedBreakMs(rowBreaks)
                     const netHrs     = calcNetHours(r.clock_in, r.clock_out, rowBreakMs)
                     return (
-                      <tr key={r._id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="table-cell font-mono text-xs">
+                      <tr key={r._id} className="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                        <td className="table-cell font-mono text-xs text-gray-600">
                           {rowDate ? format(parseISO(rowDate), 'EEE, MMM d yyyy') : '—'}
                         </td>
                         <td className="table-cell"><StatusBadge status={r.status} /></td>
-                        <td className="table-cell font-mono text-xs text-emerald-400">
+                        <td className="table-cell font-mono text-xs text-emerald-600">
                           {r.clock_in  ? format(new Date(r.clock_in),  'HH:mm') : '—'}
                         </td>
-                        <td className="table-cell font-mono text-xs text-amber-400">
+                        <td className="table-cell font-mono text-xs text-amber-500">
                           {r.clock_out ? format(new Date(r.clock_out), 'HH:mm') : '—'}
                         </td>
-                        <td className="table-cell text-xs text-orange-400">
+                        <td className="table-cell text-xs text-orange-500">
                           {rowBreakMs > 0 ? fmtDuration(rowBreakMs) : '—'}
                         </td>
-                        <td className="table-cell text-xs text-brand-400 font-semibold">
+                        <td className="table-cell text-xs text-primary font-semibold">
                           {netHrs ? `${netHrs}h` : '—'}
                         </td>
                       </tr>
@@ -433,9 +411,6 @@ export default function EmployeeAttendance() {
         </>
       )}
 
-      {/* ════════════════════════════════════════════════════════════
-          Leaves tab
-      ════════════════════════════════════════════════════════════ */}
       {activeTab === 'leaves' && (
         <LeaveHistoryTab leaves={leaves} loading={loading} onApply={() => setLeaveModal(true)} />
       )}
@@ -455,10 +430,10 @@ export default function EmployeeAttendance() {
 function LeaveHistoryTab({ leaves, loading, onApply }) {
   if (loading) return <div className="flex justify-center py-12"><Spinner /></div>
   if (leaves.length === 0) return (
-    <div className="card flex flex-col items-center justify-center py-16 text-center">
-      <CalendarOff size={40} className="text-slate-600 mb-4" />
-      <p className="text-slate-400 font-medium">No leave requests yet</p>
-      <p className="text-slate-500 text-sm mt-1">Apply for a leave to get started</p>
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm flex flex-col items-center justify-center py-16 text-center">
+      <CalendarOff size={40} className="text-gray-300 mb-4" />
+      <p className="text-gray-500 font-medium">No leave requests yet</p>
+      <p className="text-gray-400 text-sm mt-1">Apply for a leave to get started</p>
       <button onClick={onApply} className="btn-primary mt-4"><CalendarOff size={15} /> Apply for Leave</button>
     </div>
   )
@@ -469,45 +444,45 @@ function LeaveHistoryTab({ leaves, loading, onApply }) {
         const StatusIcon = cfg.icon
         const lt         = LEAVE_TYPES.find(t => t.value === leave.leave_type)
         return (
-          <div key={leave._id} className="card hover:border-white/10 transition-all">
+          <div key={leave._id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-gray-300 transition-all">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
                 <div className="text-2xl mt-0.5">{lt?.icon ?? '📋'}</div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-semibold text-white text-sm">{lt?.label ?? leave.leave_type}</h4>
+                    <h4 className="font-semibold text-gray-800 text-sm">{lt?.label ?? leave.leave_type}</h4>
                     <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${cfg.color}`}>
                       <StatusIcon size={11} /> {leave.status}
                     </span>
                     {leave.is_urgent && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">🚨 Urgent</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-600">🚨 Urgent</span>
                     )}
                   </div>
-                  <p className="text-slate-400 text-xs mt-1">
+                  <p className="text-gray-400 text-xs mt-1">
                     {leave.from_date ? format(parseISO(leave.from_date.slice(0, 10)), 'MMM d, yyyy') : '—'}
                     {' → '}
                     {leave.to_date   ? format(parseISO(leave.to_date.slice(0, 10)),   'MMM d, yyyy') : '—'}
-                    {leave.days && <span className="ml-2 text-brand-400">({leave.days} day{leave.days !== 1 ? 's' : ''})</span>}
+                    {leave.days && <span className="ml-2 text-primary">({leave.days} day{leave.days !== 1 ? 's' : ''})</span>}
                   </p>
-                  {leave.reason && <p className="text-slate-500 text-xs mt-1 italic">"{leave.reason}"</p>}
+                  {leave.reason && <p className="text-gray-400 text-xs mt-1 italic">"{leave.reason}"</p>}
                   {leave.admin_note && (
                     <p className={`text-xs mt-2 px-2 py-1 rounded-lg border ${
                       leave.status === 'approved'
-                        ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
-                        : 'bg-red-500/5 border-red-500/20 text-red-400'
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                        : 'bg-red-50 border-red-200 text-red-600'
                     }`}>Admin: {leave.admin_note}</p>
                   )}
                 </div>
               </div>
-              <p className="text-xs text-slate-500 flex-shrink-0">
+              <p className="text-xs text-gray-400 flex-shrink-0">
                 {leave.createdAt ? format(new Date(leave.createdAt), 'MMM d, yyyy') : ''}
               </p>
             </div>
             {leave.documents?.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-white/5 flex flex-wrap gap-2">
+              <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
                 {leave.documents.map((doc, i) => (
                   <a key={i} href={doc.url} target="_blank" rel="noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 hover:border-white/10 transition-all">
+                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 hover:border-gray-200 transition-all">
                     {doc.type?.startsWith('image') ? <Image size={12} /> : <FileText size={12} />}
                     {doc.name ?? `Document ${i + 1}`}
                   </a>
@@ -643,19 +618,19 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}>
-      <div className="bg-[#151823] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}>
+      <div className="bg-white border border-gray-200 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <CalendarOff size={18} className="text-brand-400" /> Apply for Leave
+            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
+              <CalendarOff size={18} className="text-primary" /> Apply for Leave
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Step {step} of 3</p>
+            <p className="text-xs text-gray-400 mt-0.5">Step {step} of 3</p>
           </div>
           <button onClick={onClose}
-            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+            className="text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -669,12 +644,12 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
           ].map((s, i) => (
             <div key={s.n} className="flex items-center gap-2 flex-1">
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                step === s.n ? 'bg-brand-600 text-white'
-                  : step > s.n ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-white/5 text-slate-500'
+                step === s.n ? 'bg-brand-600 text-gray-800'
+                  : step > s.n ? 'bg-emerald-100 text-emerald-600 border border-emerald-200'
+                  : 'bg-gray-100 text-gray-400'
               }`}>{step > s.n ? '✓' : s.n}</div>
-              <span className={`text-xs hidden sm:block ${step === s.n ? 'text-white' : 'text-slate-500'}`}>{s.label}</span>
-              {i < 2 && <div className="flex-1 h-px bg-white/10 mx-1" />}
+              <span className={`text-xs hidden sm:block ${step === s.n ? 'text-gray-800' : 'text-gray-400'}`}>{s.label}</span>
+              {i < 2 && <div className="flex-1 h-px bg-gray-200 mx-1" />}
             </div>
           ))}
         </div>
@@ -686,61 +661,61 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
           {step === 1 && (
             <>
               <div>
-                <label className="label">Leave Type <span className="text-red-400">*</span></label>
+                <label className="label">Leave Type <span className="text-red-500">*</span></label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
                   {LEAVE_TYPES.map(t => (
                     <button key={t.value} type="button" onClick={() => f('leave_type', t.value)}
                       className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all ${
                         form.leave_type === t.value
-                          ? 'border-brand-500 bg-brand-500/10 text-white'
-                          : 'border-white/5 bg-white/[0.02] text-slate-400 hover:border-white/10 hover:text-white'
+                          ? 'border-brand-500 bg-purple-50 text-gray-800'
+                          : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-800'
                       }`}>
                       <span className="text-lg">{t.icon}</span>
                       <span className="text-xs font-semibold">{t.label}</span>
-                      <span className="text-[10px] text-slate-500 leading-tight">{t.description}</span>
+                      <span className="text-[10px] text-gray-400 leading-tight">{t.description}</span>
                     </button>
                   ))}
                 </div>
-                {errors.leave_type && <p className="text-red-400 text-xs mt-1">{errors.leave_type}</p>}
+                {errors.leave_type && <p className="text-red-500 text-xs mt-1">{errors.leave_type}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">From Date <span className="text-red-400">*</span></label>
+                  <label className="label">From Date <span className="text-red-500">*</span></label>
                   <input type="date" value={form.from_date} min={format(new Date(), 'yyyy-MM-dd')}
                     onChange={e => f('from_date', e.target.value)} className="input" />
-                  {errors.from_date && <p className="text-red-400 text-xs mt-1">{errors.from_date}</p>}
+                  {errors.from_date && <p className="text-red-500 text-xs mt-1">{errors.from_date}</p>}
                 </div>
                 <div>
-                  <label className="label">To Date <span className="text-red-400">*</span></label>
+                  <label className="label">To Date <span className="text-red-500">*</span></label>
                   <input type="date" value={form.to_date}
                     min={form.from_date || format(new Date(), 'yyyy-MM-dd')}
                     onChange={e => f('to_date', e.target.value)} className="input" />
-                  {errors.to_date && <p className="text-red-400 text-xs mt-1">{errors.to_date}</p>}
+                  {errors.to_date && <p className="text-red-500 text-xs mt-1">{errors.to_date}</p>}
                 </div>
               </div>
 
               {days > 0 && (
-                <div className="flex items-center gap-3 p-3 bg-brand-500/10 border border-brand-500/20 rounded-xl">
-                  <Clock size={16} className="text-brand-400 flex-shrink-0" />
+                <div className="flex items-center gap-3 p-3 bg-purple-50 border border-primary/30 rounded-xl">
+                  <Clock size={16} className="text-primary flex-shrink-0" />
                   <div>
-                    <p className="text-brand-400 font-semibold text-sm">
+                    <p className="text-primary font-semibold text-sm">
                       {days} day{days !== 1 ? 's' : ''} of {selectedType?.label ?? 'leave'}
                     </p>
-                    <p className="text-slate-500 text-xs">
+                    <p className="text-gray-400 text-xs">
                       {format(new Date(form.from_date), 'EEE, MMM d')} → {format(new Date(form.to_date), 'EEE, MMM d, yyyy')}
                     </p>
                   </div>
                 </div>
               )}
 
-              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-white/5 hover:border-white/10 transition-all">
+              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-gray-300 transition-all bg-white">
                 <input type="checkbox" checked={form.is_urgent}
                   onChange={e => f('is_urgent', e.target.checked)}
                   className="w-4 h-4 accent-brand-500 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-white">Mark as Urgent 🚨</p>
-                  <p className="text-xs text-slate-500">Flag for priority review by admin</p>
+                  <p className="text-sm font-medium text-gray-800">Mark as Urgent 🚨</p>
+                  <p className="text-xs text-gray-400">Flag for priority review by admin</p>
                 </div>
               </label>
             </>
@@ -751,20 +726,20 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
             <>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="label mb-0">Reason for Leave <span className="text-red-400">*</span></label>
+                  <label className="label mb-0">Reason for Leave <span className="text-red-500">*</span></label>
                   <div className="flex items-center gap-1.5">
-                    <Wand2 size={12} className="text-slate-500" />
-                    <span className="text-xs text-slate-500 mr-1">Rewrite as:</span>
+                    <Wand2 size={12} className="text-gray-400" />
+                    <span className="text-xs text-gray-400 mr-1">Rewrite as:</span>
                     {['casual', 'formal'].map(tone => (
                       <button key={tone} type="button" onClick={() => handleTone(tone)} disabled={!!toneLoading}
                         className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
                           toneLoading === tone
                             ? tone === 'casual'
-                              ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 cursor-wait'
-                              : 'bg-blue-500/20 border-blue-500/40 text-blue-300 cursor-wait'
+                              ? 'bg-amber-100 border-amber-300 text-amber-600 cursor-wait'
+                              : 'bg-blue-100 border-blue-300 text-blue-600 cursor-wait'
                             : tone === 'casual'
-                              ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
-                              : 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'
+                              ? 'bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100'
+                              : 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100'
                         }`}>
                         {toneLoading === tone ? <Spinner size="xs" /> : tone === 'casual' ? '🌴' : '💼'}
                         {tone.charAt(0).toUpperCase() + tone.slice(1)}
@@ -776,8 +751,8 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   placeholder="Write your reason here — then use the Casual or Formal buttons to adjust the tone..."
                   className="input resize-none" />
                 <div className="flex justify-between mt-1">
-                  {errors.reason ? <p className="text-red-400 text-xs">{errors.reason}</p> : <span />}
-                  <p className={`text-xs ${form.reason.length < 20 ? 'text-red-400' : 'text-slate-500'}`}>
+                  {errors.reason ? <p className="text-red-500 text-xs">{errors.reason}</p> : <span />}
+                  <p className={`text-xs ${form.reason.length < 20 ? 'text-red-500' : 'text-gray-400'}`}>
                     {form.reason.length} / 20 min
                   </p>
                 </div>
@@ -788,7 +763,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 <input type="tel" value={form.contact_during_leave}
                   onChange={e => f('contact_during_leave', e.target.value)}
                   placeholder="+91 98765 43210" className="input" />
-                <p className="text-xs text-slate-500 mt-1">Optional — for urgent contact if needed</p>
+                <p className="text-xs text-gray-400 mt-1">Optional — for urgent contact if needed</p>
               </div>
 
               <div>
@@ -796,7 +771,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 <textarea value={form.handover_notes} onChange={e => f('handover_notes', e.target.value)} rows={3}
                   placeholder="List pending tasks or responsibilities that need coverage during your absence..."
                   className="input resize-none" />
-                <p className="text-xs text-slate-500 mt-1">Optional — helps your team plan coverage</p>
+                <p className="text-xs text-gray-400 mt-1">Optional — helps your team plan coverage</p>
               </div>
             </>
           )}
@@ -806,9 +781,9 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
             <>
               <div>
                 <label className="label">
-                  Supporting Documents <span className="text-slate-500 font-normal">(optional, max 5 files)</span>
+                  Supporting Documents <span className="text-gray-400 font-normal">(optional, max 5 files)</span>
                 </label>
-                <p className="text-xs text-slate-500 mb-3">
+                <p className="text-xs text-gray-400 mb-3">
                   Medical certificates, prescriptions, or other supporting documents. Images, PDF, or Word — max 5MB each.
                 </p>
                 <div
@@ -817,11 +792,11 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   onDrop={e => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files) }}
                   onClick={() => fileInputRef.current?.click()}
                   className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-                    dragOver ? 'border-brand-500 bg-brand-500/10' : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'
+                    dragOver ? 'border-brand-500 bg-purple-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}>
-                  <Upload size={28} className={`mx-auto mb-3 ${dragOver ? 'text-brand-400' : 'text-slate-500'}`} />
-                  <p className="text-sm font-medium text-slate-300">Drop files here or click to browse</p>
-                  <p className="text-xs text-slate-500 mt-1">JPG, PNG, PDF, DOCX — Max 5MB each</p>
+                  <Upload size={28} className={`mx-auto mb-3 ${dragOver ? 'text-primary' : 'text-gray-300'}`} />
+                  <p className="text-sm font-medium text-gray-500">Drop files here or click to browse</p>
+                  <p className="text-xs text-gray-400 mt-1">JPG, PNG, PDF, DOCX — Max 5MB each</p>
                   <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx"
                     className="hidden" onChange={e => addFiles(e.target.files)} />
                 </div>
@@ -829,21 +804,21 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 {files.length > 0 && (
                   <div className="space-y-2 mt-3">
                     {files.map((file, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/5 rounded-xl">
+                      <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          file.type.startsWith('image/') ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-400'
+                          file.type.startsWith('image/') ? 'bg-blue-100 text-blue-500' : 'bg-orange-100 text-orange-500'
                         }`}>
                           {file.type.startsWith('image/') ? <Image size={14} /> : <FileText size={14} />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{file.name}</p>
-                          <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(0)} KB</p>
+                          <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
+                          <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(0)} KB</p>
                         </div>
                         {file.type.startsWith('image/') && (
                           <img src={URL.createObjectURL(file)} alt="" className="w-10 h-10 rounded-lg object-cover" />
                         )}
                         <button onClick={() => setFiles(fl => fl.filter((_, j) => j !== i))}
-                          className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
+                          className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-all">
                           <X size={14} />
                         </button>
                       </div>
@@ -853,8 +828,8 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
               </div>
 
               {/* Summary */}
-              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-2.5">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Application Summary</p>
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2.5">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Application Summary</p>
                 <div className="grid grid-cols-2 gap-y-2.5 text-sm">
                   {[
                     ['Type',      `${selectedType?.icon ?? ''} ${selectedType?.label ?? '—'}`],
@@ -865,19 +840,19 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                     ['Documents', files.length > 0 ? `${files.length} file(s)` : 'None'],
                   ].map(([k, v]) => (
                     <>
-                      <span key={`k-${k}`} className="text-slate-500">{k}</span>
+                      <span key={`k-${k}`} className="text-gray-400">{k}</span>
                       <span key={`v-${k}`} className={`font-medium ${
-                        k === 'Duration' ? 'text-brand-400'
-                          : k === 'Priority' && form.is_urgent ? 'text-red-400'
-                          : 'text-white'
+                        k === 'Duration' ? 'text-primary'
+                          : k === 'Priority' && form.is_urgent ? 'text-red-500'
+                          : 'text-gray-800'
                       }`}>{v}</span>
                     </>
                   ))}
                 </div>
                 {form.reason && (
-                  <div className="mt-3 pt-3 border-t border-white/5">
-                    <p className="text-xs text-slate-500 mb-1">Reason</p>
-                    <p className="text-xs text-slate-300 leading-relaxed">{form.reason}</p>
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-400 mb-1">Reason</p>
+                    <p className="text-xs text-gray-600 leading-relaxed">{form.reason}</p>
                   </div>
                 )}
               </div>
@@ -886,7 +861,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 rounded-b-2xl">
           <div>
             {step > 1 && (
               <button onClick={() => setStep(s => s - 1)} className="btn-secondary">← Back</button>

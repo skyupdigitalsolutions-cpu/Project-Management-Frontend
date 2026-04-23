@@ -15,11 +15,11 @@ const Spinner = ({ sm }) => (
 
 const Badge = ({ children, color = 'slate' }) => {
   const colors = {
-    slate:   'bg-slate-700/50 text-slate-300',
+    slate:   'bg-slate-700/50 text-gray-600',
     green:   'bg-emerald-600/20 text-emerald-300',
     yellow:  'bg-amber-600/20  text-amber-300',
     red:     'bg-red-600/20    text-red-300',
-    brand:   'bg-brand-600/20  text-brand-300',
+    brand:   'bg-purple-50  text-primary',
     purple:  'bg-purple-600/20 text-purple-300',
   }
   return (
@@ -53,11 +53,11 @@ const statusBadge = (s) => {
 
 function Modal({ title, onClose, children }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-surface-100 border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+          <button onClick={onClose} className="text-neutral hover:text-gray-800 transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -89,62 +89,62 @@ function UserPicker({ users, selected, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-slate-300 hover:border-brand-500/40 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 hover:border-primary/30 transition-colors"
       >
         <span className="truncate">
           {selected.length === 0
             ? 'All employees (broadcast)'
             : `${selected.length} employee${selected.length > 1 ? 's' : ''} selected`}
         </span>
-        <ChevronDown size={14} className="flex-shrink-0 ml-2 text-slate-500" />
+        <ChevronDown size={14} className="flex-shrink-0 ml-2 text-neutral" />
       </button>
 
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {selectedUsers.map(u => (
-            <span key={u._id} className="inline-flex items-center gap-1 bg-brand-600/20 text-brand-300 text-xs px-2 py-0.5 rounded-full">
+            <span key={u._id} className="inline-flex items-center gap-1 bg-purple-50 text-primary text-xs px-2 py-0.5 rounded-full">
               {u.name}
-              <button onClick={() => toggle(u._id)} className="hover:text-white"><X size={10} /></button>
+              <button onClick={() => toggle(u._id)} className="hover:text-gray-800"><X size={10} /></button>
             </span>
           ))}
-          <button onClick={() => onChange([])} className="text-xs text-slate-500 hover:text-red-400 px-1">Clear all</button>
+          <button onClick={() => onChange([])} className="text-xs text-neutral hover:text-red-400 px-1">Clear all</button>
         </div>
       )}
 
       {open && (
-        <div className="absolute z-20 mt-1 w-full bg-surface-100 border border-white/10 rounded-xl shadow-xl overflow-hidden">
-          <div className="p-2 border-b border-white/5">
+        <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+          <div className="p-2 border-b border-gray-100">
             <input
               autoFocus
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search employees…"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/40"
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 placeholder-slate-600 focus:outline-none focus:border-primary/30"
             />
           </div>
           <div className="max-h-52 overflow-y-auto">
             {filtered.length === 0
-              ? <p className="text-center text-slate-500 text-sm py-4">No results</p>
+              ? <p className="text-center text-neutral text-sm py-4">No results</p>
               : filtered.map(u => (
                 <button
                   key={u._id}
                   type="button"
                   onClick={() => toggle(u._id)}
-                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 text-left transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 text-left transition-colors"
                 >
                   <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected.includes(u._id) ? 'bg-brand-500 border-brand-500' : 'border-white/20'}`}>
-                    {selected.includes(u._id) && <Check size={10} className="text-white" />}
+                    {selected.includes(u._id) && <Check size={10} className="text-gray-800" />}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm text-slate-200 truncate">{u.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{u.department} · {u.email}</p>
+                    <p className="text-sm text-gray-700 truncate">{u.name}</p>
+                    <p className="text-xs text-neutral truncate">{u.department} · {u.email}</p>
                   </div>
                 </button>
               ))
             }
           </div>
-          <div className="p-2 border-t border-white/5">
-            <button onClick={() => setOpen(false)} className="w-full text-xs text-brand-400 hover:text-brand-300 py-1">Done</button>
+          <div className="p-2 border-t border-gray-100">
+            <button onClick={() => setOpen(false)} className="w-full text-xs text-primary hover:text-primary py-1">Done</button>
           </div>
         </div>
       )}
@@ -172,76 +172,76 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="block text-xs text-slate-400 mb-1.5 font-medium">Meeting Title *</label>
+        <label className="block text-xs text-neutral mb-1.5 font-medium">Meeting Title *</label>
         <input
           required value={form.title} onChange={e => set('title', e.target.value)}
           placeholder="e.g. Weekly Standup"
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 transition-colors"
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 placeholder-slate-600 focus:outline-none focus:border-primary/30 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-xs text-slate-400 mb-1.5 font-medium">Description</label>
+        <label className="block text-xs text-neutral mb-1.5 font-medium">Description</label>
         <textarea
           rows={2} value={form.description} onChange={e => set('description', e.target.value)}
           placeholder="Optional agenda or notes…"
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 transition-colors resize-none"
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 placeholder-slate-600 focus:outline-none focus:border-primary/30 transition-colors resize-none"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs text-slate-400 mb-1.5 font-medium">Platform *</label>
+          <label className="block text-xs text-neutral mb-1.5 font-medium">Platform *</label>
           <select
             required value={form.platform} onChange={e => set('platform', e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-brand-500/50 transition-colors"
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-primary/30 transition-colors"
           >
             {PLATFORMS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-slate-400 mb-1.5 font-medium">Duration (minutes)</label>
+          <label className="block text-xs text-neutral mb-1.5 font-medium">Duration (minutes)</label>
           <input
             type="number" min="1" value={form.duration_minutes}
             onChange={e => set('duration_minutes', Number(e.target.value))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-brand-500/50 transition-colors"
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-primary/30 transition-colors"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs text-slate-400 mb-1.5 font-medium">Meeting Link *</label>
+        <label className="block text-xs text-neutral mb-1.5 font-medium">Meeting Link *</label>
         <input
           required value={form.meeting_link} onChange={e => set('meeting_link', e.target.value)}
           placeholder="https://zoom.us/j/... or https://meet.google.com/..."
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 transition-colors"
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 placeholder-slate-600 focus:outline-none focus:border-primary/30 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-xs text-slate-400 mb-1.5 font-medium">Scheduled Date & Time *</label>
+        <label className="block text-xs text-neutral mb-1.5 font-medium">Scheduled Date & Time *</label>
         <input
           required type="datetime-local" value={form.scheduled_at}
           onChange={e => set('scheduled_at', e.target.value)}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-brand-500/50 transition-colors"
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-primary/30 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-xs text-slate-400 mb-1.5 font-medium">
+        <label className="block text-xs text-neutral mb-1.5 font-medium">
           Invite Employees
-          <span className="text-slate-600 font-normal ml-1">(leave empty to send to everyone)</span>
+          <span className="text-neutral font-normal ml-1">(leave empty to send to everyone)</span>
         </label>
         <UserPicker users={users} selected={form.invitee_ids} onChange={v => set('invitee_ids', v)} />
       </div>
 
-      <div className="flex justify-end gap-3 pt-2 border-t border-white/5">
+      <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
         <button type="button" onClick={onClose}
-          className="px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+          className="px-4 py-2 text-sm text-neutral hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-colors">
           Cancel
         </button>
         <button type="submit" disabled={saving}
-          className="flex items-center gap-2 px-5 py-2 text-sm bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-white rounded-xl transition-colors font-medium">
+          className="flex items-center gap-2 px-5 py-2 text-sm bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-gray-800 rounded-xl transition-colors font-medium">
           {saving ? <Spinner sm /> : <Check size={15} />}
           {initial ? 'Update Meeting' : 'Create & Notify'}
         </button>
@@ -273,14 +273,14 @@ function NotifyModal({ meeting, users, onClose }) {
   return (
     <Modal title="Send Meeting Reminder" onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-sm text-slate-400">
-          Send a reminder notification for <span className="text-white font-medium">"{meeting.title}"</span>. Leave empty to notify all invitees.
+        <p className="text-sm text-neutral">
+          Send a reminder notification for <span className="text-gray-800 font-medium">"{meeting.title}"</span>. Leave empty to notify all invitees.
         </p>
         <UserPicker users={invitedUsers.length > 0 ? invitedUsers : users} selected={selected} onChange={setSelected} />
         <div className="flex justify-end gap-3 pt-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm text-neutral hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-colors">Cancel</button>
           <button onClick={submit} disabled={sending}
-            className="flex items-center gap-2 px-5 py-2 text-sm bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-white rounded-xl transition-colors font-medium">
+            className="flex items-center gap-2 px-5 py-2 text-sm bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-gray-800 rounded-xl transition-colors font-medium">
             {sending ? <Spinner sm /> : <Bell size={15} />}
             Send Reminder
           </button>
@@ -296,7 +296,7 @@ function MeetingCard({ meeting, onEdit, onDelete, onNotify }) {
   const past = isPast(new Date(meeting.scheduled_at))
 
   return (
-    <div className="bg-surface-50 border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
+    <div className="bg-white border border-gray-100 rounded-2xl p-5 hover:border-gray-200 transition-colors">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -304,32 +304,32 @@ function MeetingCard({ meeting, onEdit, onDelete, onNotify }) {
             {statusBadge(meeting.status)}
             {meeting.is_broadcast && <Badge color="purple">All staff</Badge>}
           </div>
-          <h3 className="text-white font-semibold text-base leading-snug truncate">{meeting.title}</h3>
+          <h3 className="text-gray-800 font-semibold text-base leading-snug truncate">{meeting.title}</h3>
           {meeting.description && (
-            <p className="text-slate-500 text-sm mt-1 line-clamp-2">{meeting.description}</p>
+            <p className="text-neutral text-sm mt-1 line-clamp-2">{meeting.description}</p>
           )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <button onClick={() => onNotify(meeting)} title="Send reminder"
-            className="p-2 text-slate-500 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-colors">
+            className="p-2 text-neutral hover:text-primary hover:bg-purple-50 rounded-lg transition-colors">
             <Bell size={15} />
           </button>
           <button onClick={() => onEdit(meeting)} title="Edit"
-            className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+            className="p-2 text-neutral hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors">
             <Edit2 size={15} />
           </button>
           <button onClick={() => onDelete(meeting._id)} title="Delete"
-            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+            className="p-2 text-neutral hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
             <Trash2 size={15} />
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mb-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral mb-3">
         <span className="flex items-center gap-1">
           <Calendar size={12} />
           {format(new Date(meeting.scheduled_at), 'dd MMM yyyy, hh:mm a')}
-          {past && <span className="text-slate-600 ml-1">(passed)</span>}
+          {past && <span className="text-neutral ml-1">(passed)</span>}
         </span>
         <span className="flex items-center gap-1">
           <Clock size={12} /> {meeting.duration_minutes} min
@@ -342,12 +342,12 @@ function MeetingCard({ meeting, onEdit, onDelete, onNotify }) {
 
       <a
         href={meeting.meeting_link} target="_blank" rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-xs text-brand-400 hover:text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 px-3 py-1.5 rounded-lg transition-colors font-medium"
+        className="inline-flex items-center gap-2 text-xs text-primary hover:text-primary bg-purple-50 hover:bg-purple-50 px-3 py-1.5 rounded-lg transition-colors font-medium"
       >
         <ExternalLink size={12} /> Join Meeting
       </a>
 
-      <p className="text-xs text-slate-600 mt-2">
+      <p className="text-xs text-neutral mt-2">
         Created by {meeting.created_by?.name} · {formatDistanceToNow(new Date(meeting.createdAt), { addSuffix: true })}
       </p>
     </div>
@@ -442,18 +442,18 @@ export default function AdminMeetings() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Video size={22} className="text-brand-400" /> Meetings
+          <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Video size={22} className="text-primary" /> Meetings
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">Schedule and manage team meetings</p>
+          <p className="text-sm text-neutral mt-0.5">Schedule and manage team meetings</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={load} className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+          <button onClick={load} className="p-2 text-neutral hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-colors">
             <RefreshCw size={16} />
           </button>
           <button
             onClick={() => setModal('create')}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm rounded-xl transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-gray-800 text-sm rounded-xl transition-colors font-medium"
           >
             <Plus size={16} /> New Meeting
           </button>
@@ -461,12 +461,12 @@ export default function AdminMeetings() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 bg-surface-50 border border-white/5 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1 w-fit">
         {['all', ...STATUS_OPTIONS].map(s => (
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${filter === s ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${filter === s ? 'bg-brand-500 text-gray-800' : 'text-neutral hover:text-gray-800'}`}
           >
             {s}
           </button>
@@ -477,7 +477,7 @@ export default function AdminMeetings() {
       {loading ? (
         <div className="flex justify-center py-20"><Spinner /></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-slate-500">
+        <div className="text-center py-20 text-neutral">
           <Video size={40} className="mx-auto mb-3 opacity-30" />
           <p>No meetings found. Create one to get started.</p>
         </div>
