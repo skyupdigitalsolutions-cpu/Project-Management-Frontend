@@ -142,7 +142,7 @@ export default function DashboardLayout() {
               {user?.name?.charAt(0)?.toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-[18px] font-semibold text-gray-800 truncate">{user?.name}</p>
+              <p className="text-[16px] font-semibold text-gray-800 truncate">{user?.name}</p>
               <span className={`badge text-[16px] mt-0.5 ${ROLE_BADGE[user?.role]}`}>{user?.role}</span>
             </div>
           </div>
@@ -160,13 +160,13 @@ export default function DashboardLayout() {
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {!isCollapsed && (
-          <p className="text-[18px] font-semibold text-gray-400 uppercase tracking-widest px-3 py-2">Menu</p>
+          <p className="text-[16px] font-semibold text-gray-400 uppercase tracking-widest px-3 py-2">Menu</p>
         )}
         {navItems.map(({ to, label, icon: Icon, end, taskBadge }) => (
           <NavLink
             key={to} to={to} end={end}
             onClick={() => setSidebarOpen(false)}
-            className={({ isActive }) => isActive ? 'nav-link-active text-[18px]' : 'nav-link text-[18px]'}
+            className={({ isActive }) => isActive ? 'nav-link-active' : 'nav-link'}
             title={isCollapsed ? label : undefined}
           >
             <Icon size={17} className="flex-shrink-0" />
@@ -248,7 +248,7 @@ export default function DashboardLayout() {
               to={`/${user?.role}/profile`}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-purple-50 transition-colors"
             >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[18px] shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[16px] shadow-sm">
                 {user?.name?.charAt(0)?.toUpperCase()}
               </div>
               <div className="hidden sm:block text-left">
