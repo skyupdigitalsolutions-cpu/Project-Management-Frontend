@@ -276,7 +276,7 @@ function LeaveApprovalTab({ onCountChange }) {
             <div key={leave._id} className="card hover:border-gray-200 transition-all">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex items-start gap-4 flex-1 min-w-0">
-                  <div className="text-2xl mt-0.5 flex-shrink-0">{lt?.icon ?? '📋'}</div>
+                  <div className="text-2xl mt-0.5 flex-shrink-0">{lt?.icon ?? ''}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       {/* Applicant */}
@@ -370,7 +370,7 @@ function LeaveApprovalTab({ onCountChange }) {
                   ['From',        viewModal.from_date ? format(parseISO(viewModal.from_date.slice(0, 10)), 'EEE, MMM d yyyy') : '—'],
                   ['To',          viewModal.to_date   ? format(parseISO(viewModal.to_date.slice(0, 10)),   'EEE, MMM d yyyy') : '—'],
                   ['Duration',    `${viewModal.days ?? '?'} day(s)`],
-                  ['Priority',    viewModal.is_urgent ? '🚨 Urgent' : 'Normal'],
+                  ['Priority',    viewModal.is_urgent ? ' Urgent' : 'Normal'],
                   ['Applied On',  viewModal.createdAt ? format(new Date(viewModal.createdAt), 'MMM d, yyyy') : '—'],
                   ['Contact',     viewModal.contact_during_leave || '—'],
                 ].map(([k, v]) => (
@@ -414,7 +414,7 @@ function LeaveApprovalTab({ onCountChange }) {
       <Modal
         open={!!actionModal}
         onClose={() => { setActionModal(null); setAdminNote('') }}
-        title={actionModal?.action === 'approve' ? '✅ Approve Leave Request' : '❌ Reject Leave Request'}
+        title={actionModal?.action === 'approve' ? ' Approve Leave Request' : ' Reject Leave Request'}
         footer={
           <>
             <button className="btn-secondary" onClick={() => { setActionModal(null); setAdminNote('') }} disabled={saving}>Cancel</button>

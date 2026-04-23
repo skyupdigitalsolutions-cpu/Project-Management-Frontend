@@ -714,7 +714,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   onChange={e => f('is_urgent', e.target.checked)}
                   className="w-4 h-4 accent-brand-500 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-800">Mark as Urgent 🚨</p>
+                  <p className="text-sm font-medium text-gray-800">Mark as Urgent </p>
                   <p className="text-[16px] text-gray-400">Flag for priority review by admin</p>
                 </div>
               </label>
@@ -741,7 +741,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                               ? 'bg-amber-50 border-amber-200 text-amber-600 hover:bg-amber-100'
                               : 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100'
                         }`}>
-                        {toneLoading === tone ? <Spinner size="xs" /> : tone === 'casual' ? '🌴' : '💼'}
+                        {toneLoading === tone ? <Spinner size="xs" /> : tone === 'casual' ? '' : ''}
                         {tone.charAt(0).toUpperCase() + tone.slice(1)}
                       </button>
                     ))}
@@ -836,7 +836,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                     ['Duration',  `${days} day${days !== 1 ? 's' : ''}`],
                     ['From',      form.from_date ? format(new Date(form.from_date), 'EEE, MMM d yyyy') : '—'],
                     ['To',        form.to_date   ? format(new Date(form.to_date),   'EEE, MMM d yyyy') : '—'],
-                    ['Priority',  form.is_urgent ? '🚨 Urgent' : 'Normal'],
+                    ['Priority',  form.is_urgent ? ' Urgent' : 'Normal'],
                     ['Documents', files.length > 0 ? `${files.length} file(s)` : 'None'],
                   ].map(([k, v]) => (
                     <>
