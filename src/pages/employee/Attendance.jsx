@@ -447,7 +447,7 @@ function LeaveHistoryTab({ leaves, loading, onApply }) {
           <div key={leave._id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-gray-300 transition-all">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-4">
-                <div className="text-2xl mt-0.5">{lt?.icon ?? '📋'}</div>
+                <div className="text-2xl mt-0.5">{lt?.icon ?? ''}</div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-semibold text-gray-800 text-sm">{lt?.label ?? leave.leave_type}</h4>
