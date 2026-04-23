@@ -54,7 +54,7 @@ function PermissionBadge({ status }) {
   )
 }
 
-// ─── Ask Approval Modal ───────────────────────────────────────────────────────
+
 
 function AskApprovalModal({ item, type, onClose, onSuccess }) {
   const [message,    setMessage]    = useState('')
@@ -83,11 +83,9 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
       files.forEach(f => fd.append('attachments', f))
 
       if (type === 'task') {
-        // Task approval → /tasks/:id/request-permission (uses in-app notifications)
         fd.append('reason', trimmed)
         await api.post(`/tasks/${item._id}/request-permission`, fd)
       } else {
-        // Project approval → /email/send-approval-request (also in-app notifications, despite the route name)
         fd.append('message',  trimmed)
         fd.append('subject',  `Approval Request: ${item.title}`)
         fd.append('ref_type', 'Project')
@@ -109,50 +107,50 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       <div
-        className="relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
-        style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden bg-white"
+        style={{ border: '1px solid #e5e7eb' }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-5 py-4 border-b border-gray-200"
-          style={{ background: 'rgba(245,158,11,0.07)' }}
+          className="flex items-center justify-between px-5 py-4 border-b border-gray-100"
+          style={{ background: 'rgba(245,158,11,0.06)' }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
-              <MessageSquarePlus size={16} className="text-amber-400" />
+            <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+              <MessageSquarePlus size={16} className="text-amber-500" />
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-800">Ask for Approval</p>
-              <p className="text-[11px] text-neutral truncate max-w-[280px]">
+              <p className="text-[11px] text-gray-500 truncate max-w-[280px]">
                 {type === 'task' ? '📋 Task' : '📁 Project'}: {item.title}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-neutral hover:text-gray-800 hover:bg-white/8 transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <X size={14} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-4 bg-white">
 
           {/* Blocked notice */}
           {needsPerm && (
             <div
               className="flex items-start gap-3 p-3 rounded-xl"
-              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+              style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)' }}
             >
               <Lock size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-semibold text-red-400">This task requires admin approval before you can start</p>
+                <p className="text-xs font-semibold text-red-500">This task requires admin approval before you can start</p>
                 {item.permission_description && (
-                  <p className="text-xs text-neutral mt-0.5 italic">"{item.permission_description}"</p>
+                  <p className="text-xs text-gray-500 mt-0.5 italic">"{item.permission_description}"</p>
                 )}
               </div>
             </div>
@@ -160,7 +158,7 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
 
           {/* Message */}
           <div>
-            <label className="block text-[11px] font-semibold text-neutral uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
               Your Message <span className="text-red-400">*</span>
             </label>
             <textarea
@@ -173,25 +171,25 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
                   ? 'Explain why you need access or what you plan to do for this task...'
                   : 'Describe your request, progress update, or what you need approval for...'
               }
-              className="w-full px-3 py-2.5 text-sm text-gray-700 placeholder-slate-600
+              className="w-full px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400
                          bg-gray-50 border border-gray-200 rounded-xl outline-none resize-none
-                         focus:border-amber-500/40 transition-colors"
+                         focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 transition-all"
             />
-            <p className="mt-1 text-[11px] text-neutral text-right">{message.length} chars</p>
+            <p className="mt-1 text-[11px] text-gray-400 text-right">{message.length} chars</p>
           </div>
 
           {/* Attachments */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-semibold text-neutral uppercase tracking-wider">
-                Attach Documents <span className="text-neutral">(optional)</span>
+              <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                Attach Documents <span className="text-gray-400">(optional)</span>
               </label>
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg
-                           text-primary border border-primary/30
-                           hover:bg-purple-50 transition-colors font-medium"
+                           text-violet-600 border border-violet-200
+                           hover:bg-violet-50 transition-colors font-medium"
               >
                 <Paperclip size={11} /> Attach File
               </button>
@@ -210,14 +208,14 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 className="w-full flex flex-col items-center justify-center py-5 rounded-xl
-                           border border-dashed border-gray-200
-                           hover:border-primary/30 hover:bg-purple-50 transition-all group"
+                           border border-dashed border-gray-200 bg-gray-50
+                           hover:border-violet-300 hover:bg-violet-50/50 transition-all group"
               >
-                <Paperclip size={20} className="text-neutral group-hover:text-primary mb-1.5 transition-colors" />
-                <p className="text-xs text-neutral group-hover:text-neutral transition-colors">
+                <Paperclip size={20} className="text-gray-300 group-hover:text-violet-400 mb-1.5 transition-colors" />
+                <p className="text-xs text-gray-400 group-hover:text-gray-500 transition-colors">
                   Click to attach PDF, Word, images, spreadsheets, or ZIP files
                 </p>
-                <p className="text-[11px] text-slate-700 mt-0.5">Max 10 MB per file</p>
+                <p className="text-[11px] text-gray-300 mt-0.5">Max 10 MB per file</p>
               </button>
             ) : (
               <div className="space-y-2">
@@ -226,17 +224,16 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
                   return (
                     <div
                       key={i}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl"
-                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl bg-gray-50 border border-gray-100"
                     >
-                      <FileIcon size={14} className="text-primary flex-shrink-0" />
+                      <FileIcon size={14} className="text-violet-500 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-700 truncate">{f.name}</p>
-                        <p className="text-[11px] text-neutral">{formatBytes(f.size)}</p>
+                        <p className="text-[11px] text-gray-400">{formatBytes(f.size)}</p>
                       </div>
                       <button
                         onClick={() => removeFile(i)}
-                        className="p-1 rounded-lg text-neutral hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        className="p-1 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-50 transition-colors"
                       >
                         <X size={12} />
                       </button>
@@ -246,7 +243,7 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="flex items-center gap-1.5 text-[11px] text-neutral hover:text-primary transition-colors mt-1"
+                  className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-violet-500 transition-colors mt-1"
                 >
                   <Paperclip size={11} /> Add another file
                 </button>
@@ -256,14 +253,14 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-gray-200">
-          <p className="text-[11px] text-neutral">
+        <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/70">
+          <p className="text-[11px] text-gray-400">
             {files.length > 0 ? `${files.length} file${files.length > 1 ? 's' : ''} attached` : 'No attachments'}
           </p>
           <div className="flex items-center gap-2.5">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs text-neutral hover:text-gray-800 rounded-xl hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-xs text-gray-500 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition-colors"
             >
               Cancel
             </button>
@@ -271,8 +268,8 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
               onClick={handleSubmit}
               disabled={submitting || message.trim().length < 5}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold
-                         bg-amber-500 hover:bg-amber-400 text-black
-                         disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                         bg-amber-500 hover:bg-amber-400 text-white
+                         disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
             >
               {submitting
                 ? <><Loader2 size={12} className="animate-spin" /> Sending…</>
@@ -409,7 +406,7 @@ export default function EmployeeDashboard() {
       {/* Welcome row */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">{getGreeting()}, {user?.name?.split(' ')[0]} 👋</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{getGreeting()}, {user?.name?.split(' ')[0]} </h1>
           <p className="text-neutral text-sm mt-1">{user?.designation} · {user?.department}</p>
         </div>
 
@@ -438,7 +435,7 @@ export default function EmployeeDashboard() {
               {clocking ? <Spinner size="sm" /> : <LogOut size={15} />} Clock Out
             </button>
           ) : (
-            <span className="text-xs text-emerald-400 font-semibold">Done ✓</span>
+            <span className="text-xs text-emerald-400 font-semibold">Done </span>
           )}
         </div>
       </div>
