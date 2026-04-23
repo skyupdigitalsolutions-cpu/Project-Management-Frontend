@@ -97,7 +97,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-accent w-full justify-center py-2.5 text-base font-semibold"
+              className="btn-primary w-full justify-center py-2.5 text-base font-semibold"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

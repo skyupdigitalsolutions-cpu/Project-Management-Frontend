@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../api/axios";
+import { ClipboardList, CheckSquare, AlertTriangle, ShieldBan, RefreshCcw } from "lucide-react";
 
 const PRIORITY_COLOR = {
   critical: "bg-red-500/20 text-red-600 border border-red-500/30",
@@ -93,10 +94,10 @@ export default function WorkflowDashboard() {
   const overallProgress = totalTasks ? Math.round((completedCount / totalTasks) * 100) : 0;
 
   const TABS = [
-    { id: "overview",    label: "📊 Overview" },
-    { id: "delayed",     label: `⚠️ Delayed (${delayedTasks.length})` },
-    { id: "permissions", label: `🔐 Permissions (${pendingPerms.length})` },
-    { id: "workload",    label: "👥 Workload" },
+    { id: "overview",    label: " Overview" },
+    { id: "delayed",     label: ` Delayed (${delayedTasks.length})` },
+    { id: "permissions", label: ` Permissions (${pendingPerms.length})` },
+    { id: "workload",    label: " Workload" },
   ];
 
   if (loading) return (
@@ -113,10 +114,10 @@ export default function WorkflowDashboard() {
         <h1 className="text-2xl font-bold text-gray-800">Workflow Dashboard</h1>
         <button
           onClick={fetchAll}
-          className="text-sm px-3 py-1.5 rounded-lg text-[#000000] bg-[#ffffff] transition-colors hover:opacity-90 border border-gray-300"
+          className=" flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg text-[#000000] bg-[#ffffff] transition-colors hover:opacity-90 border border-gray-300"
          
         >
-          🔄 Refresh
+          <RefreshCcw className="h-4 w-4" /> Refresh
         </button>
       </div>
 
@@ -130,11 +131,11 @@ export default function WorkflowDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KPICard label="Total Tasks"         value={totalTasks}          color="blue"   icon="📋" />
-        <KPICard label="Completed"           value={completedCount}      color="green"  icon="✅" />
-        <KPICard label="Delayed"             value={delayedTasks.length} color="red"    icon="⚠️" />
-        <KPICard label="Pending Permissions" value={pendingPerms.length} color="purple" icon="🔐" />
-      </div>
+  <KPICard label="Total Tasks"         value={totalTasks}          color="blue"   icon={<ClipboardList />} />
+  <KPICard label="Completed"           value={completedCount}      color="green"  icon={<CheckSquare />} />
+  <KPICard label="Delayed"             value={delayedTasks.length} color="red"    icon={<AlertTriangle />} />
+  <KPICard label="Pending Permissions" value={pendingPerms.length} color="purple" icon={<ShieldBan />} />
+</div>
 
       {/* Overall Progress */}
       <div className="rounded-xl p-5 bg-white border border-gray-200 shadow-sm">
