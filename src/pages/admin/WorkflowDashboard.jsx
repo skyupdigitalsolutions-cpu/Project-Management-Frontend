@@ -151,7 +151,7 @@ export default function WorkflowDashboard() {
         </div>
         <div className="flex flex-wrap gap-3 mt-3">
           {Object.entries(stats.by_status || {}).map(([status, count]) => (
-            <span key={status} className={`text-xs px-2 py-1 rounded-full ${STATUS_COLOR[status] || "bg-slate-100 text-slate-600"}`}>
+            <span key={status} className={`text-[16px] px-2 py-1 rounded-full ${STATUS_COLOR[status] || "bg-slate-100 text-slate-600"}`}>
               {status}: {count}
             </span>
           ))}
@@ -205,26 +205,26 @@ export default function WorkflowDashboard() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-semibold text-gray-800">{task.title}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLOR[task.priority]}`}>
+                          <span className={`text-[16px] px-2 py-0.5 rounded-full ${PRIORITY_COLOR[task.priority]}`}>
                             {task.priority}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-[16px] text-gray-500">
                           Assigned to: <strong className="text-gray-700">{task.assigned_to?.name || "—"}</strong> ·
                           Due: <strong className="text-red-600">{new Date(task.due_date).toLocaleDateString()}</strong>
                         </p>
                         {task.delay_reason && (
-                          <p className="mt-1 text-xs text-red-600 rounded px-2 py-1 bg-red-100">
+                          <p className="mt-1 text-[16px] text-red-600 rounded px-2 py-1 bg-red-100">
                             Last reason: {task.delay_reason}
                           </p>
                         )}
                         {task.delay_logs?.length > 0 && (
-                          <p className="text-xs text-gray-400 mt-1">{task.delay_logs.length} delay log(s)</p>
+                          <p className="text-[16px] text-gray-400 mt-1">{task.delay_logs.length} delay log(s)</p>
                         )}
                       </div>
                       <button
                         onClick={() => setDelayModal(task)}
-                        className="text-xs px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors bg-red-500"
+                        className="text-[16px] px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors bg-red-500"
                       >
                         Log Delay
                       </button>
@@ -250,20 +250,20 @@ export default function WorkflowDashboard() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-semibold text-gray-800">{task.title}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-600 border border-purple-300">
+                          <span className="text-[16px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-600 border border-purple-300">
                             {task.permission_status}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-[16px] text-gray-500">
                           Assigned to: <strong className="text-gray-700">{task.assigned_to?.name || "—"}</strong>
                         </p>
                         {task.permission_description && (
                           <div className="mt-2 rounded-lg px-3 py-2 bg-purple-100 border border-purple-200">
                             <p className="text-[10px] font-semibold text-purple-600 uppercase tracking-wider mb-0.5">Employee's reason:</p>
-                            <p className="text-xs text-purple-700 italic">"{task.permission_description}"</p>
+                            <p className="text-[16px] text-purple-700 italic">"{task.permission_description}"</p>
                           </div>
                         )}
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-[16px] text-gray-400 mt-1">
                           Project: <strong className="text-gray-600">{task.project_id?.title || "—"}</strong>
                           {task.due_date && <span> · Due {new Date(task.due_date).toLocaleDateString()}</span>}
                         </p>
@@ -271,13 +271,13 @@ export default function WorkflowDashboard() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => grantPermission(task._id, "grant")}
-                          className="text-xs px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors bg-emerald-500"
+                          className="text-[16px] px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors bg-emerald-500"
                         >
                           ✅ Grant
                         </button>
                         <button
                           onClick={() => grantPermission(task._id, "deny")}
-                          className="text-xs px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors bg-red-500"
+                          className="text-[16px] px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-colors bg-red-500"
                         >
                           ❌ Deny
                         </button>
@@ -328,7 +328,7 @@ export default function WorkflowDashboard() {
                 placeholder="Explain why this task is delayed (min 10 characters)..."
                 className="w-full rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-gray-50 border border-gray-200"
               />
-              <p className="text-xs text-gray-400 mt-1">{delayReason.length}/10 min characters</p>
+              <p className="text-[16px] text-gray-400 mt-1">{delayReason.length}/10 min characters</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">New Due Date (optional)</label>
@@ -372,10 +372,10 @@ function KPICard({ label, value, color, icon }) {
     purple: { backgroundColor: '#faf5ff', border: '1px solid #e9d5ff', color: '#9333ea' },
   };
   return (
-    <div className="rounded-xl p-4 shadow-sm" style={styles[color]}>
-      <div className="text-2xl mb-1">{icon}</div>
-      <div className="text-2xl font-bold" style={{ color: styles[color].color }}>{value}</div>
-      <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+    <div className="rounded-xl p-6 shadow-sm" style={styles[color]}>
+      <div className="flex gap-4 justify-between"><div className="text-[18px] mb-1">{icon}</div>
+      <div className="text-[24px] font-bold" style={{ color: styles[color].color }}>{value}</div></div>
+      <div className="text-[18px] text-gray-500 mt-0.5">{label}</div>
     </div>
   );
 }
@@ -391,32 +391,32 @@ function TaskRow({ task, onLogDelay }) {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm text-gray-800 truncate">{task.title}</span>
           {task.is_delayed && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-600">Delayed</span>
+            <span className="text-[16px] px-1.5 py-0.5 rounded bg-red-100 text-red-600">Delayed</span>
           )}
           {task.requires_permission && task.permission_status !== "granted" && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-600">
+            <span className="text-[16px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-600">
               Needs Permission
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-[16px] text-gray-400 mt-0.5">
           {task.assigned_to?.name || "Unassigned"} · Due {new Date(task.due_date).toLocaleDateString()}
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLOR[task.priority] || ""}`}>
+        <span className={`text-[16px] px-2 py-0.5 rounded-full ${PRIORITY_COLOR[task.priority] || ""}`}>
           {task.priority}
         </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLOR[task.status] || "bg-slate-100 text-slate-600"}`}>
+        <span className={`text-[16px] px-2 py-0.5 rounded-full ${STATUS_COLOR[task.status] || "bg-slate-100 text-slate-600"}`}>
           {task.status}
         </span>
         {task.progress_percent > 0 && (
-          <span className="text-xs text-gray-400 w-8 text-right">{task.progress_percent}%</span>
+          <span className="text-[16px] text-gray-400 w-8 text-right">{task.progress_percent}%</span>
         )}
         {!task.is_delayed && task.status !== "completed" && (
           <button
             onClick={onLogDelay}
-            className="text-xs px-2 py-1 rounded hover:opacity-80 transition-colors border border-red-300 text-red-500"
+            className="text-[16px] px-2 py-1 rounded hover:opacity-80 transition-colors border border-red-300 text-red-500"
           >
             Delay
           </button>
@@ -440,11 +440,11 @@ function WorkloadBar({ emp }) {
       <div className="flex justify-between mb-2">
         <div>
           <span className="font-medium text-sm text-gray-800">{emp.name}</span>
-          <span className="text-xs text-gray-400 ml-2">{emp.designation} · {emp.department}</span>
+          <span className="text-[16px] text-gray-400 ml-2">{emp.designation} · {emp.department}</span>
         </div>
         <div className="text-right">
           <span className="text-sm font-bold text-gray-700">{emp.task_count} tasks</span>
-          <span className="text-xs text-gray-400 ml-2">score: {emp.workload_score}</span>
+          <span className="text-[16px] text-gray-400 ml-2">score: {emp.workload_score}</span>
         </div>
       </div>
       <div className="w-full rounded-full h-2.5 bg-gray-100">

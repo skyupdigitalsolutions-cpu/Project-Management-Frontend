@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import {
   ChevronRight, ChevronLeft, Check, Plus, Trash2,
   Briefcase, User, Building2, LayoutList, Users, ClipboardList, Eye,
-  Clock, Calendar, AlertCircle, X, Pencil, Save, RefreshCw,
+  Clock, Calendar, AlertCircle, X, Pencil, Save, RefreshCw, RefreshCcw,
   Layers, Zap, GitBranch, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import { FormField, SelectInput, Spinner } from '../../components/common/UI'
@@ -33,18 +33,18 @@ const STATUSES      = ['planning', 'active', 'on-hold', 'completed', 'cancelled'
 const TASK_STATUSES = ['todo', 'in-progress', 'on-hold', 'completed']
 
 const PROJECT_TYPES = [
-  { value: 'website',         label: 'Website',          emoji: '🌐' },
-  { value: 'mobile_app',      label: 'Mobile App',       emoji: '📱' },
-  { value: 'ecommerce',       label: 'E-Commerce',       emoji: '🛒' },
-  { value: 'admin_dashboard', label: 'Admin Dashboard',  emoji: '📊' },
-  { value: 'api_service',     label: 'API / Backend',    emoji: '⚙️' },
-  { value: 'ai_features',     label: 'AI Features',      emoji: '🤖' },
-  { value: 'design',          label: 'Design',           emoji: '🎨' },
-  { value: 'marketing',       label: 'Marketing',        emoji: '📣' },
-  { value: 'seo',             label: 'SEO',              emoji: '🔍' },
-  { value: 'content',         label: 'Content',          emoji: '✍️' },
-  { value: 'data_analytics',  label: 'Data Analytics',   emoji: '📈' },
-  { value: 'other',           label: 'Other',            emoji: '📁' },
+  { value: 'website',         label: 'Website' },
+  { value: 'mobile_app',      label: 'Mobile App' },
+  { value: 'ecommerce',       label: 'E-Commerce' },
+  { value: 'admin_dashboard', label: 'Admin Dashboard'},
+  { value: 'api_service',     label: 'API / Backend' },
+  { value: 'ai_features',     label: 'AI Features' },
+  { value: 'design',          label: 'Design' },
+  { value: 'marketing',       label: 'Marketing'},
+  { value: 'seo',             label: 'SEO' },
+  { value: 'content',         label: 'Content'},
+  { value: 'data_analytics',  label: 'Data Analytics' },
+  { value: 'other',           label: 'Other'},
 ]
 
 // ─── Plan Preview Component ────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ function PlanPreview({ plan, onClose }) {
         <div className="flex items-center gap-3">
           <GitBranch size={16} className="text-primary" />
           <span className="text-sm font-semibold text-gray-800">Generated Project Plan</span>
-          <span className="text-xs text-neutral px-2 py-0.5 rounded-full border border-gray-200">
+          <span className="text-[16px] text-neutral px-2 py-0.5 rounded-full border border-gray-200">
             {plan.phases.length} phases · {totalTasks} tasks · {parallelTasks} parallel
           </span>
         </div>
@@ -96,8 +96,8 @@ function PlanPreview({ plan, onClose }) {
                 onClick={() => togglePhase(phase.name)}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-800">{phase.name}</span>
-                  <span className="text-xs text-neutral">
+                  <span className="text-[16px] font-semibold text-gray-800">{phase.name}</span>
+                  <span className="text-[16px] text-neutral">
                     {phase.tasks.length} tasks · {parallelCount} parallel
                   </span>
                 </div>
@@ -111,28 +111,28 @@ function PlanPreview({ plan, onClose }) {
                       style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-medium text-gray-700 truncate">{task.title}</span>
+                          <span className="text-[16px] font-medium text-gray-700 truncate">{task.title}</span>
                           {task.canRunParallel && (
-                            <span className="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                            <span className="flex items-center gap-1 text-[16px] text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-1.5 py-0.5 rounded-full flex-shrink-0">
                               <Zap size={9} />parallel
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="text-xs text-neutral">{task.role}</span>
-                          <span className="text-xs text-neutral">·</span>
-                          <span className="flex items-center gap-1 text-xs text-neutral">
+                          <span className="text-[16px] text-neutral">{task.role}</span>
+                          <span className="text-[16px] text-neutral">·</span>
+                          <span className="flex items-center gap-1 text-[16px] text-neutral">
                             <Clock size={9} />{task.duration}
                           </span>
                           {task.dependency && (
                             <>
-                              <span className="text-xs text-neutral">·</span>
-                              <span className="text-xs text-neutral italic truncate max-w-32">after: {task.dependency}</span>
+                              <span className="text-[16px] text-neutral">·</span>
+                              <span className="text-[16px] text-neutral italic truncate max-w-32">after: {task.dependency}</span>
                             </>
                           )}
                         </div>
                       </div>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full border flex-shrink-0 ${priorityColor[task.priority] ?? priorityColor.Medium}`}>
+                      <span className={`text-[16px] px-1.5 py-0.5 rounded-full border flex-shrink-0 ${priorityColor[task.priority] ?? priorityColor.Medium}`}>
                         {task.priority}
                       </span>
                     </div>
@@ -361,7 +361,7 @@ function Step1({ data, onChange, managers, editMode = false, onRegeneratePlan, r
           <p className="text-sm font-medium text-gray-600">
             Upload Project Document <span className="text-neutral font-normal">(optional)</span>
           </p>
-          <p className="text-xs text-neutral">
+          <p className="text-[16px] text-neutral">
             Upload a PDF, DOCX, or TXT file. We'll extract the project description and generate tasks automatically.
           </p>
           <label className="flex items-center gap-3 cursor-pointer">
@@ -372,7 +372,7 @@ function Step1({ data, onChange, managers, editMode = false, onRegeneratePlan, r
             <input type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={handleFileChange} />
           </label>
           {docFile && (
-            <p className="text-xs text-emerald-400">
+            <p className="text-[16px] text-emerald-400">
               ✓ Document selected — description and tasks will be generated on submit
             </p>
           )}
@@ -397,7 +397,7 @@ function Step1({ data, onChange, managers, editMode = false, onRegeneratePlan, r
         <div className="flex items-center gap-2 mb-2">
           <Layers size={13} className="text-neutral" />
           <label className="text-sm font-medium text-gray-600">Project Types</label>
-          <span className="text-xs text-neutral">(select all that apply)</span>
+          <span className="text-[16px] text-neutral">(select all that apply)</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {PROJECT_TYPES.map(pt => {
@@ -407,13 +407,13 @@ function Step1({ data, onChange, managers, editMode = false, onRegeneratePlan, r
                 key={pt.value}
                 type="button"
                 onClick={() => toggleProjectType(pt.value)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[16px] font-medium border transition-all ${
                   selected
                     ? 'bg-brand-600 border-brand-500 text-gray-800'
                     : 'bg-gray-100 border-gray-200 text-neutral hover:border-white/20 hover:text-gray-600'
                 }`}
               >
-                <span>{pt.emoji}</span>
+                
                 <span>{pt.label}</span>
                 {selected && <Check size={10} />}
               </button>
@@ -440,7 +440,7 @@ function Step1({ data, onChange, managers, editMode = false, onRegeneratePlan, r
                 <><Zap size={13} />Preview AI Project Plan</>
               )}
             </button>
-            <p className="text-xs text-neutral mt-1">
+            <p className="text-[16px] text-neutral mt-1">
               Generates a phase-based parallel execution plan for: {selectedTypes.map(t => PROJECT_TYPES.find(p => p.value === t)?.label).join(', ')}
             </p>
           </div>
@@ -452,7 +452,7 @@ function Step1({ data, onChange, managers, editMode = false, onRegeneratePlan, r
 
         {editMode && selectedTypes.length > 0 && onRegeneratePlan && (
           <div className="mt-3 p-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
-            <p className="text-xs text-red-400 mb-2">
+            <p className="text-[16px] text-red-400 mb-2">
               You changed the project types. Click below to regenerate and auto-assign a fresh plan.
             </p>
             <button
@@ -573,7 +573,7 @@ function Step2({ data, onChange }) {
       <div className="flex items-center gap-3 rounded-xl px-4 py-3"
         style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
         <AlertCircle size={14} className="text-blue-400 flex-shrink-0" />
-        <p className="text-xs text-neutral">
+        <p className="text-[16px] text-neutral">
           Client details are optional. You can skip this step and add them later.
         </p>
       </div>
@@ -639,14 +639,14 @@ function Step3({ assignments, onChange, editMode }) {
             }`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-brand-600 flex items-center justify-center text-gray-800 text-xs font-bold">
+                <div className="w-6 h-6 rounded-lg bg-brand-600 flex items-center justify-center text-gray-800 text-[16px] font-bold">
                   {idx + 1}
                 </div>
                 <span className="text-sm font-semibold text-gray-800">
                   {a.department || 'New Assignment'}
                 </span>
                 {!a._id && (
-                  <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                  <span className="text-[16px] px-2 py-0.5 rounded-full font-medium"
                     style={{ backgroundColor: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
                     New
                   </span>
@@ -843,20 +843,20 @@ function Step4({ assignments, onChange, allUsers, projectId, editMode }) {
               }}
               className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-purple-50 border border-primary/30 flex items-center justify-center text-primary text-xs font-bold">
+                <div className="w-7 h-7 rounded-lg bg-purple-50 border border-primary/30 flex items-center justify-center text-primary text-[16px] font-bold">
                   {idx + 1}
                 </div>
                 <div className="text-left">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-gray-800 text-sm">{a.title || 'Untitled'}</p>
                     {!a._id && (
-                      <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                      <span className="text-[16px] px-2 py-0.5 rounded-full font-medium"
                         style={{ backgroundColor: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
                         New
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-neutral">
+                  <p className="text-[16px] text-neutral">
                     {a.department
                       ? `${a.department} · ${a.members.length} member${a.members.length !== 1 ? 's' : ''} · ${visibleTasks.length} task${visibleTasks.length !== 1 ? 's' : ''}`
                       : <span className="text-amber-400/80">⚠ No department selected</span>
@@ -872,7 +872,7 @@ function Step4({ assignments, onChange, allUsers, projectId, editMode }) {
                 {/* Members */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-semibold text-neutral uppercase tracking-wider flex items-center gap-2">
+                    <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider flex items-center gap-2">
                       <Users size={13} /> Team Members
                     </p>
                     {departmentUsers.length > 0 && (
@@ -887,12 +887,12 @@ function Step4({ assignments, onChange, allUsers, projectId, editMode }) {
                               : x
                           ))
                         }}
-                        className="text-xs text-primary hover:text-primary transition-colors">
+                        className="text-[16px] text-primary hover:text-primary transition-colors">
                         {departmentUsers.every(u => a.members.includes(u._id)) ? 'Deselect all' : 'Select all'}
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-neutral mb-3">
+                  <p className="text-[16px] text-neutral mb-3">
                     Showing employees from{' '}
                     <span className="text-primary font-medium">{a.department || '—'}</span>
                     {a.department && departmentUsers.length === 0 && (
@@ -918,12 +918,12 @@ function Step4({ assignments, onChange, allUsers, projectId, editMode }) {
                               onChange={() => toggleMember(a._tempId, u._id)}
                               className="w-4 h-4 accent-brand-500 flex-shrink-0" />
                             <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-[16px] font-bold flex-shrink-0">
                                 {u.name.charAt(0).toUpperCase()}
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-medium text-gray-800 truncate">{u.name}</p>
-                                <p className="text-xs text-neutral truncate">{u.designation || u.department}</p>
+                                <p className="text-[16px] text-neutral truncate">{u.designation || u.department}</p>
                               </div>
                             </div>
                           </label>
@@ -942,7 +942,7 @@ function Step4({ assignments, onChange, allUsers, projectId, editMode }) {
                   )}
 
                   {departmentUsers.length > 0 && a.members.length === 0 && (
-                    <p className="text-xs text-amber-400/70 mt-2 flex items-center gap-1">
+                    <p className="text-[16px] text-amber-400/70 mt-2 flex items-center gap-1">
                       <AlertCircle size={12} /> Select at least one team member
                     </p>
                   )}
@@ -951,7 +951,7 @@ function Step4({ assignments, onChange, allUsers, projectId, editMode }) {
                 {/* Tasks */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-semibold text-neutral uppercase tracking-wider flex items-center gap-2">
+                    <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider flex items-center gap-2">
                       <ClipboardList size={13} /> Tasks
                       <span className="normal-case font-normal text-neutral">({visibleTasks.length})</span>
                     </p>
@@ -959,7 +959,7 @@ function Step4({ assignments, onChange, allUsers, projectId, editMode }) {
                       onClick={() => addTask(a._tempId)}
                       disabled={a.members.length === 0}
                       title={a.members.length === 0 ? 'Select team members first' : 'Add a new task'}
-                      className="btn-secondary !py-1.5 !px-3 text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+                      className="btn-secondary !py-1.5 !px-3 text-[16px] disabled:opacity-40 disabled:cursor-not-allowed">
                       <Plus size={12} /> Add Task
                     </button>
                   </div>
@@ -983,11 +983,11 @@ function Step4({ assignments, onChange, allUsers, projectId, editMode }) {
                           }`}>
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-neutral uppercase tracking-wider">
+                              <span className="text-[16px] font-semibold text-neutral uppercase tracking-wider">
                                 Task {ti + 1}
                               </span>
                               {!t._id && (
-                                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                                <span className="text-[16px] px-2 py-0.5 rounded-full font-medium"
                                   style={{ backgroundColor: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
                                   New
                                 </span>
@@ -1083,8 +1083,8 @@ function Step5({ project, client, assignments, allUsers, managers, editMode, onR
 
   const Row = ({ label, value }) => value ? (
     <div className="flex justify-between py-1.5">
-      <span className="text-xs text-neutral font-medium">{label}</span>
-      <span className="text-xs text-gray-700 text-right max-w-xs">{value}</span>
+      <span className="text-[16px] text-neutral font-medium">{label}</span>
+      <span className="text-[16px] text-gray-700 text-right max-w-xs">{value}</span>
     </div>
   ) : null
 
@@ -1115,8 +1115,8 @@ function Step5({ project, client, assignments, allUsers, managers, editMode, onR
           <div className="flex items-start gap-3">
             <RefreshCw size={16} className="text-violet-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-gray-800">🔄 Regenerate Plan</p>
-              <p className="text-xs text-neutral mt-0.5">
+              <p className=" flex items-center gap-2 text-sm font-semibold text-gray-800"><RefreshCcw /> Regenerate Plan</p>
+              <p className="text-[16px] text-neutral mt-0.5">
                 Changed project types or requirements? Rebuild the task plan — choose to replace or merge.
               </p>
             </div>
@@ -1135,7 +1135,7 @@ function Step5({ project, client, assignments, allUsers, managers, editMode, onR
         <div className="mb-4 rounded-xl p-4 space-y-2"
           style={{ backgroundColor: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)' }}>
           <p className="text-sm font-semibold text-gray-800 mb-2">📝 Changes Summary</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-[16px]">
             <div className="flex items-center gap-2 text-neutral">
               <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
               {assignments.filter(a => !a._id && !a._deleted).length} new assignment{assignments.filter(a => !a._id && !a._deleted).length !== 1 ? 's' : ''} to create
@@ -1188,14 +1188,14 @@ function Step5({ project, client, assignments, allUsers, managers, editMode, onR
           <Row label="Budget"       value={client.budget} />
           {client.requirements && (
             <div className="mt-3 pt-3 border-t border-gray-100">
-              <p className="text-xs text-neutral mb-1 font-medium">Requirements / Brief</p>
-              <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{client.requirements}</p>
+              <p className="text-[16px] text-neutral mb-1 font-medium">Requirements / Brief</p>
+              <p className="text-[16px] text-gray-600 leading-relaxed whitespace-pre-wrap">{client.requirements}</p>
             </div>
           )}
           {client.notes && (
             <div className="mt-3 pt-3 border-t border-gray-100">
-              <p className="text-xs text-neutral mb-1 font-medium">Notes</p>
-              <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{client.notes}</p>
+              <p className="text-[16px] text-neutral mb-1 font-medium">Notes</p>
+              <p className="text-[16px] text-gray-600 leading-relaxed whitespace-pre-wrap">{client.notes}</p>
             </div>
           )}
         </Section>
@@ -1210,11 +1210,11 @@ function Step5({ project, client, assignments, allUsers, managers, editMode, onR
               return (
                 <div key={a._tempId} className={`rounded-xl p-4 ${a._id ? 'bg-gray-100' : 'bg-emerald-500/5 border border-emerald-500/20'}`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="w-5 h-5 rounded bg-purple-50 text-primary text-xs font-bold flex items-center justify-center">{i + 1}</span>
+                    <span className="w-5 h-5 rounded bg-purple-50 text-primary text-[16px] font-bold flex items-center justify-center">{i + 1}</span>
                     <p className="font-semibold text-gray-800 text-sm">{a.title}</p>
-                    <span className="text-xs text-neutral bg-gray-50 px-2 py-0.5 rounded-full">{a.department}</span>
+                    <span className="text-[16px] text-neutral bg-gray-50 px-2 py-0.5 rounded-full">{a.department}</span>
                     {!a._id && (
-                      <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                      <span className="text-[16px] px-2 py-0.5 rounded-full font-medium"
                         style={{ backgroundColor: 'rgba(16,185,129,0.12)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)' }}>
                         New
                       </span>
@@ -1225,22 +1225,22 @@ function Step5({ project, client, assignments, allUsers, managers, editMode, onR
                     <Row label="Est. Hours" value={a.estimated_hours ? `${a.estimated_hours}h` : null} />
                   </div>
                   {memberNames.length > 0 && (
-                    <p className="text-xs text-neutral mb-2">
+                    <p className="text-[16px] text-neutral mb-2">
                       Team: <span className="text-gray-600">{memberNames.join(', ')}</span>
                     </p>
                   )}
                   {visibleTasks.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-xs text-neutral mb-2 font-semibold uppercase tracking-wider">Tasks ({visibleTasks.length})</p>
+                      <p className="text-[16px] text-neutral mb-2 font-semibold uppercase tracking-wider">Tasks ({visibleTasks.length})</p>
                       <div className="space-y-1.5">
                         {visibleTasks.map((t, ti) => {
                           const assignee = allUsers.find(u => u._id === t.assigned_to)
                           return (
-                            <div key={t._tempId} className="flex items-center justify-between text-xs">
+                            <div key={t._tempId} className="flex items-center justify-between text-[16px]">
                               <div className="flex items-center gap-2">
                                 <PriDot p={t.priority} />
                                 <span className="text-gray-600">{t.title || `Task ${ti + 1}`}</span>
-                                {!t._id && <span className="text-emerald-400 text-xs">New</span>}
+                                {!t._id && <span className="text-emerald-400 text-[16px]">New</span>}
                               </div>
                               <div className="flex items-center gap-3 text-neutral">
                                 {assignee && <span>{assignee.name}</span>}
@@ -1265,7 +1265,7 @@ function Step5({ project, client, assignments, allUsers, managers, editMode, onR
           style={{ backgroundColor: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)' }}>
           <p className="text-sm font-semibold text-red-400 mb-2">🗑 Assignments to delete ({toDelete.length})</p>
           {toDelete.map(a => (
-            <p key={a._tempId} className="text-xs text-neutral">• {a.title} ({a.department})</p>
+            <p key={a._tempId} className="text-[16px] text-neutral">• {a.title} ({a.department})</p>
           ))}
         </div>
       )}
@@ -1274,7 +1274,7 @@ function Step5({ project, client, assignments, allUsers, managers, editMode, onR
         <Check size={18} className="text-primary flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-semibold text-gray-800">{editMode ? 'Ready to save changes' : 'Ready to create'}</p>
-          <p className="text-xs text-neutral mt-0.5">
+          <p className="text-[16px] text-neutral mt-0.5">
             {editMode
               ? 'All changes will be applied immediately.'
               : `This will create 1 project, ${visible.length} assignment${visible.length !== 1 ? 's' : ''}, ${visible.reduce((s, a) => s + a.tasks.filter(t => !t._deleted).length, 0)} task${visible.reduce((s, a) => s + a.tasks.filter(t => !t._deleted).length, 0) !== 1 ? 's' : ''} and notify assigned team members.`

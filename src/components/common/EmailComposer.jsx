@@ -71,7 +71,7 @@ function RecipientPicker({ selected, onChange, users, loading }) {
             key={u._id}
             className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 
                        bg-purple-50 border border-primary/30 text-primary
-                       rounded-full text-xs font-medium"
+                       rounded-full text-[16px] font-medium"
           >
             {u.name}
             <button
@@ -103,7 +103,7 @@ function RecipientPicker({ selected, onChange, users, loading }) {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search by name, email, department…"
-                className="flex-1 text-xs text-gray-700 bg-transparent outline-none placeholder-gray-400"
+                className="flex-1 text-[16px] text-gray-700 bg-transparent outline-none placeholder-gray-400"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ function RecipientPicker({ selected, onChange, users, loading }) {
           {filtered.length > 1 && (
             <button
               onClick={selectAll}
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs
+              className="w-full flex items-center gap-2 px-3 py-2 text-[16px]
                          text-neutral hover:text-gray-800 hover:bg-gray-50 transition-colors
                          border-b border-gray-100"
             >
@@ -128,7 +128,7 @@ function RecipientPicker({ selected, onChange, users, loading }) {
                 <Loader2 size={16} className="animate-spin text-primary" />
               </div>
             ) : filtered.length === 0 ? (
-              <p className="text-center py-5 text-xs text-neutral">No users found</p>
+              <p className="text-center py-5 text-[16px] text-neutral">No users found</p>
             ) : filtered.map(u => {
               const isSelected = !!selected.find(s => s._id === u._id)
               return (
@@ -141,14 +141,14 @@ function RecipientPicker({ selected, onChange, users, loading }) {
                 >
                   {/* Avatar */}
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center
-                                  text-xs font-bold flex-shrink-0
+                                  text-[16px] font-bold flex-shrink-0
                                   ${isSelected
                                     ? 'bg-primary text-white'
                                     : 'bg-gray-100 text-gray-600'}`}>
                     {u.name?.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs font-medium truncate ${isSelected ? 'text-primary' : 'text-gray-700'}`}>
+                    <p className={`text-[16px] font-medium truncate ${isSelected ? 'text-primary' : 'text-gray-700'}`}>
                       {u.name}
                     </p>
                     <p className="text-[11px] text-neutral truncate">{u.department} · {u.designation}</p>
@@ -338,7 +338,7 @@ export default function EmailComposer() {
                       loading={usersLoading}
                     />
                     {errors.recipients && (
-                      <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                      <p className="mt-1 text-[16px] text-red-500 flex items-center gap-1">
                         <AlertCircle size={11} /> {errors.recipients}
                       </p>
                     )}
@@ -360,7 +360,7 @@ export default function EmailComposer() {
                                     : 'border-gray-200 focus:border-primary/40'}`}
                     />
                     {errors.subject && (
-                      <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                      <p className="mt-1 text-[16px] text-red-500 flex items-center gap-1">
                         <AlertCircle size={11} /> {errors.subject}
                       </p>
                     )}
@@ -383,7 +383,7 @@ export default function EmailComposer() {
                                     : 'border-gray-200 focus:border-primary/40'}`}
                     />
                     {errors.body && (
-                      <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                      <p className="mt-1 text-[16px] text-red-500 flex items-center gap-1">
                         <AlertCircle size={11} /> {errors.body}
                       </p>
                     )}
@@ -406,7 +406,7 @@ export default function EmailComposer() {
                                        bg-gray-50 border border-gray-200"
                           >
                             <FileIcon name={file.name} />
-                            <span className="flex-1 text-xs text-gray-600 truncate min-w-0">{file.name}</span>
+                            <span className="flex-1 text-[16px] text-gray-600 truncate min-w-0">{file.name}</span>
                             <span className="text-[11px] text-neutral flex-shrink-0">{formatBytes(file.size)}</span>
                             <button
                               onClick={() => removeFile(id)}
@@ -427,7 +427,7 @@ export default function EmailComposer() {
                     {/* Attach file */}
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[16px]
                                  text-gray-600 hover:text-gray-800 border border-gray-200
                                  hover:border-gray-300 hover:bg-white transition-all"
                       title="Attach file"
@@ -448,7 +448,7 @@ export default function EmailComposer() {
                     <button
                       onClick={() => setRecipients(users)}
                       disabled={usersLoading || users.length === 0}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[16px]
                                  text-gray-600 hover:text-gray-800 border border-gray-200
                                  hover:border-gray-300 hover:bg-white transition-all
                                  disabled:opacity-40 disabled:cursor-not-allowed"
@@ -462,7 +462,7 @@ export default function EmailComposer() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleClose}
-                      className="px-3 py-2 rounded-xl text-xs text-gray-500
+                      className="px-3 py-2 rounded-xl text-[16px] text-gray-500
                                  hover:text-gray-700 hover:bg-white transition-colors border border-transparent hover:border-gray-200"
                     >
                       Discard
@@ -470,7 +470,7 @@ export default function EmailComposer() {
                     <button
                       onClick={handleSend}
                       disabled={sending}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-[16px] font-semibold
                                  bg-primary hover:bg-primary/90 text-white
                                  disabled:opacity-50 disabled:cursor-not-allowed
                                  transition-all shadow-sm shadow-primary/30"

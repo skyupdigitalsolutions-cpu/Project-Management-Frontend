@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import {
-  LogIn, LogOut, Clock, CalendarOff, Upload, X, FileText, Image,
+  LogIn, LogOut, Clock, CalendarOff, Upload, X, FileText, Image, Siren, BellElectric,
   CheckCircle2, XCircle, AlertCircle, Wand2, Coffee, PlayCircle,
 } from 'lucide-react'
 import api, { fetchMyLeaves, submitLeave } from '../../api/axios'
@@ -11,12 +11,12 @@ import { PageHeader, StatusBadge, Spinner, EmptyState, StatCard } from '../../co
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const LEAVE_TYPES = [
-  { value: 'sick',      label: 'Sick Leave',      icon: '🤒', description: 'Medical illness or health issues' },
-  { value: 'casual',    label: 'Casual Leave',    icon: '🌴', description: 'Personal or casual reasons' },
-  { value: 'earned',    label: 'Earned Leave',    icon: '🏖️', description: 'Planned annual leave' },
-  { value: 'maternity', label: 'Maternity Leave', icon: '👶', description: 'Maternity / paternity leave' },
-  { value: 'emergency', label: 'Emergency Leave', icon: '🚨', description: 'Unforeseen emergency situations' },
-  { value: 'unpaid',    label: 'Unpaid Leave',    icon: '💸', description: 'Leave without pay' },
+  { value: 'sick',      label: 'Sick Leave', description: 'Medical illness or health issues' },
+  { value: 'casual',    label: 'Casual Leave',     description: 'Personal or casual reasons' },
+  { value: 'earned',    label: 'Earned Leave',     description: 'Planned annual leave' },
+  { value: 'maternity', label: 'Maternity Leave',  description: 'Maternity / paternity leave' },
+  { value: 'emergency', label: 'Emergency Leave',  description: 'Unforeseen emergency situations' },
+  { value: 'unpaid',    label: 'Unpaid Leave',     description: 'Leave without pay' },
 ]
 
 const LEAVE_STATUS_CONFIG = {
@@ -118,7 +118,7 @@ export default function EmployeeAttendance() {
       const closed = breaks.map(b => (!b.end ? { ...b, end: new Date().toISOString() } : b))
       saveBreaks(dateKey, closed)
       setBreaks(closed)
-      toast('Break ended automatically', { icon: '☕' })
+      toast('Break ended automatically', { icon: <BellElectric /> })
     }
     setClocking(true)
     try {
@@ -136,7 +136,7 @@ export default function EmployeeAttendance() {
     const updated = [...breaks, entry]
     saveBreaks(dateKey, updated)
     setBreaks(updated)
-    toast('Break started ☕', { icon: '🟡' })
+    toast('Break started ', { icon: '🟡' })
     setBreaking(false)
   }
 
@@ -205,7 +205,7 @@ export default function EmployeeAttendance() {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <p className="text-[16px] font-semibold text-gray-400 uppercase tracking-wider">
                   Today — {format(new Date(), 'EEEE, MMMM d, yyyy')}
                 </p>
 
@@ -213,7 +213,7 @@ export default function EmployeeAttendance() {
                   <div className="mt-2 flex items-center gap-6 flex-wrap">
 
                     <div>
-                      <p className="text-xs text-gray-400">Clock In</p>
+                      <p className="text-[16px] text-gray-400">Clock In</p>
                       <p className={`text-2xl font-bold font-mono mt-0.5 ${today?.clock_in ? 'text-emerald-600' : 'text-gray-300'}`}>
                         {today?.clock_in ? format(new Date(today.clock_in), 'HH:mm') : '--:--'}
                       </p>
@@ -222,7 +222,7 @@ export default function EmployeeAttendance() {
                     <div className="text-gray-300 text-xl font-thin">→</div>
 
                     <div>
-                      <p className="text-xs text-gray-400">Clock Out</p>
+                      <p className="text-[16px] text-gray-400">Clock Out</p>
                       <p className={`text-2xl font-bold font-mono mt-0.5 ${today?.clock_out ? 'text-amber-500' : 'text-gray-300'}`}>
                         {today?.clock_out ? format(new Date(today.clock_out), 'HH:mm') : '--:--'}
                       </p>
@@ -230,7 +230,7 @@ export default function EmployeeAttendance() {
 
                     {today?.clock_in && (
                       <div>
-                        <p className="text-xs text-gray-400">Break</p>
+                        <p className="text-[16px] text-gray-400">Break</p>
                         <p className={`text-2xl font-bold font-mono mt-0.5 ${totalBreakMs > 0 ? 'text-orange-500' : 'text-gray-300'}`}>
                           {totalBreakMs > 0 ? fmtDuration(totalBreakMs) : '0m'}
                         </p>
@@ -239,7 +239,7 @@ export default function EmployeeAttendance() {
 
                     {netHoursToday !== null && (
                       <div>
-                        <p className="text-xs text-gray-400">{isDone ? 'Net Hours' : 'Net (live)'}</p>
+                        <p className="text-[16px] text-gray-400">{isDone ? 'Net Hours' : 'Net (live)'}</p>
                         <p className="text-2xl font-bold font-mono mt-0.5 text-primary">
                           {netHoursToday}h
                         </p>
@@ -295,7 +295,7 @@ export default function EmployeeAttendance() {
                 <Coffee size={16} className="text-orange-500 flex-shrink-0 animate-bounce" />
                 <div className="flex-1 min-w-0">
                   <p className="text-orange-600 font-semibold text-sm">On Break</p>
-                  <p className="text-gray-500 text-xs">
+                  <p className="text-gray-500 text-[16px]">
                     Started at {format(new Date(ongoingBreak.start), 'HH:mm')}
                     &nbsp;·&nbsp;
                     Elapsed: {fmtDuration(ongoingBreakMs)}
@@ -303,7 +303,7 @@ export default function EmployeeAttendance() {
                 </div>
                 <button
                   onClick={endBreak}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-all"
+                  className="flex items-center gap-1.5 text-[16px] font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-all"
                 >
                   <PlayCircle size={13} /> Resume Work
                 </button>
@@ -313,7 +313,7 @@ export default function EmployeeAttendance() {
             {/* ── Break log for today ── */}
             {breaks.length > 0 && (
               <div className="border-t border-gray-100 pt-4">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                <p className="text-[16px] font-semibold text-gray-400 uppercase tracking-wider mb-3">
                   Today's Break Log
                 </p>
                 <div className="space-y-2">
@@ -323,7 +323,7 @@ export default function EmployeeAttendance() {
                       : new Date() - new Date(b.start)
                     const dur  = fmtDuration(bMs) + (b.end ? '' : ' (ongoing)')
                     return (
-                      <div key={b.id ?? i} className="flex items-center gap-3 text-xs">
+                      <div key={b.id ?? i} className="flex items-center gap-3 text-[16px]">
                         <span className="w-5 h-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-500 font-bold text-[10px] flex-shrink-0">
                           {i + 1}
                         </span>
@@ -337,7 +337,7 @@ export default function EmployeeAttendance() {
                     )
                   })}
 
-                  <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-1 text-xs">
+                  <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-1 text-[16px]">
                     <span className="text-gray-400">Total break time</span>
                     <span className="text-right font-bold text-orange-500">{fmtDuration(totalBreakMs)}</span>
                     {netHoursToday !== null && (
@@ -385,20 +385,20 @@ export default function EmployeeAttendance() {
                     const netHrs     = calcNetHours(r.clock_in, r.clock_out, rowBreakMs)
                     return (
                       <tr key={r._id} className="hover:bg-gray-50 transition-colors border-b border-gray-50">
-                        <td className="table-cell font-mono text-xs text-gray-600">
+                        <td className="table-cell font-mono text-[16px] text-gray-600">
                           {rowDate ? format(parseISO(rowDate), 'EEE, MMM d yyyy') : '—'}
                         </td>
                         <td className="table-cell"><StatusBadge status={r.status} /></td>
-                        <td className="table-cell font-mono text-xs text-emerald-600">
+                        <td className="table-cell font-mono text-[16px] text-emerald-600">
                           {r.clock_in  ? format(new Date(r.clock_in),  'HH:mm') : '—'}
                         </td>
-                        <td className="table-cell font-mono text-xs text-amber-500">
+                        <td className="table-cell font-mono text-[16px] text-amber-500">
                           {r.clock_out ? format(new Date(r.clock_out), 'HH:mm') : '—'}
                         </td>
-                        <td className="table-cell text-xs text-orange-500">
+                        <td className="table-cell text-[16px] text-orange-500">
                           {rowBreakMs > 0 ? fmtDuration(rowBreakMs) : '—'}
                         </td>
-                        <td className="table-cell text-xs text-primary font-semibold">
+                        <td className="table-cell text-[16px] text-primary font-semibold">
                           {netHrs ? `${netHrs}h` : '—'}
                         </td>
                       </tr>
@@ -451,22 +451,22 @@ function LeaveHistoryTab({ leaves, loading, onApply }) {
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-semibold text-gray-800 text-sm">{lt?.label ?? leave.leave_type}</h4>
-                    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${cfg.color}`}>
+                    <span className={`inline-flex items-center gap-1 text-[16px] px-2 py-0.5 rounded-full border ${cfg.color}`}>
                       <StatusIcon size={11} /> {leave.status}
                     </span>
                     {leave.is_urgent && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-600">🚨 Urgent</span>
+                      <span className="text-[16px] px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-600"><Siren /> Urgent</span>
                     )}
                   </div>
-                  <p className="text-gray-400 text-xs mt-1">
+                  <p className="text-gray-400 text-[16px] mt-1">
                     {leave.from_date ? format(parseISO(leave.from_date.slice(0, 10)), 'MMM d, yyyy') : '—'}
                     {' → '}
                     {leave.to_date   ? format(parseISO(leave.to_date.slice(0, 10)),   'MMM d, yyyy') : '—'}
                     {leave.days && <span className="ml-2 text-primary">({leave.days} day{leave.days !== 1 ? 's' : ''})</span>}
                   </p>
-                  {leave.reason && <p className="text-gray-400 text-xs mt-1 italic">"{leave.reason}"</p>}
+                  {leave.reason && <p className="text-gray-400 text-[16px] mt-1 italic">"{leave.reason}"</p>}
                   {leave.admin_note && (
-                    <p className={`text-xs mt-2 px-2 py-1 rounded-lg border ${
+                    <p className={`text-[16px] mt-2 px-2 py-1 rounded-lg border ${
                       leave.status === 'approved'
                         ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
                         : 'bg-red-50 border-red-200 text-red-600'
@@ -474,7 +474,7 @@ function LeaveHistoryTab({ leaves, loading, onApply }) {
                   )}
                 </div>
               </div>
-              <p className="text-xs text-gray-400 flex-shrink-0">
+              <p className="text-[16px] text-gray-400 flex-shrink-0">
                 {leave.createdAt ? format(new Date(leave.createdAt), 'MMM d, yyyy') : ''}
               </p>
             </div>
@@ -482,7 +482,7 @@ function LeaveHistoryTab({ leaves, loading, onApply }) {
               <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
                 {leave.documents.map((doc, i) => (
                   <a key={i} href={doc.url} target="_blank" rel="noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 hover:border-gray-200 transition-all">
+                    className="flex items-center gap-1.5 text-[16px] text-gray-500 hover:text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 hover:border-gray-200 transition-all">
                     {doc.type?.startsWith('image') ? <Image size={12} /> : <FileText size={12} />}
                     {doc.name ?? `Document ${i + 1}`}
                   </a>
@@ -627,7 +627,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
             <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
               <CalendarOff size={18} className="text-primary" /> Apply for Leave
             </h2>
-            <p className="text-xs text-gray-400 mt-0.5">Step {step} of 3</p>
+            <p className="text-[16px] text-gray-400 mt-0.5">Step {step} of 3</p>
           </div>
           <button onClick={onClose}
             className="text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
@@ -643,12 +643,12 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
             { n: 3, label: 'Documents & Review' },
           ].map((s, i) => (
             <div key={s.n} className="flex items-center gap-2 flex-1">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[16px] font-bold transition-all ${
                 step === s.n ? 'bg-brand-600 text-gray-800'
                   : step > s.n ? 'bg-emerald-100 text-emerald-600 border border-emerald-200'
                   : 'bg-gray-100 text-gray-400'
               }`}>{step > s.n ? '✓' : s.n}</div>
-              <span className={`text-xs hidden sm:block ${step === s.n ? 'text-gray-800' : 'text-gray-400'}`}>{s.label}</span>
+              <span className={`text-[16px] hidden sm:block ${step === s.n ? 'text-gray-800' : 'text-gray-400'}`}>{s.label}</span>
               {i < 2 && <div className="flex-1 h-px bg-gray-200 mx-1" />}
             </div>
           ))}
@@ -671,12 +671,12 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                           : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-800'
                       }`}>
                       <span className="text-lg">{t.icon}</span>
-                      <span className="text-xs font-semibold">{t.label}</span>
+                      <span className="text-[16px] font-semibold">{t.label}</span>
                       <span className="text-[10px] text-gray-400 leading-tight">{t.description}</span>
                     </button>
                   ))}
                 </div>
-                {errors.leave_type && <p className="text-red-500 text-xs mt-1">{errors.leave_type}</p>}
+                {errors.leave_type && <p className="text-red-500 text-[16px] mt-1">{errors.leave_type}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -684,14 +684,14 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   <label className="label">From Date <span className="text-red-500">*</span></label>
                   <input type="date" value={form.from_date} min={format(new Date(), 'yyyy-MM-dd')}
                     onChange={e => f('from_date', e.target.value)} className="input" />
-                  {errors.from_date && <p className="text-red-500 text-xs mt-1">{errors.from_date}</p>}
+                  {errors.from_date && <p className="text-red-500 text-[16px] mt-1">{errors.from_date}</p>}
                 </div>
                 <div>
                   <label className="label">To Date <span className="text-red-500">*</span></label>
                   <input type="date" value={form.to_date}
                     min={form.from_date || format(new Date(), 'yyyy-MM-dd')}
                     onChange={e => f('to_date', e.target.value)} className="input" />
-                  {errors.to_date && <p className="text-red-500 text-xs mt-1">{errors.to_date}</p>}
+                  {errors.to_date && <p className="text-red-500 text-[16px] mt-1">{errors.to_date}</p>}
                 </div>
               </div>
 
@@ -702,7 +702,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                     <p className="text-primary font-semibold text-sm">
                       {days} day{days !== 1 ? 's' : ''} of {selectedType?.label ?? 'leave'}
                     </p>
-                    <p className="text-gray-400 text-xs">
+                    <p className="text-gray-400 text-[16px]">
                       {format(new Date(form.from_date), 'EEE, MMM d')} → {format(new Date(form.to_date), 'EEE, MMM d, yyyy')}
                     </p>
                   </div>
@@ -715,7 +715,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   className="w-4 h-4 accent-brand-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-800">Mark as Urgent 🚨</p>
-                  <p className="text-xs text-gray-400">Flag for priority review by admin</p>
+                  <p className="text-[16px] text-gray-400">Flag for priority review by admin</p>
                 </div>
               </label>
             </>
@@ -729,10 +729,10 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   <label className="label mb-0">Reason for Leave <span className="text-red-500">*</span></label>
                   <div className="flex items-center gap-1.5">
                     <Wand2 size={12} className="text-gray-400" />
-                    <span className="text-xs text-gray-400 mr-1">Rewrite as:</span>
+                    <span className="text-[16px] text-gray-400 mr-1">Rewrite as:</span>
                     {['casual', 'formal'].map(tone => (
                       <button key={tone} type="button" onClick={() => handleTone(tone)} disabled={!!toneLoading}
-                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[16px] font-medium border transition-all ${
                           toneLoading === tone
                             ? tone === 'casual'
                               ? 'bg-amber-100 border-amber-300 text-amber-600 cursor-wait'
@@ -751,8 +751,8 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   placeholder="Write your reason here — then use the Casual or Formal buttons to adjust the tone..."
                   className="input resize-none" />
                 <div className="flex justify-between mt-1">
-                  {errors.reason ? <p className="text-red-500 text-xs">{errors.reason}</p> : <span />}
-                  <p className={`text-xs ${form.reason.length < 20 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {errors.reason ? <p className="text-red-500 text-[16px]">{errors.reason}</p> : <span />}
+                  <p className={`text-[16px] ${form.reason.length < 20 ? 'text-red-500' : 'text-gray-400'}`}>
                     {form.reason.length} / 20 min
                   </p>
                 </div>
@@ -763,7 +763,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 <input type="tel" value={form.contact_during_leave}
                   onChange={e => f('contact_during_leave', e.target.value)}
                   placeholder="+91 98765 43210" className="input" />
-                <p className="text-xs text-gray-400 mt-1">Optional — for urgent contact if needed</p>
+                <p className="text-[16px] text-gray-400 mt-1">Optional — for urgent contact if needed</p>
               </div>
 
               <div>
@@ -771,7 +771,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 <textarea value={form.handover_notes} onChange={e => f('handover_notes', e.target.value)} rows={3}
                   placeholder="List pending tasks or responsibilities that need coverage during your absence..."
                   className="input resize-none" />
-                <p className="text-xs text-gray-400 mt-1">Optional — helps your team plan coverage</p>
+                <p className="text-[16px] text-gray-400 mt-1">Optional — helps your team plan coverage</p>
               </div>
             </>
           )}
@@ -783,7 +783,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 <label className="label">
                   Supporting Documents <span className="text-gray-400 font-normal">(optional, max 5 files)</span>
                 </label>
-                <p className="text-xs text-gray-400 mb-3">
+                <p className="text-[16px] text-gray-400 mb-3">
                   Medical certificates, prescriptions, or other supporting documents. Images, PDF, or Word — max 5MB each.
                 </p>
                 <div
@@ -796,7 +796,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   }`}>
                   <Upload size={28} className={`mx-auto mb-3 ${dragOver ? 'text-primary' : 'text-gray-300'}`} />
                   <p className="text-sm font-medium text-gray-500">Drop files here or click to browse</p>
-                  <p className="text-xs text-gray-400 mt-1">JPG, PNG, PDF, DOCX — Max 5MB each</p>
+                  <p className="text-[16px] text-gray-400 mt-1">JPG, PNG, PDF, DOCX — Max 5MB each</p>
                   <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx"
                     className="hidden" onChange={e => addFiles(e.target.files)} />
                 </div>
@@ -812,7 +812,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
-                          <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(0)} KB</p>
+                          <p className="text-[16px] text-gray-400">{(file.size / 1024).toFixed(0)} KB</p>
                         </div>
                         {file.type.startsWith('image/') && (
                           <img src={URL.createObjectURL(file)} alt="" className="w-10 h-10 rounded-lg object-cover" />
@@ -829,7 +829,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
 
               {/* Summary */}
               <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2.5">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Application Summary</p>
+                <p className="text-[16px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Application Summary</p>
                 <div className="grid grid-cols-2 gap-y-2.5 text-sm">
                   {[
                     ['Type',      `${selectedType?.icon ?? ''} ${selectedType?.label ?? '—'}`],
@@ -851,8 +851,8 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 </div>
                 {form.reason && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-xs text-gray-400 mb-1">Reason</p>
-                    <p className="text-xs text-gray-600 leading-relaxed">{form.reason}</p>
+                    <p className="text-[16px] text-gray-400 mb-1">Reason</p>
+                    <p className="text-[16px] text-gray-600 leading-relaxed">{form.reason}</p>
                   </div>
                 )}
               </div>

@@ -305,7 +305,7 @@ function CustomRingtoneUpload({ category, cfg, onCfgUpdate, label }) {
         <div className="space-y-2">
           <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 border border-gray-200">
             <Music size={11} className="text-primary shrink-0" />
-            <span className="text-xs text-gray-600 truncate flex-1" title={ringtone.name}>
+            <span className="text-[16px] text-gray-600 truncate flex-1" title={ringtone.name}>
               {ringtone.name}
             </span>
             <button
@@ -345,7 +345,7 @@ function CustomRingtoneUpload({ category, cfg, onCfgUpdate, label }) {
           </div>
         </div>
       ) : (
-        <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-dashed border-white/15 text-neutral hover:border-primary/30 hover:text-primary cursor-pointer transition-all text-xs font-medium">
+        <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-dashed border-white/15 text-neutral hover:border-primary/30 hover:text-primary cursor-pointer transition-all text-[16px] font-medium">
           <Upload size={12} />
           Upload audio file (mp3, wav, ogg…)
           <input type="file" accept="audio/*" className="hidden" onChange={handleFileChange} />
@@ -380,7 +380,7 @@ function SoundRow({ label, configKey, category, useCustomKey, cfg, onUpdate }) {
               }`}
               onClick={() => onUpdate({ [configKey]: key, [useCustomKey]: false })}
             >
-              <span className="text-xs font-medium">{preset.label}</span>
+              <span className="text-[16px] font-medium">{preset.label}</span>
               <button
                 onClick={(e) => { e.stopPropagation(); playSound(key, cfg.volume) }}
                 className="p-0.5 rounded hover:text-gray-800 transition-colors"
@@ -438,7 +438,7 @@ function SoundSettingsPanel({ onClose }) {
         {/* Master toggle + volume */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-gray-600">Enable Sounds</span>
+            <span className="text-[16px] font-semibold text-gray-600">Enable Sounds</span>
             <button
               onClick={() => update({ enabled: !cfg.enabled })}
               className={`relative w-9 h-5 rounded-full transition-colors ${cfg.enabled ? 'bg-brand-500' : 'bg-white/15'}`}
@@ -485,7 +485,7 @@ function SoundSettingsPanel({ onClose }) {
             setTimeout(() => playSoundForCategory('meeting', cfg), 1800)
           }}
           disabled={!cfg.enabled}
-          className="w-full py-2 rounded-xl bg-purple-50 hover:bg-purple-50 border border-primary/30 text-primary text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+          className="w-full py-2 rounded-xl bg-purple-50 hover:bg-purple-50 border border-primary/30 text-primary text-[16px] font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
         >
           <Play size={11} /> Preview All Sounds
         </button>
@@ -765,14 +765,14 @@ export default function NotificationBell() {
               {unread > 0 && (
                 <button
                   onClick={markAll}
-                  className="text-xs text-primary hover:text-primary px-2 py-1 rounded hover:bg-gray-50 flex items-center gap-1"
+                  className="text-[16px] text-primary hover:text-primary px-2 py-1 rounded hover:bg-gray-50 flex items-center gap-1"
                 >
                   <Check size={12} /> Mark all read
                 </button>
               )}
               <button
                 onClick={clearAll}
-                className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-gray-50 flex items-center gap-1"
+                className="text-[16px] text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-gray-50 flex items-center gap-1"
               >
                 <Trash2 size={12} /> Clear
               </button>
@@ -840,20 +840,20 @@ export default function NotificationBell() {
                       href={joinLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 mt-1.5 text-xs text-primary hover:text-primary bg-purple-50 hover:bg-purple-50 px-2.5 py-1 rounded-lg transition-colors font-medium"
+                      className="inline-flex items-center gap-1 mt-1.5 text-[16px] text-primary hover:text-primary bg-purple-50 hover:bg-purple-50 px-2.5 py-1 rounded-lg transition-colors font-medium"
                     >
                       <ExternalLink size={11} /> Join Meeting
                     </a>
                   )}
 
                   <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-neutral">
+                    <p className="text-[16px] text-neutral">
                       {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                     </p>
                     {canReply && !isReplying && (
                       <button
                         onClick={() => openReply(n)}
-                        className="text-xs text-neutral hover:text-primary flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-gray-50 transition-colors"
+                        className="text-[16px] text-neutral hover:text-primary flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-gray-50 transition-colors"
                       >
                         <Reply size={11} /> Reply
                       </button>
@@ -868,20 +868,20 @@ export default function NotificationBell() {
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
                         placeholder="Type your reply…"
-                        className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-700 placeholder-slate-600 resize-none focus:outline-none focus:border-primary/30 transition-colors"
+                        className="w-full text-[16px] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-700 placeholder-slate-600 resize-none focus:outline-none focus:border-primary/30 transition-colors"
                       />
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={cancelReply}
                           disabled={replying}
-                          className="text-xs text-neutral hover:text-gray-600 px-2 py-1 rounded hover:bg-gray-50 flex items-center gap-1 transition-colors"
+                          className="text-[16px] text-neutral hover:text-gray-600 px-2 py-1 rounded hover:bg-gray-50 flex items-center gap-1 transition-colors"
                         >
                           <X size={11} /> Cancel
                         </button>
                         <button
                           onClick={() => sendReply(n)}
                           disabled={replying || !replyText.trim()}
-                          className="text-xs text-gray-800 bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors font-medium"
+                          className="text-[16px] text-gray-800 bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors font-medium"
                         >
                           {replying
                             ? <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />

@@ -70,8 +70,8 @@ function RequestPermissionModal({ task, onClose, onSuccess }) {
           <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 border border-red-200">
             <Lock size={14} className="text-red-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-semibold text-red-600">Task is blocked</p>
-              <p className="text-xs text-neutral mt-0.5 leading-relaxed">
+              <p className="text-[16px] font-semibold text-red-600">Task is blocked</p>
+              <p className="text-[16px] text-neutral mt-0.5 leading-relaxed">
                 This task requires admin approval before you can start.
                 {task.permission_description && <span className="block mt-1 text-gray-500 italic">"{task.permission_description}"</span>}
               </p>
@@ -89,11 +89,11 @@ function RequestPermissionModal({ task, onClose, onSuccess }) {
           </div>
         </div>
         <div className="flex items-center justify-end gap-2.5 px-5 py-4 border-t border-gray-100">
-          <button onClick={onClose} className="btn-secondary text-xs">Cancel</button>
+          <button onClick={onClose} className="btn-secondary text-[16px]">Cancel</button>
           <button
             onClick={handleSubmit}
             disabled={submitting || reason.trim().length < 5}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-warning text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[16px] font-semibold bg-warning text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {submitting ? <><Loader2 size={12} className="animate-spin" /> Sending…</> : <><Send size={12} /> Send Request</>}
           </button>
@@ -111,8 +111,8 @@ function PermissionStatusBanner({ task, onRequestClick }) {
     <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
       <ShieldCheck size={15} className="text-green-600 flex-shrink-0" />
       <div>
-        <p className="text-xs font-semibold text-green-700">Permission Granted</p>
-        <p className="text-xs text-neutral mt-0.5">
+        <p className="text-[16px] font-semibold text-green-700">Permission Granted</p>
+        <p className="text-[16px] text-neutral mt-0.5">
           You have been approved to work on this task.
           {task.permission_granted_by?.name && <span className="text-gray-500"> Approved by {task.permission_granted_by.name}.</span>}
         </p>
@@ -124,10 +124,10 @@ function PermissionStatusBanner({ task, onRequestClick }) {
     <div className="flex items-center gap-3 p-3 rounded-xl bg-red-50 border border-red-200">
       <ShieldX size={15} className="text-red-500 flex-shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-red-600">Permission Denied</p>
-        <p className="text-xs text-neutral mt-0.5">Contact your manager or admin for clarification.</p>
+        <p className="text-[16px] font-semibold text-red-600">Permission Denied</p>
+        <p className="text-[16px] text-neutral mt-0.5">Contact your manager or admin for clarification.</p>
       </div>
-      <button onClick={onRequestClick} className="flex-shrink-0 text-xs px-3 py-1.5 rounded-lg text-yellow-600 border border-yellow-200 bg-yellow-50 hover:bg-yellow-100 transition-colors font-medium">
+      <button onClick={onRequestClick} className="flex-shrink-0 text-[16px] px-3 py-1.5 rounded-lg text-yellow-600 border border-yellow-200 bg-yellow-50 hover:bg-yellow-100 transition-colors font-medium">
         Re-request
       </button>
     </div>
@@ -137,8 +137,8 @@ function PermissionStatusBanner({ task, onRequestClick }) {
     <div className="flex items-center gap-3 p-3 rounded-xl bg-yellow-50 border border-yellow-200">
       <ShieldQuestion size={15} className="text-yellow-600 flex-shrink-0 animate-pulse" />
       <div>
-        <p className="text-xs font-semibold text-yellow-700">Awaiting Admin Approval</p>
-        <p className="text-xs text-neutral mt-0.5">
+        <p className="text-[16px] font-semibold text-yellow-700">Awaiting Admin Approval</p>
+        <p className="text-[16px] text-neutral mt-0.5">
           Your permission request has been sent.
           {task.permission_description && <span className="text-gray-500 italic"> Reason: "{task.permission_description}"</span>}
         </p>
@@ -150,13 +150,13 @@ function PermissionStatusBanner({ task, onRequestClick }) {
     <div className="flex items-center gap-3 p-3 rounded-xl bg-red-50 border border-red-200">
       <Lock size={15} className="text-red-500 flex-shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-red-600">Permission Required</p>
-        <p className="text-xs text-neutral mt-0.5">
+        <p className="text-[16px] font-semibold text-red-600">Permission Required</p>
+        <p className="text-[16px] text-neutral mt-0.5">
           This task is blocked until an admin grants permission.
           {task.permission_description && <span className="text-gray-500 italic block mt-0.5">"{task.permission_description}"</span>}
         </p>
       </div>
-      <button onClick={onRequestClick} className="flex-shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-yellow-50 text-yellow-600 border border-yellow-200 hover:bg-yellow-100 transition-colors font-semibold">
+      <button onClick={onRequestClick} className="flex-shrink-0 flex items-center gap-1.5 text-[16px] px-3 py-1.5 rounded-lg bg-yellow-50 text-yellow-600 border border-yellow-200 hover:bg-yellow-100 transition-colors font-semibold">
         <ShieldAlert size={11} /> Request
       </button>
     </div>
@@ -307,10 +307,10 @@ export default function EmployeeMyTasksEnhanced() {
 
                   {/* Row 2: project / module / due date meta */}
                   <div className="flex items-center gap-2 flex-wrap pl-4">
-                    <span className="text-xs text-neutral">{project?.title ?? '—'}</span>
-                    {t.module_name && <span className="text-xs text-neutral">· {t.module_name}</span>}
+                    <span className="text-[16px] text-neutral">{project?.title ?? '—'}</span>
+                    {t.module_name && <span className="text-[16px] text-neutral">· {t.module_name}</span>}
                     {t.due_date && (
-                      <span className={`text-xs font-medium ${overdue ? 'text-danger' : 'text-neutral'}`}>
+                      <span className={`text-[16px] font-medium ${overdue ? 'text-danger' : 'text-neutral'}`}>
                         · Due {format(new Date(t.due_date), 'MMM d')}{overdue && ' ⚠'}
                       </span>
                     )}
@@ -334,7 +334,7 @@ export default function EmployeeMyTasksEnhanced() {
                         onChange={e => updateStatus(t._id, e.target.value)}
                         disabled={updating === t._id || isBlocked}
                         title={isBlocked ? 'Task is blocked — get permission first' : undefined}
-                        className="text-xs py-1.5 pl-2 pr-7 w-32 appearance-none cursor-pointer rounded-lg
+                        className="text-[16px] py-1.5 pl-2 pr-7 w-32 appearance-none cursor-pointer rounded-lg
                                    border border-gray-200 bg-white text-gray-700 outline-none
                                    focus:border-primary focus:ring-1 focus:ring-primary
                                    disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -366,21 +366,21 @@ export default function EmployeeMyTasksEnhanced() {
 
                     {t.description && (
                       <div>
-                        <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1">Task Details</p>
+                        <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1">Task Details</p>
                         <p className="text-sm text-gray-600 leading-relaxed">{t.description}</p>
                       </div>
                     )}
 
                     {project?.description && (
                       <div>
-                        <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1">Project Context</p>
+                        <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1">Project Context</p>
                         <p className="text-sm text-gray-600 leading-relaxed">{project.extracted_description || project.description}</p>
                       </div>
                     )}
 
                     {deliverables.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Expected Deliverables</p>
+                        <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Expected Deliverables</p>
                         <ul className="space-y-1">
                           {deliverables.map((d, i) => (
                             <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -394,26 +394,26 @@ export default function EmployeeMyTasksEnhanced() {
 
                     <div className="flex flex-wrap gap-4">
                       {t.start_date && (
-                        <div className="flex items-center gap-1.5 text-xs text-neutral">
+                        <div className="flex items-center gap-1.5 text-[16px] text-neutral">
                           <Calendar size={11} />Start:
                           <span className="text-gray-700 ml-1">{format(new Date(t.start_date), 'MMM d, yyyy')}</span>
                         </div>
                       )}
                       {t.end_date && (
-                        <div className="flex items-center gap-1.5 text-xs text-neutral">
+                        <div className="flex items-center gap-1.5 text-[16px] text-neutral">
                           <Clock size={11} />End:
                           <span className="text-gray-700 ml-1">{format(new Date(t.end_date), 'MMM d, yyyy')}</span>
                         </div>
                       )}
-                      {t.estimated_days && <div className="text-xs text-neutral">Est: <span className="text-gray-700 ml-1">{t.estimated_days}d</span></div>}
-                      {t.required_role   && <div className="text-xs text-neutral">Role: <span className="text-gray-700 ml-1">{t.required_role}</span></div>}
+                      {t.estimated_days && <div className="text-[16px] text-neutral">Est: <span className="text-gray-700 ml-1">{t.estimated_days}d</span></div>}
+                      {t.required_role   && <div className="text-[16px] text-neutral">Role: <span className="text-gray-700 ml-1">{t.required_role}</span></div>}
                     </div>
 
                     {project?._id && (
                       <button
                         onClick={() => openDocument(t._id, project._id)}
                         disabled={docLoading === t._id}
-                        className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-neutral hover:text-primary hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-2 text-[16px] px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-neutral hover:text-primary hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {docLoading === t._id
                           ? <><div className="w-3 h-3 border-2 border-neutral border-t-transparent rounded-full animate-spin" />Loading…</>

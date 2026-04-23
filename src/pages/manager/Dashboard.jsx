@@ -11,7 +11,7 @@ const COLORS = ['#6366f1','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4']
 const Tooltip_ = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs">
+    <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-[16px]">
       <p className="text-neutral mb-1">{label}</p>
       {payload.map(p => <p key={p.name} style={{ color: p.fill }} className="font-semibold">{p.value}</p>)}
     </div>
@@ -87,7 +87,7 @@ export default function ManagerDashboard() {
                 <div key={t._id} className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800 truncate">{t.title}</p>
-                    <p className="text-xs text-neutral">{t.assigned_to?.name ?? '—'}</p>
+                    <p className="text-[16px] text-neutral">{t.assigned_to?.name ?? '—'}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <PriorityBadge priority={t.priority} />

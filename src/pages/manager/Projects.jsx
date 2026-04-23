@@ -73,11 +73,11 @@ export default function ManagerProjects() {
 
               <h3 className="font-semibold text-gray-800 mb-1 line-clamp-1">{p.title}</h3>
               {p.client_info?.company && (
-                <p className="text-xs text-primary mb-1">Client: {p.client_info.company}</p>
+                <p className="text-[16px] text-primary mb-1">Client: {p.client_info.company}</p>
               )}
               <p className="text-sm text-neutral line-clamp-2 mb-4 flex-1">{p.description}</p>
 
-              <div className="flex items-center justify-between text-xs text-neutral pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-between text-[16px] text-neutral pt-3 border-t border-gray-100">
                 <span className="flex items-center gap-1.5">
                   <Users size={11}/> {p.manager_id?.name ?? '—'}
                 </span>

@@ -122,7 +122,7 @@ export default function ManagerNotifications() {
         >
           <Inbox size={15} /> Inbox
           {unreadCount > 0 && (
-            <span className="bg-red-500 text-gray-800 text-xs rounded-full px-1.5 py-0.5 leading-none">{unreadCount}</span>
+            <span className="bg-red-500 text-gray-800 text-[16px] rounded-full px-1.5 py-0.5 leading-none">{unreadCount}</span>
           )}
         </button>
         <button
@@ -133,7 +133,7 @@ export default function ManagerNotifications() {
         >
           <SendHorizonal size={15} /> Sent
           {sent.length > 0 && (
-            <span className="bg-slate-600 text-gray-600 text-xs rounded-full px-1.5 py-0.5 leading-none">{sent.length}</span>
+            <span className="bg-slate-600 text-gray-600 text-[16px] rounded-full px-1.5 py-0.5 leading-none">{sent.length}</span>
           )}
         </button>
       </div>
@@ -177,14 +177,14 @@ export default function ManagerNotifications() {
                 <p className={`text-sm ${tab === 'inbox' && !n.is_read ? 'text-gray-700' : 'text-neutral'}`}>{n.message}</p>
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
                   {n.type && (
-                    <span className="text-xs text-neutral bg-gray-50 px-2 py-0.5 rounded-full">{n.type}</span>
+                    <span className="text-[16px] text-neutral bg-gray-50 px-2 py-0.5 rounded-full">{n.type}</span>
                   )}
                   {tab === 'sent' && n.recipient_count != null && (
-                    <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                    <span className="text-[16px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                       → {n.recipient_count} recipient{n.recipient_count !== 1 ? 's' : ''}
                     </span>
                   )}
-                  <span className="text-xs text-neutral">
+                  <span className="text-[16px] text-neutral">
                     {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                   </span>
                 </div>
@@ -231,10 +231,10 @@ export default function ManagerNotifications() {
           </FormField>
           <FormField label="Recipients (leave empty = all users)">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-neutral">
+              <span className="text-[16px] text-neutral">
                 {form.user_ids.length === 0 ? 'Will send to all users' : `${form.user_ids.length} of ${users.length} selected`}
               </span>
-              <button type="button" onClick={selectAll} className="text-xs text-primary hover:text-primary transition-colors">
+              <button type="button" onClick={selectAll} className="text-[16px] text-primary hover:text-primary transition-colors">
                 {form.user_ids.length === users.length ? 'Deselect all' : 'Select all'}
               </button>
             </div>
@@ -243,7 +243,7 @@ export default function ManagerNotifications() {
                 <label key={u._id} className="flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer">
                   <input type="checkbox" checked={form.user_ids.includes(u._id)} onChange={() => toggleUser(u._id)} className="w-4 h-4 accent-brand-500" />
                   <span className="text-sm text-gray-600">{u.name}</span>
-                  <span className="text-xs text-neutral ml-auto capitalize">{u.role}</span>
+                  <span className="text-[16px] text-neutral ml-auto capitalize">{u.role}</span>
                 </label>
               ))}
             </div>
@@ -268,7 +268,7 @@ export default function ManagerNotifications() {
         <div className="space-y-4">
           {replyTarget && (
             <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-              <p className="text-xs text-neutral mb-1">Original message</p>
+              <p className="text-[16px] text-neutral mb-1">Original message</p>
               <p className="text-sm text-gray-600 italic">"{replyTarget.message}"</p>
             </div>
           )}

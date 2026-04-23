@@ -109,7 +109,7 @@ export default function DashboardLayout() {
   const TaskBadge = () => {
     if (newTaskCount === 0) return null
     return (
-      <span className={`ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold text-gray-800 shadow-sm ${hasUrgent ? 'bg-danger animate-pulse' : 'bg-success'}`}>
+      <span className={`ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold text-gray-800 shadow-sm ${hasUrgent ? 'bg-danger animate-pulse' : 'bg-success'}`}>
         {newTaskCount}
       </span>
     )
@@ -119,12 +119,12 @@ export default function DashboardLayout() {
     <div className="flex flex-col h-full font-poppins">
       {/* Logo */}
       {/* Logo */}
-<div className={`flex items-center border-b border-gray-100 ${isCollapsed ? 'p-4 justify-center' : 'p-5 gap-3'}`}>
+<div className={`flex items-center border-b border-gray-100 ${isCollapsed ? 'p-6 justify-center' : 'p-6 gap-3'}`}>
   {isCollapsed
     ? <img
         src='/images/skyup_logo1.svg'
         alt="Logo"
-        className="w-8 h-8 object-contain"
+        className="w-15 h-8 object-contain"
       />
     : <img
         src='/images/skyup_logo.webp'
@@ -142,8 +142,8 @@ export default function DashboardLayout() {
               {user?.name?.charAt(0)?.toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">{user?.name}</p>
-              <span className={`badge text-xs mt-0.5 ${ROLE_BADGE[user?.role]}`}>{user?.role}</span>
+              <p className="text-[18px] font-semibold text-gray-800 truncate">{user?.name}</p>
+              <span className={`badge text-[16px] mt-0.5 ${ROLE_BADGE[user?.role]}`}>{user?.role}</span>
             </div>
           </div>
         </div>
@@ -160,13 +160,13 @@ export default function DashboardLayout() {
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {!isCollapsed && (
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest px-3 py-2">Menu</p>
+          <p className="text-[18px] font-semibold text-gray-400 uppercase tracking-widest px-3 py-2">Menu</p>
         )}
         {navItems.map(({ to, label, icon: Icon, end, taskBadge }) => (
           <NavLink
             key={to} to={to} end={end}
             onClick={() => setSidebarOpen(false)}
-            className={({ isActive }) => isActive ? 'nav-link-active' : 'nav-link'}
+            className={({ isActive }) => isActive ? 'nav-link-active text-[18px]' : 'nav-link text-[18px]'}
             title={isCollapsed ? label : undefined}
           >
             <Icon size={17} className="flex-shrink-0" />
@@ -229,7 +229,7 @@ export default function DashboardLayout() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header/Navbar */}
-        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-gray-200 bg-white flex-shrink-0 shadow-sm">
+        <header className="h-18 lg:py-3 flex items-center justify-between px-4 lg:px-6 border-b border-gray-200 bg-white flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -240,7 +240,7 @@ export default function DashboardLayout() {
             <div className="hidden lg:block" />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 ">
             {(isAdmin || isManager) && <EmailComposer />}
             <NotificationBell />
             <div className="h-5 w-px bg-gray-200" />
@@ -248,12 +248,12 @@ export default function DashboardLayout() {
               to={`/${user?.role}/profile`}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-purple-50 transition-colors"
             >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[18px] shadow-sm">
                 {user?.name?.charAt(0)?.toUpperCase()}
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-semibold text-gray-700 leading-none">{user?.name}</p>
-                <p className="text-xs text-neutral mt-0.5 capitalize">{user?.role}</p>
+                <p className="text-[16px] font-semibold text-gray-700 leading-none">{user?.name}</p>
+                <p className="text-[16px] text-neutral mt-0.5 capitalize">{user?.role}</p>
               </div>
             </NavLink>
           </div>

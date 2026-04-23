@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import {
   ArrowLeft, Users, CheckSquare, Clock, Calendar, Building2,
-  ChevronDown, ChevronRight, Mail, Phone, Globe, DollarSign,
+  ChevronDown, ChevronRight, Mail, Phone, Globe, DollarSign, Check,
   FileText, Edit, Trash2, Upload, Download
 } from 'lucide-react'
 import { StatusBadge, PriorityBadge, Spinner, EmptyState } from '../../components/common/UI'
@@ -131,12 +131,12 @@ export default function ProjectDetail() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 pt-5 border-t border-gray-100">
           <div>
-            <p className="text-xs text-neutral uppercase tracking-wider font-semibold mb-1">Manager</p>
+            <p className="text-[16px] text-neutral uppercase tracking-wider font-semibold mb-1">Manager</p>
             <p className="text-sm font-medium text-gray-800">{project.manager_id?.name ?? '—'}</p>
-            <p className="text-xs text-neutral">{project.manager_id?.designation}</p>
+            <p className="text-[16px] text-neutral">{project.manager_id?.designation}</p>
           </div>
           <div>
-            <p className="text-xs text-neutral uppercase tracking-wider font-semibold mb-1">Timeline</p>
+            <p className="text-[16px] text-neutral uppercase tracking-wider font-semibold mb-1">Timeline</p>
             <p className="text-sm text-gray-800 font-mono">
               {project.start_date ? format(new Date(project.start_date), 'MMM d') : '—'}
               {' → '}
@@ -144,11 +144,11 @@ export default function ProjectDetail() {
             </p>
           </div>
           <div>
-            <p className="text-xs text-neutral uppercase tracking-wider font-semibold mb-1">Assignments</p>
+            <p className="text-[16px] text-neutral uppercase tracking-wider font-semibold mb-1">Assignments</p>
             <p className="text-2xl font-bold text-gray-800">{assignments.length}</p>
           </div>
           <div>
-            <p className="text-xs text-neutral uppercase tracking-wider font-semibold mb-1">Total Tasks</p>
+            <p className="text-[16px] text-neutral uppercase tracking-wider font-semibold mb-1">Total Tasks</p>
             <p className="text-2xl font-bold text-gray-800">{totalTasks}</p>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function ProjectDetail() {
                 <button
                   onClick={handleDocView}
                   disabled={docDownloading}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-[16px] px-3 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-50"
                   style={{ backgroundColor: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc' }}>
                   {docDownloading
                     ? <><div className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" /> Opening…</>
@@ -177,7 +177,7 @@ export default function ProjectDetail() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={docUploading}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-50"
+                className="flex items-center gap-1.5 text-[16px] px-3 py-1.5 rounded-lg transition-all hover:opacity-80 disabled:opacity-50"
                 style={{ backgroundColor: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399' }}>
                 {docUploading
                   ? <><div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" /> Uploading…</>
@@ -193,7 +193,7 @@ export default function ProjectDetail() {
               <FileText size={16} className="text-indigo-400 flex-shrink-0" />
               <div>
                 <p className="text-sm text-gray-800 font-medium">Document attached</p>
-                <p className="text-xs text-neutral mt-0.5">Click "View Document" to open · Employees see a "View Reference Document" button on their tasks</p>
+                <p className="text-[16px] text-neutral mt-0.5">Click "View Document" to open · Employees see a "View Reference Document" button on their tasks</p>
               </div>
             </div>
           ) : (
@@ -202,18 +202,18 @@ export default function ProjectDetail() {
               <Upload size={16} className="text-neutral flex-shrink-0" />
               <div>
                 <p className="text-sm text-neutral">No document attached yet</p>
-                <p className="text-xs text-neutral mt-0.5">Upload a PDF, DOCX, or TXT — employees will see a "View Reference Document" button on their tasks</p>
+                <p className="text-[16px] text-neutral mt-0.5">Upload a PDF, DOCX, or TXT — employees will see a "View Reference Document" button on their tasks</p>
               </div>
             </div>
           )}
 
           {project.extracted_deliverables?.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-xs text-neutral uppercase tracking-wider font-semibold mb-2">Extracted Deliverables</p>
+              <p className="text-[16px] text-neutral uppercase tracking-wider font-semibold mb-2">Extracted Deliverables</p>
               <ul className="space-y-1">
                 {project.extracted_deliverables.map((d, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                    <span className="text-emerald-400 flex-shrink-0 mt-0.5">✓</span>
+                    <span className="text-emerald-400 flex-shrink-0 mt-0.5"><Check /></span>
                     <span>{d}</span>
                   </li>
                 ))}
@@ -239,7 +239,7 @@ export default function ProjectDetail() {
           </div>
           {ci.requirements && (
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-xs text-neutral uppercase tracking-wider font-semibold mb-2 flex items-center gap-1.5">
+              <p className="text-[16px] text-neutral uppercase tracking-wider font-semibold mb-2 flex items-center gap-1.5">
                 <FileText size={12} /> Requirements / Brief
               </p>
               <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{ci.requirements}</p>
@@ -252,7 +252,7 @@ export default function ProjectDetail() {
       <div>
         <h2 className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
           Department Assignments
-          <span className="text-xs text-neutral font-normal bg-gray-50 px-2 py-0.5 rounded-full">{assignments.length}</span>
+          <span className="text-[16px] text-neutral font-normal bg-gray-50 px-2 py-0.5 rounded-full">{assignments.length}</span>
         </h2>
 
         {assignments.length === 0 ? (
@@ -275,10 +275,10 @@ export default function ProjectDetail() {
                       <div className="text-left flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-semibold text-gray-800 text-sm">{a.title}</p>
-                          <span className="text-xs bg-gray-50 text-neutral px-2 py-0.5 rounded-full">{a.department}</span>
+                          <span className="text-[16px] bg-gray-50 text-neutral px-2 py-0.5 rounded-full">{a.department}</span>
                           <StatusBadge status={a.status} />
                         </div>
-                        <div className="flex items-center gap-4 mt-0.5 text-xs text-neutral">
+                        <div className="flex items-center gap-4 mt-0.5 text-[16px] text-neutral">
                           <span className="font-mono">
                             {a.start_date ? format(new Date(a.start_date), 'MMM d') : '—'}
                             {' → '}
@@ -330,7 +330,7 @@ function AssignmentDetail({ assignmentId }) {
     <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
       {/* Members */}
       <div>
-        <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <Users size={12} /> Team Members ({members.length})
         </p>
         {members.length === 0 ? (
@@ -339,15 +339,15 @@ function AssignmentDetail({ assignmentId }) {
           <div className="space-y-2">
             {members.map(m => (
               <div key={m._id} className="flex items-center gap-3 px-3 py-2 bg-gray-100 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[16px] flex-shrink-0">
                   {(m.user_id?.name ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{m.user_id?.name ?? '—'}</p>
-                  <p className="text-xs text-neutral">{m.user_id?.department}</p>
+                  <p className="text-[16px] text-neutral">{m.user_id?.department}</p>
                 </div>
                 {m.allocated_hours && (
-                  <span className="text-xs text-neutral font-mono">{m.allocated_hours}h</span>
+                  <span className="text-[16px] text-neutral font-mono">{m.allocated_hours}h</span>
                 )}
               </div>
             ))}
@@ -357,7 +357,7 @@ function AssignmentDetail({ assignmentId }) {
 
       {/* Tasks */}
       <div>
-        <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <CheckSquare size={12} /> Tasks ({tasks.length})
         </p>
         {tasks.length === 0 ? (
@@ -375,7 +375,7 @@ function AssignmentDetail({ assignmentId }) {
                     </div>
                     <StatusBadge status={t.status} />
                   </div>
-                  <div className="flex items-center gap-3 mt-1.5 text-xs text-neutral ml-3.5">
+                  <div className="flex items-center gap-3 mt-1.5 text-[16px] text-neutral ml-3.5">
                     {t.assigned_to && (
                       <span className="flex items-center gap-1">
                         <Users size={10} /> {t.assigned_to.name}
@@ -404,7 +404,7 @@ function InfoItem({ icon: Icon, label, value }) {
     <div className="flex items-start gap-2">
       <Icon size={14} className="text-neutral flex-shrink-0 mt-0.5" />
       <div>
-        <p className="text-xs text-neutral">{label}</p>
+        <p className="text-[16px] text-neutral">{label}</p>
         <p className="text-sm text-gray-800 font-medium break-all">{value}</p>
       </div>
     </div>

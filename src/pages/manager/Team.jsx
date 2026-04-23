@@ -70,16 +70,16 @@ export default function ManagerTeam() {
                     <StatusBadge status={u.status} />
                   </div>
                   <p className="text-sm text-neutral mt-0.5">{u.designation}</p>
-                  <p className="text-xs text-neutral">{u.department}</p>
+                  <p className="text-[16px] text-neutral">{u.department}</p>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-                <div className="flex items-center gap-2 text-xs text-neutral">
+                <div className="flex items-center gap-2 text-[16px] text-neutral">
                   <Mail size={12} className="flex-shrink-0" />
                   <span className="truncate">{u.email}</span>
                 </div>
                 {u.phone && (
-                  <div className="flex items-center gap-2 text-xs text-neutral">
+                  <div className="flex items-center gap-2 text-[16px] text-neutral">
                     <Phone size={12} className="flex-shrink-0" />
                     <span>{u.phone}</span>
                   </div>

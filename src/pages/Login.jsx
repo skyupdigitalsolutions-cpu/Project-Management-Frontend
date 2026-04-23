@@ -109,14 +109,14 @@ export default function Login() {
 
           {/* Demo accounts */}
           <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-3">Quick demo access</p>
+            {/* <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-3">Quick demo access</p> */}
             <div className="flex gap-2">
               {DEMO.map(d => (
                 <button
                   key={d.label}
                   type="button"
                   onClick={() => fillDemo(d)}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-semibold transition-all duration-200 hover:shadow-sm ${d.color}`}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-[16px] font-semibold transition-all duration-200 hover:shadow-sm ${d.color}`}
                 >
                   {d.label}
                 </button>

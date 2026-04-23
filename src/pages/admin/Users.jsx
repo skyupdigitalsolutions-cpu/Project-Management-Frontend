@@ -151,12 +151,12 @@ export default function AdminUsers() {
                 <tr key={u._id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="table-cell">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[16px] flex-shrink-0">
                         {u.name?.charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <p className="font-medium text-gray-800 text-sm">{u.name}</p>
-                        <p className="text-xs text-neutral">{u.email}</p>
+                        <p className="text-[16px] text-neutral">{u.email}</p>
                       </div>
                     </div>
                   </td>
@@ -164,7 +164,7 @@ export default function AdminUsers() {
                   <td className="table-cell text-neutral">{u.department}</td>
                   <td className="table-cell text-neutral">{u.designation}</td>
                   <td className="table-cell"><StatusBadge status={u.status} /></td>
-                  <td className="table-cell text-neutral font-mono text-xs">{u.joining_date ? format(new Date(u.joining_date), 'dd MMM yyyy') : '—'}</td>
+                  <td className="table-cell text-neutral font-mono text-[16px]">{u.joining_date ? format(new Date(u.joining_date), 'dd MMM yyyy') : '—'}</td>
                   <td className="table-cell">
                     <div className="flex items-center gap-1">
                       <button onClick={() => openEdit(u)} className="p-1.5 rounded-lg text-neutral hover:text-gray-800 hover:bg-white/10 transition-colors"><Pencil size={14} /></button>

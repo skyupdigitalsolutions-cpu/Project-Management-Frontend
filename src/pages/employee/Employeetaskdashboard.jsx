@@ -194,7 +194,7 @@ export default function EmployeeTaskDashboard() {
           />
         </div>
         {capacityPct >= 100 && (
-          <p className="text-xs text-red-600 mt-1.5 flex items-center gap-1">
+          <p className="text-[16px] text-red-600 mt-1.5 flex items-center gap-1">
             <AlertTriangle className="w-3 h-3" /> Daily capacity exceeded — some tasks may be rescheduled
           </p>
         )}
@@ -259,8 +259,8 @@ function SummaryCard({ label, value, sub, color, active, onClick }) {
       }`}
     >
       <div className={`text-2xl font-bold ${active ? '' : 'text-gray-800'}`}>{value}</div>
-      <div className={`text-xs font-medium mt-0.5 ${active ? '' : 'text-gray-500'}`}>{label}</div>
-      <div className={`text-xs mt-0.5 opacity-70`}>{sub}</div>
+      <div className={`text-[16px] font-medium mt-0.5 ${active ? '' : 'text-gray-500'}`}>{label}</div>
+      <div className={`text-[16px] mt-0.5 opacity-70`}>{sub}</div>
     </button>
   )
 }
@@ -295,7 +295,7 @@ function TaskCard({ task, updating, onStatusChange }) {
               </h3>
               <div className={`w-2 h-2 rounded-full flex-shrink-0 ${PRIORITY_DOT[task.priority] || 'bg-gray-400'}`} title={task.priority} />
               {overdue && (
-                <span className="flex items-center gap-0.5 text-xs text-red-600 font-medium">
+                <span className="flex items-center gap-0.5 text-[16px] text-red-600 font-medium">
                   <AlertTriangle className="w-3 h-3" /> Overdue
                 </span>
               )}
@@ -303,14 +303,14 @@ function TaskCard({ task, updating, onStatusChange }) {
 
             {/* Project / assignment */}
             {task.project_id?.title && (
-              <p className="text-xs text-gray-400 mt-0.5 truncate">
+              <p className="text-[16px] text-gray-400 mt-0.5 truncate">
                 {task.project_id.title}
                 {task.assignment_id?.title && <> · {task.assignment_id.title}</>}
               </p>
             )}
 
             {/* Meta row */}
-            <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 flex-wrap">
+            <div className="flex items-center gap-3 mt-2 text-[16px] text-gray-500 flex-wrap">
               {task.estimated_hours && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" /> {task.estimated_hours}h estimated
@@ -331,7 +331,7 @@ function TaskCard({ task, updating, onStatusChange }) {
 
             {/* Description */}
             {task.description && (
-              <p className="text-xs text-gray-400 mt-2 line-clamp-2">{task.description}</p>
+              <p className="text-[16px] text-gray-400 mt-2 line-clamp-2">{task.description}</p>
             )}
           </div>
         </div>
@@ -342,7 +342,7 @@ function TaskCard({ task, updating, onStatusChange }) {
             <button
               onClick={() => onStatusChange(task, statusInfo.next)}
               disabled={!!updating}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[16px] font-medium transition-colors disabled:opacity-50 ${
                 statusInfo.next === 'completed'
                   ? 'bg-green-100 hover:bg-green-200 text-green-700'
                   : 'bg-blue-100 hover:bg-blue-200 text-blue-700'

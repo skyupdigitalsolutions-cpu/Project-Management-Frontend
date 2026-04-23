@@ -149,13 +149,13 @@ export default function WorkloadDashboard() {
               <div key={task._id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{task.title}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-[16px] text-gray-400">
                     {task.assigned_to?.name || '—'} · Due: {fmt(task.due_date)}
                   </p>
                 </div>
                 <div className="ml-3 flex items-center gap-2">
                   <select
-                    className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white"
+                    className="text-[16px] border border-gray-200 rounded-md px-2 py-1 bg-white"
                     value={reassignTo[task._id] || ''}
                     onChange={e => setReassignTo(p => ({ ...p, [task._id]: e.target.value }))}
                   >
@@ -167,7 +167,7 @@ export default function WorkloadDashboard() {
                   <button
                     onClick={() => handleReassign(task._id)}
                     disabled={reassigning === task._id || !reassignTo[task._id]}
-                    className="text-xs px-2 py-1 bg-red-600 text-gray-800 rounded-md hover:bg-red-700 disabled:opacity-40 flex items-center gap-1"
+                    className="text-[16px] px-2 py-1 bg-red-600 text-gray-800 rounded-md hover:bg-red-700 disabled:opacity-40 flex items-center gap-1"
                   >
                     {reassigning === task._id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRight className="w-3 h-3" />}
                     Go
@@ -226,13 +226,13 @@ export default function WorkloadDashboard() {
               const c     = PRIORITY_COLOR[p]
               return (
                 <div key={p} className="flex items-center gap-3">
-                  <span className={`text-xs font-medium w-16 ${c.text}`}>
+                  <span className={`text-[16px] font-medium w-16 ${c.text}`}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </span>
                   <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <div className={`h-full rounded-full ${c.bar} transition-all duration-700`} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-xs text-gray-500 w-16 text-right">{count} ({pct}%)</span>
+                  <span className="text-[16px] text-gray-500 w-16 text-right">{count} ({pct}%)</span>
                 </div>
               )
             })}
@@ -266,17 +266,17 @@ function EmployeeWorkloadCard({ entry, tasks, expanded, onToggle, users, reassig
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-gray-800 text-sm">{user?.name || 'Unknown'}</p>
                 {isOverloaded && (
-                  <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">
+                  <span className="text-[16px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">
                     Heavy load
                   </span>
                 )}
                 {overdueCount > 0 && (
-                  <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium flex items-center gap-0.5">
+                  <span className="text-[16px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium flex items-center gap-0.5">
                     <AlertTriangle className="w-3 h-3" /> {overdueCount} overdue
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-[16px] text-gray-400 mt-0.5">
                 {user?.designation || '—'} · {activeTasks.length} active tasks · {totalHours}h booked
               </p>
             </div>
@@ -285,7 +285,7 @@ function EmployeeWorkloadCard({ entry, tasks, expanded, onToggle, users, reassig
           <div className="flex items-center gap-4">
             {/* Workload bar */}
             <div className="hidden md:block w-36">
-              <div className="flex justify-between text-xs text-gray-400 mb-1">
+              <div className="flex justify-between text-[16px] text-gray-400 mb-1">
                 <span>{totalHours}h</span>
                 <span className="text-gray-300">{dailyCap * 5}h/wk cap</span>
               </div>
@@ -311,8 +311,8 @@ function EmployeeWorkloadCard({ entry, tasks, expanded, onToggle, users, reassig
               <div key={task._id} className={`flex items-center justify-between rounded-lg px-3 py-2.5 ${task.is_delayed ? 'bg-red-50' : 'bg-gray-50'}`}>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-700 truncate">{task.title}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-3">
-                    <span className={`px-1.5 py-0.5 rounded-full text-xs ${STATUS_COLOR[task.status]}`}>{task.status}</span>
+                  <p className="text-[16px] text-gray-400 mt-0.5 flex items-center gap-3">
+                    <span className={`px-1.5 py-0.5 rounded-full text-[16px] ${STATUS_COLOR[task.status]}`}>{task.status}</span>
                     {task.estimated_hours && <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" />{task.estimated_hours}h</span>}
                     {task.end_date && <span className="flex items-center gap-0.5"><Calendar className="w-3 h-3" />{fmt(task.end_date)}</span>}
                     {task.is_delayed && <span className="text-red-500 font-medium flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" />Overdue</span>}
@@ -321,7 +321,7 @@ function EmployeeWorkloadCard({ entry, tasks, expanded, onToggle, users, reassig
                 {/* Quick reassign */}
                 <div className="ml-2 flex items-center gap-1 flex-shrink-0">
                   <select
-                    className="text-xs border border-gray-200 rounded-md px-1.5 py-1 bg-white max-w-[120px]"
+                    className="text-[16px] border border-gray-200 rounded-md px-1.5 py-1 bg-white max-w-[120px]"
                     value={reassignTo[task._id] || ''}
                     onChange={e => onReassignToChange(task._id, e.target.value)}
                     onClick={e => e.stopPropagation()}
@@ -363,7 +363,7 @@ function StatBox({ label, value, icon: Icon, color }) {
     <div className={`rounded-xl border p-4 ${colors[color]}`}>
       <div className="flex items-center gap-2 mb-1">
         <Icon className="w-4 h-4" />
-        <span className="text-xs font-medium opacity-70">{label}</span>
+        <span className="text-[16px] font-medium opacity-70">{label}</span>
       </div>
       <div className="text-2xl font-bold">{value}</div>
     </div>

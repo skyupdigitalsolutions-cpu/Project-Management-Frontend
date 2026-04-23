@@ -123,7 +123,7 @@ export default function EmployeeProjects() {
 
                 {/* Client */}
                 {p.client_info?.company && (
-                  <p className="text-xs text-primary mb-1">Client: {p.client_info.company}</p>
+                  <p className="text-[16px] text-primary mb-1">Client: {p.client_info.company}</p>
                 )}
 
                 {/* Description */}
@@ -155,7 +155,7 @@ export default function EmployeeProjects() {
                 )}
 
                 {/* Footer */}
-                <div className="flex items-center justify-between text-xs text-neutral pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between text-[16px] text-neutral pt-3 border-t border-gray-100">
                   <span className="flex items-center gap-1">
                     <Users size={11} /> {p.manager_id?.name ?? '—'}
                   </span>

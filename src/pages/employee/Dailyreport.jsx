@@ -107,7 +107,7 @@ export default function EmployeeDailyReport() {
           <p className={`text-sm font-semibold ${todayReport ? 'text-emerald-700' : 'text-amber-700'}`}>
             {todayReport ? "Today's report submitted ✓" : "Today's report pending"}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-[16px] text-gray-500 mt-0.5">
             {todayReport
               ? `Submitted ${format(parseISO(todayReport.createdAt), 'hh:mm a')}`
               : "Don't forget to log your work before end of day"}
@@ -134,7 +134,7 @@ export default function EmployeeDailyReport() {
             <form onSubmit={handleSubmit} className="p-5 space-y-5">
               {/* Summary */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                <label className="block text-[16px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
                   Work Summary <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -145,16 +145,16 @@ export default function EmployeeDailyReport() {
                   placeholder="Briefly describe what you worked on today..."
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-brand-500 resize-none"
                 />
-                <p className="text-xs text-gray-400 mt-1 text-right">{form.summary.length}/2000</p>
+                <p className="text-[16px] text-gray-400 mt-1 text-right">{form.summary.length}/2000</p>
               </div>
 
               {/* Tasks Completed */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Tasks Completed</label>
+                <label className="block text-[16px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Tasks Completed</label>
                 <div className="space-y-2">
                   {form.tasks_completed.map((task, i) => (
                     <div key={i} className="flex gap-2 items-center">
-                      <span className="text-gray-400 text-xs w-4 text-right">{i + 1}.</span>
+                      <span className="text-gray-400 text-[16px] w-4 text-right">{i + 1}.</span>
                       <input
                         value={task}
                         onChange={e => handleTaskChange(i, e.target.value)}
@@ -169,14 +169,14 @@ export default function EmployeeDailyReport() {
                     </div>
                   ))}
                 </div>
-                <button type="button" onClick={addTask} className="mt-2 text-xs text-primary hover:opacity-80 flex items-center gap-1">
+                <button type="button" onClick={addTask} className="mt-2 text-[16px] text-primary hover:opacity-80 flex items-center gap-1">
                   <Plus size={12} /> Add task
                 </button>
               </div>
 
               {/* Blockers */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Blockers / Issues</label>
+                <label className="block text-[16px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Blockers / Issues</label>
                 <textarea
                   value={form.blockers}
                   onChange={e => setForm(f => ({ ...f, blockers: e.target.value }))}
@@ -188,7 +188,7 @@ export default function EmployeeDailyReport() {
 
               {/* Plan for tomorrow */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Plan for Tomorrow</label>
+                <label className="block text-[16px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Plan for Tomorrow</label>
                 <textarea
                   value={form.plan_for_tomorrow}
                   onChange={e => setForm(f => ({ ...f, plan_for_tomorrow: e.target.value }))}
@@ -241,10 +241,10 @@ function ReportCard({ report, expanded, onToggle }) {
             <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
               {dateStr}
               {isToday && (
-                <span className="text-xs bg-purple-50 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full">Today</span>
+                <span className="text-[16px] bg-purple-50 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full">Today</span>
               )}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{report.summary}</p>
+            <p className="text-[16px] text-gray-400 mt-0.5 line-clamp-1">{report.summary}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -259,7 +259,7 @@ function ReportCard({ report, expanded, onToggle }) {
           <Section label="Summary" content={report.summary} />
           {report.tasks_completed?.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Tasks Completed</p>
+              <p className="text-[16px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Tasks Completed</p>
               <ul className="space-y-1">
                 {report.tasks_completed.map((t, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -280,8 +280,8 @@ function ReportCard({ report, expanded, onToggle }) {
 function Section({ label, content, highlight }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
-      <p className={`text-sm ${highlight === 'amber' ? 'text-amber-600' : 'text-gray-700'}`}>{content}</p>
+      <p className="text-[16px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+      <p className={`text-[16px] ${highlight === 'amber' ? 'text-amber-600' : 'text-gray-700'}`}>{content}</p>
     </div>
   )
 }

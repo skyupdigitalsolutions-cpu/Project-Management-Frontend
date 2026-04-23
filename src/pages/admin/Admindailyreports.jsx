@@ -53,7 +53,7 @@ export default function AdminDailyReports() {
       <div className="card !p-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-40">
-            <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Employee</label>
+            <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Employee</label>
             <div className="relative">
               <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral" />
                <select
@@ -71,7 +71,7 @@ export default function AdminDailyReports() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">From</label>
+            <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">From</label>
             <input
               type="date" value={filters.from} max={todayStr}
               onChange={e => setFilter('from', e.target.value)}
@@ -79,7 +79,7 @@ export default function AdminDailyReports() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">To</label>
+            <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">To</label>
             <input
               type="date" value={filters.to} max={todayStr}
               onChange={e => setFilter('to', e.target.value)}
@@ -100,7 +100,7 @@ export default function AdminDailyReports() {
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setFilters(f => ({ ...f, from: todayStr, to: todayStr, page: 1 }))}
-          className="text-xs px-3 py-1 rounded-full border border-primary/30 text-primary hover:bg-purple-50 transition-colors"
+          className="text-[16px] px-3 py-1 rounded-full border border-primary/30 text-primary hover:bg-purple-50 transition-colors"
         >
           Today's Reports
         </button>
@@ -109,7 +109,7 @@ export default function AdminDailyReports() {
             const d = new Date(); d.setDate(d.getDate() - 7)
             setFilters(f => ({ ...f, from: format(d, 'yyyy-MM-dd'), to: todayStr, page: 1 }))
           }}
-          className="text-xs px-3 py-1 rounded-full border border-gray-200 text-neutral hover:border-white/20 transition-colors"
+          className="text-[16px] px-3 py-1 rounded-full border border-gray-200 text-neutral hover:border-white/20 transition-colors"
         >
           Last 7 Days
         </button>
@@ -118,7 +118,7 @@ export default function AdminDailyReports() {
             const d = new Date(); d.setDate(d.getDate() - 30)
             setFilters(f => ({ ...f, from: format(d, 'yyyy-MM-dd'), to: todayStr, page: 1 }))
           }}
-          className="text-xs px-3 py-1 rounded-full border border-gray-200 text-neutral hover:border-white/20 transition-colors"
+          className="text-[16px] px-3 py-1 rounded-full border border-gray-200 text-neutral hover:border-white/20 transition-colors"
         >
           Last 30 Days
         </button>
@@ -172,17 +172,17 @@ function AdminReportCard({ report, expanded, onToggle }) {
   return (
     <div className="border border-gray-100 rounded-lg overflow-hidden">
       <button onClick={onToggle} className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/3 transition-colors text-left gap-3">
-        <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-primary text-[16px] font-bold flex-shrink-0">
           {user?.name?.[0]?.toUpperCase() || '?'}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-gray-800">{user?.name || 'Unknown'}</p>
-            <span className="text-xs text-neutral">{user?.designation}</span>
-            {isToday && <span className="text-xs bg-purple-50 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full">Today</span>}
+            <span className="text-[16px] text-neutral">{user?.designation}</span>
+            {isToday && <span className="text-[16px] bg-purple-50 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full">Today</span>}
           </div>
-          <p className="text-xs text-neutral mt-0.5 truncate">{dateStr} · {report.summary?.slice(0, 80)}{report.summary?.length > 80 ? '…' : ''}</p>
+          <p className="text-[16px] text-neutral mt-0.5 truncate">{dateStr} · {report.summary?.slice(0, 80)}{report.summary?.length > 80 ? '…' : ''}</p>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -192,7 +192,7 @@ function AdminReportCard({ report, expanded, onToggle }) {
 
       {expanded && (
         <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
-          <div className="flex items-center gap-3 text-xs text-neutral flex-wrap">
+          <div className="flex items-center gap-3 text-[16px] text-neutral flex-wrap">
             <span>{user?.department}</span>
             <span>·</span>
             <span>{user?.email}</span>
@@ -201,7 +201,7 @@ function AdminReportCard({ report, expanded, onToggle }) {
           <ReportSection label="Work Summary" content={report.summary} />
           {report.tasks_completed?.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Tasks Completed</p>
+              <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Tasks Completed</p>
               <ul className="space-y-1">
                 {report.tasks_completed.map((t, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -222,7 +222,7 @@ function AdminReportCard({ report, expanded, onToggle }) {
 function ReportSection({ label, content, highlight }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1">{label}</p>
       <p className={`text-sm ${highlight === 'amber' ? 'text-amber-300' : 'text-gray-600'}`}>{content}</p>
     </div>
   )

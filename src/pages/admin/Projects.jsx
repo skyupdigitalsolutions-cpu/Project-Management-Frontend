@@ -21,16 +21,16 @@ const STATUSES   = ['planning', 'active', 'on-hold', 'completed', 'cancelled']
 const PRIORITIES = ['low', 'medium', 'high', 'critical']
 
 const PROJECT_TYPES = [
-  { value: 'website',        label: '🌐 Website',        hint: 'Frontend, Backend, Full Stack, Designer' },
-  { value: 'mobile_app',     label: '📱 Mobile App',      hint: 'Mobile Dev, Backend, Designer' },
-  { value: 'ecommerce',      label: '🛒 E-Commerce',      hint: 'Full Stack, Backend, SEO, Designer' },
-  { value: 'api_service',    label: '⚙️ API Service',     hint: 'Backend, Full Stack' },
-  { value: 'data_analytics', label: '📊 Data Analytics',  hint: 'Data Analyst, Backend' },
-  { value: 'design',         label: '🎨 Design',          hint: 'Designer' },
-  { value: 'content',        label: '✍️ Content',         hint: 'Content Writer' },
-  { value: 'seo',            label: '🔍 SEO',             hint: 'SEO Specialist, Content Writer' },
-  { value: 'marketing',      label: '📣 Marketing',       hint: 'Marketing Specialist, Content Writer' },
-  { value: 'other',          label: '📁 Other',           hint: 'General assignment' },
+  { value: 'website',        label: ' Website',        hint: 'Frontend, Backend, Full Stack, Designer' },
+  { value: 'mobile_app',     label: ' Mobile App',      hint: 'Mobile Dev, Backend, Designer' },
+  { value: 'ecommerce',      label: ' E-Commerce',      hint: 'Full Stack, Backend, SEO, Designer' },
+  { value: 'api_service',    label: ' API Service',     hint: 'Backend, Full Stack' },
+  { value: 'data_analytics', label: ' Data Analytics',  hint: 'Data Analyst, Backend' },
+  { value: 'design',         label: ' Design',          hint: 'Designer' },
+  { value: 'content',        label: ' Content',         hint: 'Content Writer' },
+  { value: 'seo',            label: ' SEO',             hint: 'SEO Specialist, Content Writer' },
+  { value: 'marketing',      label: ' Marketing',       hint: 'Marketing Specialist, Content Writer' },
+  { value: 'other',          label: ' Other',           hint: 'General assignment' },
 ]
 
 const COMPLEXITIES = [
@@ -187,7 +187,7 @@ function SectionHeader({ icon: Icon, title, subtitle, right }) {
         )}
         <div>
           <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-          {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+          {subtitle && <p className="text-[16px] text-gray-500 mt-0.5">{subtitle}</p>}
         </div>
       </div>
       {right && <div className="flex-shrink-0">{right}</div>}
@@ -198,12 +198,12 @@ function SectionHeader({ icon: Icon, title, subtitle, right }) {
 function Field({ label, required, hint, children }) {
   return (
     <div className="space-y-1.5">
-      <label className="flex items-center gap-1 text-xs font-medium text-gray-600">
+      <label className="flex items-center gap-1 text-[16px] font-medium text-gray-600">
         {label}
         {required && <span className="text-blue-500">*</span>}
       </label>
       {children}
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="text-[16px] text-gray-400">{hint}</p>}
     </div>
   )
 }
@@ -211,7 +211,7 @@ function Field({ label, required, hint, children }) {
 function PriorityDot({ priority }) {
   const m = PRIORITY_META[priority] || PRIORITY_META.medium
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium"
+    <span className="inline-flex items-center gap-1.5 text-[16px] px-2.5 py-1 rounded-full font-medium"
       style={{ background: m.bg, border: `1px solid ${m.border}`, color: m.text }}>
       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: m.dot }} />
       {priority.charAt(0).toUpperCase() + priority.slice(1)}
@@ -230,7 +230,7 @@ function FormAlert({ msg, onClose }) {
       }>
       <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
       <span className="flex-1">{msg.text}</span>
-      <button onClick={onClose} className="opacity-50 hover:opacity-100 transition-opacity text-xs">✕</button>
+      <button onClick={onClose} className="opacity-50 hover:opacity-100 transition-opacity text-[16px]">✕</button>
     </div>
   )
 }
@@ -258,7 +258,7 @@ function GhostBtn({ children, onClick, type = 'button', className = '' }) {
 function DangerBtn({ children, onClick }) {
   return (
     <button type="button" onClick={onClick}
-      className="inline-flex items-center gap-1 text-xs font-medium text-red-400/60 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-red-50">
+      className="inline-flex items-center gap-1 text-[16px] font-medium text-red-400/60 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-red-50">
       {children}
     </button>
   )
@@ -283,7 +283,7 @@ function WizardTabs({ steps, currentStep, onStepClick, completedSteps }) {
             onClick={() => isClickable && onStepClick(step.n)}
             disabled={!isClickable && !isActive}
             className={[
-              'flex items-center gap-2 px-4 py-3 text-xs font-semibold transition-all flex-1 justify-center relative',
+              'flex items-center gap-2 px-4 py-3 text-[16px] font-semibold transition-all flex-1 justify-center relative',
               isActive                      ? 'text-white'                                          : '',
               isCompleted && !isActive      ? 'text-emerald-600 hover:text-gray-900 cursor-pointer' : '',
               !isCompleted && !isActive     ? 'text-gray-400 cursor-not-allowed'                   : '',
@@ -381,7 +381,7 @@ function ProjectInfoStep({ project, updateProject, managers }) {
                         )
                       }}
                     />
-                    <span className={`text-xs transition-colors ${checked ? 'text-gray-900' : 'text-gray-500'}`}>
+                    <span className={`text-[16px] transition-colors ${checked ? 'text-gray-900' : 'text-gray-500'}`}>
                       {pt.label}
                     </span>
                   </label>
@@ -527,7 +527,7 @@ function ClientDetailsStep({ client, updateClient }) {
         <div className="flex items-center gap-3 rounded-lg px-4 py-3"
           style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
           <AlertCircle size={14} className="text-blue-500 flex-shrink-0" />
-          <p className="text-xs text-gray-500">
+          <p className="text-[16px] text-gray-500">
             Client details are optional. You can skip this step and add them later.
           </p>
         </div>
@@ -599,7 +599,7 @@ function SmartTypeAssignmentCard({ a, index, savedProject, onUpdate, onRemove })
       <div className="flex items-center justify-between px-5 py-3"
         style={{ borderBottom: `1px solid ${T.cardBorder}` }}>
         <div className="flex items-center gap-2">
-          <span className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold text-blue-600"
+          <span className="w-6 h-6 rounded-md flex items-center justify-center text-[16px] font-bold text-blue-600"
             style={{ backgroundColor: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
             {index}
           </span>
@@ -696,7 +696,7 @@ function SmartTypeAssignmentCard({ a, index, savedProject, onUpdate, onRemove })
             <div className="px-4 py-2.5 flex items-center gap-2"
               style={{ borderBottom: '1px solid rgba(16,185,129,0.15)' }}>
               <CheckCircle2 size={13} className="text-emerald-500" />
-              <span className="text-xs font-semibold text-emerald-600">
+              <span className="text-[16px] font-semibold text-emerald-600">
                 {a._tasks.length} tasks generated and smart-assigned
               </span>
             </div>
@@ -704,10 +704,10 @@ function SmartTypeAssignmentCard({ a, index, savedProject, onUpdate, onRemove })
               {a._tasks.map(task => (
                 <div key={task._id} className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-sm text-gray-800 flex-1 min-w-0 truncate">{task.title}</span>
-                  <span className="text-xs text-gray-500 mx-3 whitespace-nowrap flex items-center gap-1">
+                  <span className="text-[16px] text-gray-500 mx-3 whitespace-nowrap flex items-center gap-1">
                     <Users size={10} /> {task.assigned_to?.name || '—'}
                   </span>
-                  <span className="text-xs text-gray-500 whitespace-nowrap flex items-center gap-1">
+                  <span className="text-[16px] text-gray-500 whitespace-nowrap flex items-center gap-1">
                     <Clock size={10} /> {task.estimated_hours}h
                   </span>
                 </div>
@@ -730,18 +730,18 @@ function SmartTypePreviewPanel({ preview }) {
       <div className="px-4 py-2.5 flex items-center gap-2"
         style={{ borderBottom: '1px solid rgba(59,130,246,0.15)' }}>
         <Eye size={13} className="text-blue-500" />
-        <span className="text-xs font-semibold text-blue-600">
+        <span className="text-[16px] font-semibold text-blue-600">
           Preview — {summary.taskCount} tasks · {summary.totalEstimatedHours}h total
         </span>
         <div className="ml-auto flex gap-2">
           {summary.priorityBreakdown?.high > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full"
+            <span className="text-[16px] px-2 py-0.5 rounded-full"
               style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.2)' }}>
               {summary.priorityBreakdown.high} high
             </span>
           )}
           {summary.priorityBreakdown?.medium > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full"
+            <span className="text-[16px] px-2 py-0.5 rounded-full"
               style={{ backgroundColor: 'rgba(245,158,11,0.1)', color: '#d97706', border: '1px solid rgba(245,158,11,0.2)' }}>
               {summary.priorityBreakdown.medium} medium
             </span>
@@ -752,19 +752,19 @@ function SmartTypePreviewPanel({ preview }) {
       <div className="divide-y divide-gray-100">
         {tasks.map((task, i) => (
           <div key={i} className="flex items-center justify-between px-4 py-2">
-            <span className="text-xs text-gray-800 flex-1 min-w-0 truncate">{task.title}</span>
-            <span className="text-xs text-gray-500 mx-2 whitespace-nowrap">{task.required_role}</span>
-            <span className="text-xs font-medium text-blue-600 whitespace-nowrap">{task.estimatedHours}h</span>
+            <span className="text-[16px] text-gray-800 flex-1 min-w-0 truncate">{task.title}</span>
+            <span className="text-[16px] text-gray-500 mx-2 whitespace-nowrap">{task.required_role}</span>
+            <span className="text-[16px] font-medium text-blue-600 whitespace-nowrap">{task.estimatedHours}h</span>
           </div>
         ))}
       </div>
 
       {candidateEmployees.length > 0 && (
         <div className="px-4 py-3" style={{ borderTop: '1px solid rgba(59,130,246,0.15)' }}>
-          <p className="text-xs text-gray-500 mb-2">Eligible employees ({candidateEmployees.length}):</p>
+          <p className="text-[16px] text-gray-500 mb-2">Eligible employees ({candidateEmployees.length}):</p>
           <div className="flex flex-wrap gap-2">
             {candidateEmployees.slice(0, 5).map(emp => (
-              <div key={emp._id} className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border border-gray-200 bg-gray-50">
+              <div key={emp._id} className="flex items-center gap-1.5 text-[16px] px-2.5 py-1 rounded-full border border-gray-200 bg-gray-50">
                 <span className={`w-1.5 h-1.5 rounded-full ${
                   emp.activeTaskCount === 0 ? 'bg-emerald-500' :
                   emp.activeTaskCount < 5  ? 'bg-amber-400'   : 'bg-red-400'
@@ -774,14 +774,14 @@ function SmartTypePreviewPanel({ preview }) {
               </div>
             ))}
             {candidateEmployees.length > 5 && (
-              <span className="text-xs text-gray-400 py-1">+{candidateEmployees.length - 5} more</span>
+              <span className="text-[16px] text-gray-400 py-1">+{candidateEmployees.length - 5} more</span>
             )}
           </div>
         </div>
       )}
 
       {candidateEmployees.length === 0 && (
-        <div className="flex items-center gap-2 px-4 py-3 text-xs text-amber-600"
+        <div className="flex items-center gap-2 px-4 py-3 text-[16px] text-amber-600"
           style={{ borderTop: '1px solid rgba(59,130,246,0.15)' }}>
           <AlertCircle size={13} />
           No eligible employees found. Add employees with matching roles/departments.
@@ -838,8 +838,8 @@ function TeamAndTasksStep({
                     <Icon size={13} className={active ? 'text-blue-500' : 'text-gray-400'} />
                   </div>
                   <div>
-                    <p className={`text-xs font-semibold ${active ? 'text-gray-900' : 'text-gray-500'}`}>{m.label}</p>
-                    <p className={`text-xs mt-0.5 leading-tight text-gray-400`}>{m.desc}</p>
+                    <p className={`text-[16px] font-semibold ${active ? 'text-gray-900' : 'text-gray-500'}`}>{m.label}</p>
+                    <p className={`text-[16px] mt-0.5 leading-tight text-gray-400`}>{m.desc}</p>
                   </div>
                 </button>
               )
@@ -850,7 +850,7 @@ function TeamAndTasksStep({
             <div className="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5"
               style={{ backgroundColor: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)' }}>
               <AlertCircle size={13} className="text-amber-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-gray-500">
+              <p className="text-[16px] text-gray-500">
                 <span className="text-amber-600 font-semibold">Manual — </span>
                 You will assign tasks to employees manually after the project is created.
               </p>
@@ -860,7 +860,7 @@ function TeamAndTasksStep({
             <div className="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5"
               style={{ backgroundColor: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)' }}>
               <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-gray-500">
+              <p className="text-[16px] text-gray-500">
                 <span className="text-emerald-600 font-semibold">Smart Auto-Assignment ON — </span>
                 Tasks will be matched to employees automatically when the project is created.
               </p>
@@ -870,7 +870,7 @@ function TeamAndTasksStep({
             <div className="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5"
               style={{ backgroundColor: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.18)' }}>
               <Sparkles size={13} className="text-blue-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-gray-500">
+              <p className="text-[16px] text-gray-500">
                 <span className="text-blue-600 font-semibold">Smart Plan — </span>
                 AI generates a complete task plan with day-wise scheduling from your project description.
               </p>
@@ -880,7 +880,7 @@ function TeamAndTasksStep({
             <div className="flex items-start gap-2.5 rounded-lg px-3.5 py-2.5"
               style={{ backgroundColor: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.2)' }}>
               <Zap size={13} className="text-violet-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-gray-500">
+              <p className="text-[16px] text-gray-500">
                 <span className="text-violet-600 font-semibold">Type-Based Generation — </span>
                 Select an assignment type (Design / Development / Testing / Marketing), preview the generated tasks, then smart-assign in one click.
               </p>
@@ -895,7 +895,7 @@ function TeamAndTasksStep({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-gray-900">Assignments &amp; Tasks</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-[16px] text-gray-400 mt-0.5">
                 {assignments.length} assignment{assignments.length !== 1 ? 's' : ''} ·{' '}
                 {assignments.reduce((n, a) => n + a.tasks.length, 0)} tasks total
               </p>
@@ -962,7 +962,7 @@ function TeamAndTasksStep({
                                 )
                               }}
                             />
-                            <span className={`text-xs ${checked ? 'text-gray-900' : 'text-gray-500'}`}>{pt.label}</span>
+                            <span className={`text-[16px] ${checked ? 'text-gray-900' : 'text-gray-500'}`}>{pt.label}</span>
                           </label>
                         )
                       })}
@@ -991,7 +991,7 @@ function TeamAndTasksStep({
             <div className="flex items-center gap-3 rounded-xl px-4 py-3.5"
               style={{ backgroundColor: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)' }}>
               <AlertCircle size={14} className="text-amber-500 flex-shrink-0" />
-              <p className="text-xs text-gray-500">
+              <p className="text-[16px] text-gray-500">
                 The project must be saved before you can generate tasks.
                 Go back to Step 1 and complete the project info, then the project will be saved automatically when you reach this step.
               </p>
@@ -1001,7 +1001,7 @@ function TeamAndTasksStep({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-sm font-semibold text-gray-900">Type-Based Assignments</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-[16px] text-gray-400 mt-0.5">
                     {smartAssignments.length} assignment{smartAssignments.length !== 1 ? 's' : ''} ·{' '}
                     {smartAssignments.filter(a => a._assigned).length} assigned
                   </p>
@@ -1043,12 +1043,12 @@ function SmartPlanPreview({ plan, onReset, onConfirm, confirming }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-emerald-600">Plan generated successfully</p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-[16px] text-gray-500 mt-0.5">
             {modules.length} module{modules.length !== 1 ? 's' : ''} · {total_tasks} task{total_tasks !== 1 ? 's' : ''} · Scheduled day-wise per role
           </p>
         </div>
         <button type="button" onClick={onReset}
-          className="text-xs text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1 flex-shrink-0">
+          className="text-[16px] text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1 flex-shrink-0">
           <RefreshCw size={11} /> Regenerate
         </button>
       </div>
@@ -1059,7 +1059,7 @@ function SmartPlanPreview({ plan, onReset, onConfirm, confirming }) {
             title={mod.name}
             subtitle={`${mod.tasks.length} task${mod.tasks.length !== 1 ? 's' : ''}`}
             right={
-              <span className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-blue-600"
+              <span className="w-7 h-7 rounded-md flex items-center justify-center text-[16px] font-bold text-blue-600"
                 style={{ backgroundColor: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
                 {mi + 1}
               </span>
@@ -1071,9 +1071,9 @@ function SmartPlanPreview({ plan, onReset, onConfirm, confirming }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{task.title}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <span className="text-xs text-gray-500">{task.required_role}</span>
+                    <span className="text-[16px] text-gray-500">{task.required_role}</span>
                     <span className="text-gray-300">·</span>
-                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <span className="text-[16px] text-gray-500 flex items-center gap-1">
                       <Clock size={10} /> {task.estimated_days} day{task.estimated_days !== 1 ? 's' : ''}
                     </span>
                   </div>
@@ -1081,7 +1081,7 @@ function SmartPlanPreview({ plan, onReset, onConfirm, confirming }) {
                 <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                   <PriorityDot priority={task.priority} />
                   {task.start_date && (
-                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                    <span className="text-[16px] text-gray-400 flex items-center gap-1">
                       <Calendar size={10} />
                       {new Date(task.start_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                       {' – '}
@@ -1089,12 +1089,12 @@ function SmartPlanPreview({ plan, onReset, onConfirm, confirming }) {
                     </span>
                   )}
                   {task.suggested_assignee ? (
-                    <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+                    <span className="text-[16px] px-2 py-0.5 rounded-full flex items-center gap-1"
                       style={{ backgroundColor: 'rgba(59,130,246,0.08)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }}>
                       <Users size={10} /> {task.suggested_assignee.name}
                     </span>
                   ) : (
-                    <span className="text-xs text-amber-500 flex items-center gap-1">
+                    <span className="text-[16px] text-amber-500 flex items-center gap-1">
                       <AlertCircle size={10} /> No match
                     </span>
                   )}
@@ -1114,7 +1114,7 @@ function TaskCard({ task, tIdx, aIdx, total, autoAssign, onRemove, onUpdate }) {
   return (
     <div className="rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-white">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <span className="text-[16px] font-semibold text-gray-400 uppercase tracking-wider">
           Task {tIdx + 1}
         </span>
         {total > 1 && (
@@ -1178,7 +1178,7 @@ function TaskCard({ task, tIdx, aIdx, total, autoAssign, onRemove, onUpdate }) {
               onChange={e => onUpdate('requires_permission', e.target.checked)}
               className="w-4 h-4 accent-blue-500 flex-shrink-0 cursor-pointer" />
             <label htmlFor={`perm-${aIdx}-${tIdx}`}
-              className="text-xs text-gray-500 cursor-pointer select-none leading-tight">
+              className="text-[16px] text-gray-500 cursor-pointer select-none leading-tight">
               Requires admin approval to start
             </label>
           </div>
@@ -1212,7 +1212,7 @@ function AssignmentCard({ asgn, aIdx, total, autoAssign, onUpdate, onRemove, onA
         onClick={() => setCollapsed(c => !c)}
       >
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-blue-600"
+          <div className="w-7 h-7 rounded-md flex items-center justify-center text-[16px] font-bold text-blue-600"
             style={{ backgroundColor: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
             {aIdx + 1}
           </div>
@@ -1220,7 +1220,7 @@ function AssignmentCard({ asgn, aIdx, total, autoAssign, onUpdate, onRemove, onA
             <p className="text-sm font-semibold text-gray-900">
               {asgn.title || <span className="text-gray-400 font-normal italic">Untitled Assignment</span>}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-[16px] text-gray-400 mt-0.5">
               {asgn.tasks.length} task{asgn.tasks.length !== 1 ? 's' : ''}
               {asgn.department ? ` · ${asgn.department}` : ''}
             </p>
@@ -1277,11 +1277,11 @@ function AssignmentCard({ asgn, aIdx, total, autoAssign, onUpdate, onRemove, onA
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <p className="text-[16px] font-semibold text-gray-400 uppercase tracking-wider">
                 Tasks ({asgn.tasks.length})
               </p>
               <button type="button" onClick={onAddTask}
-                className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-90"
+                className="text-[16px] px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-90"
                 style={{ backgroundColor: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', color: '#3b82f6' }}>
                 + Add Task
               </button>
@@ -1314,8 +1314,8 @@ function ReviewStep({ project, client, assignments, assignMode, plan, smartAssig
 
   const Row = ({ label, value }) => value ? (
     <div className="flex items-start justify-between gap-4 py-2.5 border-b border-gray-100">
-      <span className="text-xs text-gray-400 flex-shrink-0 w-32">{label}</span>
-      <span className="text-xs text-gray-700 text-right">{value}</span>
+      <span className="text-[16px] text-gray-400 flex-shrink-0 w-32">{label}</span>
+      <span className="text-[16px] text-gray-700 text-right">{value}</span>
     </div>
   ) : null
 
@@ -1370,12 +1370,12 @@ function ReviewStep({ project, client, assignments, assignMode, plan, smartAssig
                 <p className="text-sm font-semibold text-gray-900 mb-1">
                   {i + 1}. {a.title || <span className="text-gray-400 italic">Untitled</span>}
                 </p>
-                <p className="text-xs text-gray-400 mb-2">
+                <p className="text-[16px] text-gray-400 mb-2">
                   {a.department} · {a.tasks.length} task{a.tasks.length !== 1 ? 's' : ''}
                 </p>
                 <div className="space-y-1">
                   {a.tasks.map(t => (
-                    <div key={t.id} className="flex items-center gap-2 text-xs text-gray-500">
+                    <div key={t.id} className="flex items-center gap-2 text-[16px] text-gray-500">
                       <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
                       <span className="flex-1">{t.title || 'Untitled task'}</span>
                       <PriorityDot priority={t.priority} />
@@ -1403,10 +1403,10 @@ function ReviewStep({ project, client, assignments, assignMode, plan, smartAssig
                   </p>
                   {a._assigned
                     ? <CheckCircle2 size={13} className="text-emerald-500" />
-                    : <span className="text-xs text-amber-500">Not yet assigned</span>
+                    : <span className="text-[16px] text-amber-500">Not yet assigned</span>
                   }
                 </div>
-                <p className="text-xs text-gray-400 mb-1">
+                <p className="text-[16px] text-gray-400 mb-1">
                   {a.type} · {a.priority} priority · {a._tasks.length} tasks generated
                 </p>
               </div>
@@ -1419,7 +1419,7 @@ function ReviewStep({ project, client, assignments, assignMode, plan, smartAssig
         <div className="flex items-center gap-3 rounded-xl px-4 py-3.5"
           style={{ backgroundColor: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)' }}>
           <Layers size={15} className="text-emerald-500 flex-shrink-0" />
-          <p className="text-xs text-gray-500">
+          <p className="text-[16px] text-gray-500">
             Smart Plan with <span className="text-gray-900 font-semibold">{plan.total_tasks} tasks</span> across{' '}
             <span className="text-gray-900 font-semibold">{plan.modules?.length} modules</span> is ready to be created.
           </p>
@@ -1429,7 +1429,7 @@ function ReviewStep({ project, client, assignments, assignMode, plan, smartAssig
       <div className="flex items-center gap-3 rounded-xl px-4 py-3.5"
         style={{ backgroundColor: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)' }}>
         <CheckCircle2 size={15} className="text-blue-500 flex-shrink-0" />
-        <p className="text-xs text-gray-500">
+        <p className="text-[16px] text-gray-500">
           Everything looks good? Click{' '}
           <span className="text-gray-900 font-semibold">Create Project</span> to finalize.
         </p>
@@ -1760,7 +1760,7 @@ export default function AdminProjects() {
       <div className="space-y-6 animate-fade-in max-w-4xl">
         <div>
           <button onClick={() => setView('list')}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mb-3">
+            className="flex items-center gap-1.5 text-[16px] text-gray-400 hover:text-gray-700 transition-colors mb-3">
             <ChevronLeft size={13} /> Back to Projects
           </button>
           <h1 className="text-xl font-bold text-gray-900">Create New Project</h1>
@@ -1789,7 +1789,7 @@ export default function AdminProjects() {
 
             {currentStep < CREATE_STEPS.length ? (
               <PrimaryBtn onClick={handleNext} className="flex-1">
-                Continue <span className="opacity-60 text-xs ml-1">→</span>
+                Continue <span className="opacity-60 text-[16px] ml-1">→</span>
               </PrimaryBtn>
             ) : (
               <PrimaryBtn
@@ -1887,18 +1887,18 @@ export default function AdminProjects() {
 
               <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-1">{p.title}</h3>
               {p.client_info?.company && (
-                <p className="text-xs text-blue-500 mb-1">Client: {p.client_info.company}</p>
+                <p className="text-[16px] text-blue-500 mb-1">Client: {p.client_info.company}</p>
               )}
-              <p className="text-xs text-gray-400 line-clamp-2 mb-4 flex-1 leading-relaxed">{p.description}</p>
+              <p className="text-[16px] text-gray-400 line-clamp-2 mb-4 flex-1 leading-relaxed">{p.description}</p>
 
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 min-w-0">
+                <div className="flex items-center gap-1.5 text-[16px] text-gray-500 min-w-0">
                   <div className="w-5 h-5 rounded bg-emerald-50 flex items-center justify-center flex-shrink-0">
                     <Users size={9} className="text-emerald-500" />
                   </div>
                   <span className="truncate">{p.manager_id?.name ?? 'No manager'}</span>
                 </div>
-                <span className="text-xs text-gray-400 font-mono flex items-center gap-1 flex-shrink-0">
+                <span className="text-[16px] text-gray-400 font-mono flex items-center gap-1 flex-shrink-0">
                   <Calendar size={10} />
                   {p.end_date ? format(new Date(p.end_date), 'MMM d, yyyy') : '—'}
                 </span>

@@ -136,7 +136,7 @@ function MyReportTab() {
           <p className={`text-sm font-semibold ${todayReport ? 'text-emerald-300' : 'text-amber-300'}`}>
             {todayReport ? "Today's report submitted ✓" : "Today's report pending"}
           </p>
-          <p className="text-xs text-neutral mt-0.5">
+          <p className="text-[16px] text-neutral mt-0.5">
             {todayReport
               ? `Submitted ${format(parseISO(todayReport.createdAt), 'hh:mm a')}`
               : 'Submit your daily update so admin can track your progress'}
@@ -157,7 +157,7 @@ function MyReportTab() {
                 <h2 className="text-base font-semibold text-gray-800">
                   {todayReport ? 'Update Daily Report' : 'Submit Daily Report'}
                 </h2>
-                <p className="text-xs text-neutral mt-0.5">{format(new Date(), 'MMMM d, yyyy')} · Visible to Admin</p>
+                <p className="text-[16px] text-neutral mt-0.5">{format(new Date(), 'MMMM d, yyyy')} · Visible to Admin</p>
               </div>
               <button onClick={() => setShowForm(false)} className="text-neutral hover:text-gray-800 transition-colors">
                 <X size={18} />
@@ -167,22 +167,22 @@ function MyReportTab() {
             <form onSubmit={handleSubmit} className="p-5 space-y-5">
               {/* Summary */}
               <div>
-                <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">
+                <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">
                   Work Summary <span className="text-red-400">*</span>
                 </label>
                 <textarea value={form.summary} onChange={e => setForm(f => ({ ...f, summary: e.target.value }))}
                   rows={3} maxLength={2000} placeholder="Describe what you worked on today..."
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-slate-600 focus:outline-none focus:border-brand-500 resize-none" />
-                <p className="text-xs text-neutral mt-1 text-right">{form.summary.length}/2000</p>
+                <p className="text-[16px] text-neutral mt-1 text-right">{form.summary.length}/2000</p>
               </div>
 
               {/* Tasks */}
               <div>
-                <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Tasks Completed</label>
+                <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Tasks Completed</label>
                 <div className="space-y-2">
                   {form.tasks_completed.map((task, i) => (
                     <div key={i} className="flex gap-2 items-center">
-                      <span className="text-neutral text-xs w-4 text-right">{i + 1}.</span>
+                      <span className="text-neutral text-[16px] w-4 text-right">{i + 1}.</span>
                       <input value={task} onChange={e => handleTaskChange(i, e.target.value)}
                         placeholder={`Task ${i + 1}...`}
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-slate-600 focus:outline-none focus:border-brand-500" />
@@ -194,14 +194,14 @@ function MyReportTab() {
                     </div>
                   ))}
                 </div>
-                <button type="button" onClick={addTask} className="mt-2 text-xs text-primary hover:text-primary flex items-center gap-1">
+                <button type="button" onClick={addTask} className="mt-2 text-[16px] text-primary hover:text-primary flex items-center gap-1">
                   <Plus size={12} /> Add task
                 </button>
               </div>
 
               {/* Blockers */}
               <div>
-                <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Blockers / Issues</label>
+                <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Blockers / Issues</label>
                 <textarea value={form.blockers} onChange={e => setForm(f => ({ ...f, blockers: e.target.value }))}
                   rows={2} placeholder="Any blockers or challenges? (optional)"
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-slate-600 focus:outline-none focus:border-brand-500 resize-none" />
@@ -209,7 +209,7 @@ function MyReportTab() {
 
               {/* Plan for tomorrow */}
               <div>
-                <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Plan for Tomorrow</label>
+                <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Plan for Tomorrow</label>
                 <textarea value={form.plan_for_tomorrow} onChange={e => setForm(f => ({ ...f, plan_for_tomorrow: e.target.value }))}
                   rows={2} placeholder="What do you plan to work on tomorrow? (optional)"
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-slate-600 focus:outline-none focus:border-brand-500 resize-none" />
@@ -290,7 +290,7 @@ function TeamReportsTab() {
       <div className="card !p-4">
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-40">
-            <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Employee</label>
+            <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Employee</label>
             <div className="relative">
               <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral" />
              <select
@@ -307,12 +307,12 @@ function TeamReportsTab() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">From</label>
+            <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">From</label>
             <input type="date" value={filters.from} max={todayStr} onChange={e => setFilter('from', e.target.value)}
               className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-brand-500" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">To</label>
+            <label className="block text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">To</label>
             <input type="date" value={filters.to} max={todayStr} onChange={e => setFilter('to', e.target.value)}
               className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-brand-500" />
           </div>
@@ -325,14 +325,14 @@ function TeamReportsTab() {
       {/* Quick chips */}
       <div className="flex items-center gap-2 flex-wrap">
         <button onClick={() => setFilters(f => ({ ...f, from: todayStr, to: todayStr, page: 1 }))}
-          className="text-xs px-3 py-1 rounded-full border border-primary/30 text-primary hover:bg-purple-50 transition-colors">
+          className="text-[16px] px-3 py-1 rounded-full border border-primary/30 text-primary hover:bg-purple-50 transition-colors">
           Today
         </button>
         <button onClick={() => { const d = new Date(); d.setDate(d.getDate() - 7); setFilters(f => ({ ...f, from: format(d, 'yyyy-MM-dd'), to: todayStr, page: 1 })) }}
-          className="text-xs px-3 py-1 rounded-full border border-gray-200 text-neutral hover:border-white/20 transition-colors">
+          className="text-[16px] px-3 py-1 rounded-full border border-gray-200 text-neutral hover:border-white/20 transition-colors">
           Last 7 Days
         </button>
-        <span className="text-xs text-neutral ml-auto">{pagination.total} report{pagination.total !== 1 ? 's' : ''}</span>
+        <span className="text-[16px] text-neutral ml-auto">{pagination.total} report{pagination.total !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Reports list */}
@@ -381,9 +381,9 @@ function OwnReportCard({ report, expanded, onToggle }) {
           <div>
             <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
               {dateStr}
-              {isToday && <span className="text-xs bg-purple-50 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full">Today</span>}
+              {isToday && <span className="text-[16px] bg-purple-50 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full">Today</span>}
             </p>
-            <p className="text-xs text-neutral mt-0.5 line-clamp-1">{report.summary}</p>
+            <p className="text-[16px] text-neutral mt-0.5 line-clamp-1">{report.summary}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -395,7 +395,7 @@ function OwnReportCard({ report, expanded, onToggle }) {
           <Sec label="Summary" content={report.summary} />
           {report.tasks_completed?.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Tasks Completed</p>
+              <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Tasks Completed</p>
               <ul className="space-y-1">
                 {report.tasks_completed.map((t, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -421,16 +421,16 @@ function TeamReportCard({ report, expanded, onToggle }) {
   return (
     <div className="border border-gray-100 rounded-lg overflow-hidden">
       <button onClick={onToggle} className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/3 transition-colors text-left gap-3">
-        <div className="w-8 h-8 rounded-full bg-emerald-600/30 flex items-center justify-center text-emerald-300 text-xs font-bold flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-emerald-600/30 flex items-center justify-center text-emerald-300 text-[16px] font-bold flex-shrink-0">
           {user?.name?.[0]?.toUpperCase() || '?'}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-gray-800">{user?.name || 'Unknown'}</p>
-            <span className="text-xs text-neutral">{user?.designation}</span>
-            {isToday && <span className="text-xs bg-purple-50 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full">Today</span>}
+            <span className="text-[16px] text-neutral">{user?.designation}</span>
+            {isToday && <span className="text-[16px] bg-purple-50 text-primary border border-primary/30 px-1.5 py-0.5 rounded-full">Today</span>}
           </div>
-          <p className="text-xs text-neutral mt-0.5 truncate">{dateStr} · {report.summary?.slice(0, 80)}{report.summary?.length > 80 ? '…' : ''}</p>
+          <p className="text-[16px] text-neutral mt-0.5 truncate">{dateStr} · {report.summary?.slice(0, 80)}{report.summary?.length > 80 ? '…' : ''}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {expanded ? <ChevronUp size={15} className="text-neutral" /> : <ChevronDown size={15} className="text-neutral" />}
@@ -438,13 +438,13 @@ function TeamReportCard({ report, expanded, onToggle }) {
       </button>
       {expanded && (
         <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
-          <div className="flex items-center gap-3 text-xs text-neutral flex-wrap">
+          <div className="flex items-center gap-3 text-[16px] text-neutral flex-wrap">
             <span>{user?.department}</span>
           </div>
           <Sec label="Work Summary" content={report.summary} />
           {report.tasks_completed?.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1.5">Tasks Completed</p>
+              <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1.5">Tasks Completed</p>
               <ul className="space-y-1">
                 {report.tasks_completed.map((t, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -465,7 +465,7 @@ function TeamReportCard({ report, expanded, onToggle }) {
 function Sec({ label, content, highlight }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-1">{label}</p>
       <p className={`text-sm ${highlight === 'amber' ? 'text-amber-300' : 'text-gray-600'}`}>{content}</p>
     </div>
   )

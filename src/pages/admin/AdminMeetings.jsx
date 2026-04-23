@@ -102,12 +102,12 @@ function UserPicker({ users, selected, onChange }) {
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {selectedUsers.map(u => (
-            <span key={u._id} className="inline-flex items-center gap-1 bg-purple-50 text-primary text-xs px-2 py-0.5 rounded-full">
+            <span key={u._id} className="inline-flex items-center gap-1 bg-purple-50 text-primary text-[16px] px-2 py-0.5 rounded-full">
               {u.name}
               <button onClick={() => toggle(u._id)} className="hover:text-gray-800"><X size={10} /></button>
             </span>
           ))}
-          <button onClick={() => onChange([])} className="text-xs text-neutral hover:text-red-400 px-1">Clear all</button>
+          <button onClick={() => onChange([])} className="text-[16px] text-neutral hover:text-red-400 px-1">Clear all</button>
         </div>
       )}
 
@@ -137,14 +137,14 @@ function UserPicker({ users, selected, onChange }) {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm text-gray-700 truncate">{u.name}</p>
-                    <p className="text-xs text-neutral truncate">{u.department} · {u.email}</p>
+                    <p className="text-[16px] text-neutral truncate">{u.department} · {u.email}</p>
                   </div>
                 </button>
               ))
             }
           </div>
           <div className="p-2 border-t border-gray-100">
-            <button onClick={() => setOpen(false)} className="w-full text-xs text-primary hover:text-primary py-1">Done</button>
+            <button onClick={() => setOpen(false)} className="w-full text-[16px] text-primary hover:text-primary py-1">Done</button>
           </div>
         </div>
       )}
@@ -172,7 +172,7 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="block text-xs text-neutral mb-1.5 font-medium">Meeting Title *</label>
+        <label className="block text-[16px] text-neutral mb-1.5 font-medium">Meeting Title *</label>
         <input
           required value={form.title} onChange={e => set('title', e.target.value)}
           placeholder="e.g. Weekly Standup"
@@ -181,7 +181,7 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
       </div>
 
       <div>
-        <label className="block text-xs text-neutral mb-1.5 font-medium">Description</label>
+        <label className="block text-[16px] text-neutral mb-1.5 font-medium">Description</label>
         <textarea
           rows={2} value={form.description} onChange={e => set('description', e.target.value)}
           placeholder="Optional agenda or notes…"
@@ -191,7 +191,7 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs text-neutral mb-1.5 font-medium">Platform *</label>
+          <label className="block text-[16px] text-neutral mb-1.5 font-medium">Platform *</label>
           <select
             required value={form.platform} onChange={e => set('platform', e.target.value)}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-primary/30 transition-colors"
@@ -200,7 +200,7 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
           </select>
         </div>
         <div>
-          <label className="block text-xs text-neutral mb-1.5 font-medium">Duration (minutes)</label>
+          <label className="block text-[16px] text-neutral mb-1.5 font-medium">Duration (minutes)</label>
           <input
             type="number" min="1" value={form.duration_minutes}
             onChange={e => set('duration_minutes', Number(e.target.value))}
@@ -210,7 +210,7 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
       </div>
 
       <div>
-        <label className="block text-xs text-neutral mb-1.5 font-medium">Meeting Link *</label>
+        <label className="block text-[16px] text-neutral mb-1.5 font-medium">Meeting Link *</label>
         <input
           required value={form.meeting_link} onChange={e => set('meeting_link', e.target.value)}
           placeholder="https://zoom.us/j/... or https://meet.google.com/..."
@@ -219,7 +219,7 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
       </div>
 
       <div>
-        <label className="block text-xs text-neutral mb-1.5 font-medium">Scheduled Date & Time *</label>
+        <label className="block text-[16px] text-neutral mb-1.5 font-medium">Scheduled Date & Time *</label>
         <input
           required type="datetime-local" value={form.scheduled_at}
           onChange={e => set('scheduled_at', e.target.value)}
@@ -228,7 +228,7 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
       </div>
 
       <div>
-        <label className="block text-xs text-neutral mb-1.5 font-medium">
+        <label className="block text-[16px] text-neutral mb-1.5 font-medium">
           Invite Employees
           <span className="text-neutral font-normal ml-1">(leave empty to send to everyone)</span>
         </label>
@@ -325,7 +325,7 @@ function MeetingCard({ meeting, onEdit, onDelete, onNotify }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral mb-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[16px] text-neutral mb-3">
         <span className="flex items-center gap-1">
           <Calendar size={12} />
           {format(new Date(meeting.scheduled_at), 'dd MMM yyyy, hh:mm a')}
@@ -342,12 +342,12 @@ function MeetingCard({ meeting, onEdit, onDelete, onNotify }) {
 
       <a
         href={meeting.meeting_link} target="_blank" rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-xs text-primary hover:text-primary bg-purple-50 hover:bg-purple-50 px-3 py-1.5 rounded-lg transition-colors font-medium"
+        className="inline-flex items-center gap-2 text-[16px] text-primary hover:text-primary bg-purple-50 hover:bg-purple-50 px-3 py-1.5 rounded-lg transition-colors font-medium"
       >
         <ExternalLink size={12} /> Join Meeting
       </a>
 
-      <p className="text-xs text-neutral mt-2">
+      <p className="text-[16px] text-neutral mt-2">
         Created by {meeting.created_by?.name} · {formatDistanceToNow(new Date(meeting.createdAt), { addSuffix: true })}
       </p>
     </div>
@@ -466,7 +466,7 @@ export default function AdminMeetings() {
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${filter === s ? 'bg-brand-500 text-gray-800' : 'text-neutral hover:text-gray-800'}`}
+            className={`px-3 py-1.5 rounded-lg text-[16px] font-medium transition-colors capitalize ${filter === s ? 'bg-brand-500 text-gray-800' : 'text-neutral hover:text-gray-800'}`}
           >
             {s}
           </button>

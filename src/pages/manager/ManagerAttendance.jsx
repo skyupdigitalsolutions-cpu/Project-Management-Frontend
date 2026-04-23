@@ -244,7 +244,7 @@ function MyAttendanceTab() {
         {/* Time display + action buttons */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold text-neutral uppercase tracking-wider">
+            <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider">
               Today — {format(new Date(), 'EEEE, MMMM d, yyyy')}
             </p>
 
@@ -252,7 +252,7 @@ function MyAttendanceTab() {
               <div className="mt-2 flex items-center gap-6 flex-wrap">
 
                 <div>
-                  <p className="text-xs text-neutral">Clock In</p>
+                  <p className="text-[16px] text-neutral">Clock In</p>
                   <p className={`text-2xl font-bold font-mono mt-0.5 ${today?.clock_in ? 'text-emerald-400' : 'text-neutral'}`}>
                     {today?.clock_in ? format(new Date(today.clock_in), 'HH:mm') : '--:--'}
                   </p>
@@ -261,7 +261,7 @@ function MyAttendanceTab() {
                 <div className="text-neutral text-xl font-thin">→</div>
 
                 <div>
-                  <p className="text-xs text-neutral">Clock Out</p>
+                  <p className="text-[16px] text-neutral">Clock Out</p>
                   <p className={`text-2xl font-bold font-mono mt-0.5 ${today?.clock_out ? 'text-amber-400' : 'text-neutral'}`}>
                     {today?.clock_out ? format(new Date(today.clock_out), 'HH:mm') : '--:--'}
                   </p>
@@ -270,7 +270,7 @@ function MyAttendanceTab() {
                 {/* Break total — shown once clocked in */}
                 {today?.clock_in && (
                   <div>
-                    <p className="text-xs text-neutral">Break</p>
+                    <p className="text-[16px] text-neutral">Break</p>
                     <p className={`text-2xl font-bold font-mono mt-0.5 ${totalBreakMs > 0 ? 'text-orange-400' : 'text-neutral'}`}>
                       {totalBreakMs > 0 ? fmtDuration(totalBreakMs) : '0m'}
                     </p>
@@ -280,7 +280,7 @@ function MyAttendanceTab() {
                 {/* Net working hours */}
                 {netHoursToday !== null && (
                   <div>
-                    <p className="text-xs text-neutral">{isDone ? 'Net Hours' : 'Net (live)'}</p>
+                    <p className="text-[16px] text-neutral">{isDone ? 'Net Hours' : 'Net (live)'}</p>
                     <p className="text-2xl font-bold font-mono mt-0.5 text-primary">
                       {netHoursToday}h
                     </p>
@@ -337,7 +337,7 @@ function MyAttendanceTab() {
             <Coffee size={16} className="text-orange-400 flex-shrink-0 animate-bounce" />
             <div className="flex-1 min-w-0">
               <p className="text-orange-400 font-semibold text-sm">On Break</p>
-              <p className="text-neutral text-xs">
+              <p className="text-neutral text-[16px]">
                 Started at {format(new Date(ongoingBreak.start), 'HH:mm')}
                 &nbsp;·&nbsp;
                 Elapsed: {fmtDuration(ongoingBreakMs)}
@@ -345,7 +345,7 @@ function MyAttendanceTab() {
             </div>
             <button
               onClick={endBreak}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all"
+              className="flex items-center gap-1.5 text-[16px] font-semibold px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all"
             >
               <PlayCircle size={13} /> Resume Work
             </button>
@@ -355,7 +355,7 @@ function MyAttendanceTab() {
         {/* ── Break log for today ── */}
         {breaks.length > 0 && (
           <div className="border-t border-gray-100 pt-4">
-            <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-3">
+            <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-3">
               Today's Break Log
             </p>
             <div className="space-y-2">
@@ -365,7 +365,7 @@ function MyAttendanceTab() {
                   : new Date() - new Date(b.start)
                 const dur = fmtDuration(bMs) + (b.end ? '' : ' (ongoing)')
                 return (
-                  <div key={b.id ?? i} className="flex items-center gap-3 text-xs">
+                  <div key={b.id ?? i} className="flex items-center gap-3 text-[16px]">
                     <span className="w-5 h-5 flex items-center justify-center rounded-full bg-orange-500/10 text-orange-400 font-bold text-[10px] flex-shrink-0">
                       {i + 1}
                     </span>
@@ -380,7 +380,7 @@ function MyAttendanceTab() {
               })}
 
               {/* Summary row */}
-              <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-1 text-xs">
+              <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-1 text-[16px]">
                 <span className="text-neutral">Total break time</span>
                 <span className="text-right font-bold text-orange-400">{fmtDuration(totalBreakMs)}</span>
                 {netHoursToday !== null && (
@@ -428,20 +428,20 @@ function MyAttendanceTab() {
                 const netHrs     = calcNetHours(r.clock_in, r.clock_out, rowBreakMs)
                 return (
                   <tr key={r._id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="table-cell font-mono text-xs">
+                    <td className="table-cell font-mono text-[16px]">
                       {rowDate ? format(parseISO(rowDate), 'EEE, MMM d yyyy') : '—'}
                     </td>
                     <td className="table-cell"><StatusBadge status={r.status} /></td>
-                    <td className="table-cell font-mono text-xs text-emerald-400">
+                    <td className="table-cell font-mono text-[16px] text-emerald-400">
                       {r.clock_in  ? format(new Date(r.clock_in),  'HH:mm') : '—'}
                     </td>
-                    <td className="table-cell font-mono text-xs text-amber-400">
+                    <td className="table-cell font-mono text-[16px] text-amber-400">
                       {r.clock_out ? format(new Date(r.clock_out), 'HH:mm') : '—'}
                     </td>
-                    <td className="table-cell text-xs text-orange-400">
+                    <td className="table-cell text-[16px] text-orange-400">
                       {rowBreakMs > 0 ? fmtDuration(rowBreakMs) : '—'}
                     </td>
-                    <td className="table-cell text-xs text-primary font-semibold">
+                    <td className="table-cell text-[16px] text-primary font-semibold">
                       {netHrs ? `${netHrs}h` : '—'}
                     </td>
                   </tr>
@@ -487,22 +487,22 @@ function MyLeavesTab({ onApply }) {
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-semibold text-gray-800 text-sm">{lt?.label ?? leave.leave_type}</h4>
-                    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${cfg.color}`}>
+                    <span className={`inline-flex items-center gap-1 text-[16px] px-2 py-0.5 rounded-full border ${cfg.color}`}>
                       <StatusIcon size={11} /> {leave.status}
                     </span>
                     {leave.is_urgent && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">🚨 Urgent</span>
+                      <span className="text-[16px] px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">🚨 Urgent</span>
                     )}
                   </div>
-                  <p className="text-neutral text-xs mt-1">
+                  <p className="text-neutral text-[16px] mt-1">
                     {leave.from_date ? format(parseISO(leave.from_date.slice(0, 10)), 'MMM d, yyyy') : '—'}
                     {' → '}
                     {leave.to_date   ? format(parseISO(leave.to_date.slice(0, 10)),   'MMM d, yyyy') : '—'}
                     {leave.days && <span className="ml-2 text-primary">({leave.days} day{leave.days !== 1 ? 's' : ''})</span>}
                   </p>
-                  {leave.reason && <p className="text-neutral text-xs mt-1 italic">"{leave.reason}"</p>}
+                  {leave.reason && <p className="text-neutral text-[16px] mt-1 italic">"{leave.reason}"</p>}
                   {leave.admin_note && (
-                    <p className={`text-xs mt-2 px-2 py-1 rounded-lg border ${
+                    <p className={`text-[16px] mt-2 px-2 py-1 rounded-lg border ${
                       leave.status === 'approved'
                         ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
                         : 'bg-red-500/5 border-red-500/20 text-red-400'
@@ -512,7 +512,7 @@ function MyLeavesTab({ onApply }) {
                   )}
                 </div>
               </div>
-              <p className="text-xs text-neutral flex-shrink-0">
+              <p className="text-[16px] text-neutral flex-shrink-0">
                 {leave.createdAt ? format(new Date(leave.createdAt), 'MMM d, yyyy') : ''}
               </p>
             </div>
@@ -611,7 +611,7 @@ function TeamAttendanceTab() {
                   <tr key={r._id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[16px]">
                           {(r.user_id?.name ?? '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-sm font-medium text-gray-800">{r.user_id?.name ?? '—'}</span>
@@ -619,13 +619,13 @@ function TeamAttendanceTab() {
                     </td>
                     <td className="table-cell text-neutral text-sm">{r.user_id?.department ?? '—'}</td>
                     <td className="table-cell"><StatusBadge status={r.status} /></td>
-                    <td className="table-cell text-neutral font-mono text-xs">
+                    <td className="table-cell text-neutral font-mono text-[16px]">
                       {r.clock_in  ? format(new Date(r.clock_in),  'HH:mm') : '—'}
                     </td>
-                    <td className="table-cell text-neutral font-mono text-xs">
+                    <td className="table-cell text-neutral font-mono text-[16px]">
                       {r.clock_out ? format(new Date(r.clock_out), 'HH:mm') : '—'}
                     </td>
-                    <td className="table-cell text-neutral text-xs">{hrs ? `${hrs}h` : '—'}</td>
+                    <td className="table-cell text-neutral text-[16px]">{hrs ? `${hrs}h` : '—'}</td>
                   </tr>
                 )
               })}
@@ -777,7 +777,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
             <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
               <CalendarOff size={18} className="text-primary" /> Apply for Leave
             </h2>
-            <p className="text-xs text-neutral mt-0.5">Step {step} of 3</p>
+            <p className="text-[16px] text-neutral mt-0.5">Step {step} of 3</p>
           </div>
           <button onClick={onClose} className="text-neutral hover:text-gray-800 p-1.5 rounded-lg hover:bg-gray-50">
             <X size={18} />
@@ -792,12 +792,12 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
             { n: 3, label: 'Documents & Review' },
           ].map((s, i) => (
             <div key={s.n} className="flex items-center gap-2 flex-1">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[16px] font-bold transition-all ${
                 step === s.n ? 'bg-brand-600 text-gray-800'
                   : step > s.n ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   : 'bg-gray-50 text-neutral'
               }`}>{step > s.n ? '✓' : s.n}</div>
-              <span className={`text-xs hidden sm:block ${step === s.n ? 'text-gray-800' : 'text-neutral'}`}>{s.label}</span>
+              <span className={`text-[16px] hidden sm:block ${step === s.n ? 'text-gray-800' : 'text-neutral'}`}>{s.label}</span>
               {i < 2 && <div className="flex-1 h-px bg-white/10 mx-1" />}
             </div>
           ))}
@@ -819,26 +819,26 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                           : 'border-gray-100 bg-white/[0.02] text-neutral hover:border-gray-200 hover:text-gray-800'
                       }`}>
                       <span className="text-lg">{t.icon}</span>
-                      <span className="text-xs font-semibold">{t.label}</span>
+                      <span className="text-[16px] font-semibold">{t.label}</span>
                       <span className="text-[10px] text-neutral leading-tight">{t.description}</span>
                     </button>
                   ))}
                 </div>
-                {errors.leave_type && <p className="text-red-400 text-xs mt-1">{errors.leave_type}</p>}
+                {errors.leave_type && <p className="text-red-400 text-[16px] mt-1">{errors.leave_type}</p>}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">From Date <span className="text-red-400">*</span></label>
                   <input type="date" value={form.from_date} min={format(new Date(), 'yyyy-MM-dd')}
                     onChange={e => f('from_date', e.target.value)} className="input" />
-                  {errors.from_date && <p className="text-red-400 text-xs mt-1">{errors.from_date}</p>}
+                  {errors.from_date && <p className="text-red-400 text-[16px] mt-1">{errors.from_date}</p>}
                 </div>
                 <div>
                   <label className="label">To Date <span className="text-red-400">*</span></label>
                   <input type="date" value={form.to_date}
                     min={form.from_date || format(new Date(), 'yyyy-MM-dd')}
                     onChange={e => f('to_date', e.target.value)} className="input" />
-                  {errors.to_date && <p className="text-red-400 text-xs mt-1">{errors.to_date}</p>}
+                  {errors.to_date && <p className="text-red-400 text-[16px] mt-1">{errors.to_date}</p>}
                 </div>
               </div>
               {days > 0 && (
@@ -848,7 +848,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                     <p className="text-primary font-semibold text-sm">
                       {days} day{days !== 1 ? 's' : ''} of {selectedType?.label ?? 'leave'}
                     </p>
-                    <p className="text-neutral text-xs">
+                    <p className="text-neutral text-[16px]">
                       {format(new Date(form.from_date), 'EEE, MMM d')} → {format(new Date(form.to_date), 'EEE, MMM d, yyyy')}
                     </p>
                   </div>
@@ -860,7 +860,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   className="w-4 h-4 accent-brand-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-gray-800">Mark as Urgent 🚨</p>
-                  <p className="text-xs text-neutral">Flag for priority review by admin</p>
+                  <p className="text-[16px] text-neutral">Flag for priority review by admin</p>
                 </div>
               </label>
             </>
@@ -874,9 +874,9 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   <label className="label mb-0">Reason for Leave <span className="text-red-400">*</span></label>
                   <div className="flex items-center gap-1.5">
                     <Wand2 size={12} className="text-neutral" />
-                    <span className="text-xs text-neutral mr-1">Rewrite as:</span>
+                    <span className="text-[16px] text-neutral mr-1">Rewrite as:</span>
                     <button type="button" onClick={() => handleTone('casual')} disabled={!!toneLoading}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[16px] font-medium border transition-all ${
                         toneLoading === 'casual'
                           ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 cursor-wait'
                           : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
@@ -884,7 +884,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                       {toneLoading === 'casual' ? <Spinner size="xs" /> : '🌴'} Casual
                     </button>
                     <button type="button" onClick={() => handleTone('formal')} disabled={!!toneLoading}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[16px] font-medium border transition-all ${
                         toneLoading === 'formal'
                           ? 'bg-blue-500/20 border-blue-500/40 text-blue-300 cursor-wait'
                           : 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'
@@ -897,12 +897,12 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   placeholder="Write your reason here — then use the Casual or Formal buttons to adjust the tone..."
                   className="input resize-none" />
                 <div className="flex justify-between mt-1">
-                  {errors.reason ? <p className="text-red-400 text-xs">{errors.reason}</p> : <span />}
-                  <p className={`text-xs ${form.reason.length < 20 ? 'text-red-400' : 'text-neutral'}`}>
+                  {errors.reason ? <p className="text-red-400 text-[16px]">{errors.reason}</p> : <span />}
+                  <p className={`text-[16px] ${form.reason.length < 20 ? 'text-red-400' : 'text-neutral'}`}>
                     {form.reason.length} / 20 min
                   </p>
                 </div>
-                <p className="text-xs text-neutral mt-1 flex items-center gap-1">
+                <p className="text-[16px] text-neutral mt-1 flex items-center gap-1">
                   <Wand2 size={10} /> Use the tone buttons above to auto-rewrite your reason as casual or formal.
                 </p>
               </div>
@@ -928,7 +928,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 <label className="label">
                   Supporting Documents <span className="text-neutral font-normal">(optional)</span>
                 </label>
-                <p className="text-xs text-neutral mb-3">
+                <p className="text-[16px] text-neutral mb-3">
                   Upload medical certificates, doctor's notes, etc. Max 5 files, 5MB each.
                 </p>
                 <div
@@ -941,7 +941,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                   }`}>
                   <Upload size={28} className={`mx-auto mb-3 ${dragOver ? 'text-primary' : 'text-neutral'}`} />
                   <p className="text-sm font-medium text-gray-600">Drop files here or click to browse</p>
-                  <p className="text-xs text-neutral mt-1">JPG, PNG, PDF, DOCX — Max 5MB each</p>
+                  <p className="text-[16px] text-neutral mt-1">JPG, PNG, PDF, DOCX — Max 5MB each</p>
                   <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx"
                     className="hidden" onChange={e => addFiles(e.target.files)} />
                 </div>
@@ -956,7 +956,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
-                          <p className="text-xs text-neutral">{(file.size / 1024).toFixed(0)} KB</p>
+                          <p className="text-[16px] text-neutral">{(file.size / 1024).toFixed(0)} KB</p>
                         </div>
                         {file.type.startsWith('image/') && (
                           <img src={URL.createObjectURL(file)} alt="" className="w-10 h-10 rounded-lg object-cover" />
@@ -971,7 +971,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 )}
               </div>
               <div className="p-4 bg-white/[0.02] border border-gray-100 rounded-xl">
-                <p className="text-xs font-semibold text-neutral uppercase tracking-wider mb-3">Summary</p>
+                <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-3">Summary</p>
                 <div className="grid grid-cols-2 gap-y-2.5 text-sm">
                   {[
                     ['Type',      `${selectedType?.icon ?? ''} ${selectedType?.label ?? '—'}`],

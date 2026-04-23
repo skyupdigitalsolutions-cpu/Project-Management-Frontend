@@ -142,12 +142,12 @@ export default function AdminTasks() {
                   <tr key={t._id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="table-cell">
                       <p className="font-medium text-gray-800 text-sm line-clamp-1">{t.title}</p>
-                      {t.description && <p className="text-xs text-neutral line-clamp-1">{t.description}</p>}
+                      {t.description && <p className="text-[16px] text-neutral line-clamp-1">{t.description}</p>}
                     </td>
-                    <td className="table-cell text-neutral text-xs">{t.project_id?.title ?? '—'}</td>
+                    <td className="table-cell text-neutral text-[16px]">{t.project_id?.title ?? '—'}</td>
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs">
+                        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[16px]">
                           {(t.assigned_to?.name ?? '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-sm text-gray-600">{t.assigned_to?.name ?? '—'}</span>
@@ -156,7 +156,7 @@ export default function AdminTasks() {
                     <td className="table-cell"><PriorityBadge priority={t.priority} /></td>
                     <td className="table-cell"><StatusBadge status={t.status} /></td>
                     <td className="table-cell">
-                      <span className={`text-xs font-mono ${isOverdue ? 'text-red-400' : 'text-neutral'}`}>
+                      <span className={`text-[16px] font-mono ${isOverdue ? 'text-red-400' : 'text-neutral'}`}>
                         {t.due_date ? format(new Date(t.due_date), 'dd MMM yyyy') : '—'}
                         {isOverdue && ' ⚠'}
                       </span>

@@ -66,7 +66,7 @@ function MeetingCard({ meeting }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral mb-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[16px] text-neutral mb-4">
         <span className="flex items-center gap-1">
           <Calendar size={12} />
           {format(new Date(meeting.scheduled_at), 'dd MMM yyyy, hh:mm a')}
@@ -82,7 +82,7 @@ function MeetingCard({ meeting }) {
       </div>
 
       {cancelled ? (
-        <span className="inline-flex items-center gap-1 text-xs text-red-400 bg-red-500/10 px-3 py-1.5 rounded-lg">
+        <span className="inline-flex items-center gap-1 text-[16px] text-red-400 bg-red-500/10 px-3 py-1.5 rounded-lg">
           This meeting has been cancelled
         </span>
       ) : (
@@ -90,7 +90,7 @@ function MeetingCard({ meeting }) {
           href={meeting.meeting_link}
           target="_blank"
           rel="noopener noreferrer"
-          className={`inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-xl transition-colors ${
+          className={`inline-flex items-center gap-2 text-[16px] font-medium px-4 py-2 rounded-xl transition-colors ${
             live
               ? 'bg-emerald-500 hover:bg-emerald-600 text-gray-800'
               : past
@@ -135,7 +135,7 @@ export default function EmployeeMeetings() {
           <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Video size={22} className="text-primary" /> My Meetings
             {liveCount > 0 && (
-              <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+              <span className="text-[16px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                 {liveCount} live
               </span>
             )}
@@ -153,7 +153,7 @@ export default function EmployeeMeetings() {
           <button
             key={t}
             onClick={() => setFilter(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${filter === t ? 'bg-brand-500 text-gray-800' : 'text-neutral hover:text-gray-800'}`}
+            className={`px-3 py-1.5 rounded-lg text-[16px] font-medium transition-colors capitalize ${filter === t ? 'bg-brand-500 text-gray-800' : 'text-neutral hover:text-gray-800'}`}
           >
             {t}
           </button>

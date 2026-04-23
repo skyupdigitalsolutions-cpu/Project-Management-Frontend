@@ -8,12 +8,12 @@ import { PageHeader, StatCard, SelectInput, Modal, FormField, StatusBadge, Spinn
 const STATUSES = ['present', 'absent', 'late', 'on-leave', 'half-day']
 
 const LEAVE_TYPES = [
-  { value: 'sick',      label: 'Sick Leave',      icon: '🤒' },
-  { value: 'casual',    label: 'Casual Leave',    icon: '🌴' },
-  { value: 'earned',    label: 'Earned Leave',    icon: '🏖️' },
-  { value: 'maternity', label: 'Maternity Leave', icon: '👶' },
-  { value: 'emergency', label: 'Emergency Leave', icon: '🚨' },
-  { value: 'unpaid',    label: 'Unpaid Leave',    icon: '💸' },
+  { value: 'sick',      label: 'Sick Leave' },
+  { value: 'casual',    label: 'Casual Leave' },
+  { value: 'earned',    label: 'Earned Leave'},
+  { value: 'maternity', label: 'Maternity Leave' },
+  { value: 'emergency', label: 'Emergency Leave'},
+  { value: 'unpaid',    label: 'Unpaid Leave'},
 ]
 
 const LEAVE_STATUS_CONFIG = {
@@ -48,7 +48,7 @@ export default function AdminAttendance() {
         <TabBtn active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')}><Clock size={14} /> Attendance</TabBtn>
         <TabBtn active={activeTab === 'leaves'} onClick={() => setActiveTab('leaves')}>
           <CalendarOff size={14} /> Leave Requests
-          {pendingCount > 0 && <span className="ml-1 bg-amber-500 text-gray-800 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">{pendingCount}</span>}
+          {pendingCount > 0 && <span className="ml-1 bg-amber-500 text-gray-800 text-[16px] rounded-full w-5 h-5 flex items-center justify-center font-bold">{pendingCount}</span>}
         </TabBtn>
       </div>
 
@@ -141,16 +141,16 @@ function AttendanceTab() {
                   <tr key={r._id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="table-cell">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs">{(r.user_id?.name ?? '?').charAt(0).toUpperCase()}</div>
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[16px]">{(r.user_id?.name ?? '?').charAt(0).toUpperCase()}</div>
                         <span className="text-sm font-medium text-gray-800">{r.user_id?.name ?? '—'}</span>
                       </div>
                     </td>
-                    <td className="table-cell"><span className={`text-xs px-2 py-0.5 rounded-full border capitalize ${roleBadge}`}>{r.user_id?.role ?? '—'}</span></td>
+                    <td className="table-cell"><span className={`text-[16px] px-2 py-0.5 rounded-full border capitalize ${roleBadge}`}>{r.user_id?.role ?? '—'}</span></td>
                     <td className="table-cell text-neutral text-sm">{r.user_id?.department ?? '—'}</td>
                     <td className="table-cell"><StatusBadge status={r.status} /></td>
-                    <td className="table-cell text-neutral font-mono text-xs">{r.clock_in ? format(new Date(r.clock_in), 'HH:mm') : '—'}</td>
-                    <td className="table-cell text-neutral font-mono text-xs">{r.clock_out ? format(new Date(r.clock_out), 'HH:mm') : '—'}</td>
-                    <td className="table-cell text-neutral text-xs">{hrs ? `${hrs}h` : '—'}</td>
+                    <td className="table-cell text-neutral font-mono text-[16px]">{r.clock_in ? format(new Date(r.clock_in), 'HH:mm') : '—'}</td>
+                    <td className="table-cell text-neutral font-mono text-[16px]">{r.clock_out ? format(new Date(r.clock_out), 'HH:mm') : '—'}</td>
+                    <td className="table-cell text-neutral text-[16px]">{hrs ? `${hrs}h` : '—'}</td>
                     <td className="table-cell"><button onClick={() => openEdit(r)} className="p-1.5 rounded-lg text-neutral hover:text-gray-800 hover:bg-white/10"><Pencil size={13} /></button></td>
                   </tr>
                 )
@@ -178,12 +178,12 @@ function AttendanceTab() {
               <label key={u._id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer">
                 <input type="checkbox" checked={absentIds.includes(u._id)} onChange={e => setAbsentIds(ids => e.target.checked ? [...ids, u._id] : ids.filter(id => id !== u._id))} className="w-4 h-4 accent-brand-500" />
                 <span className="text-sm text-gray-600">{u.name}</span>
-                <span className={`text-xs ml-auto px-1.5 py-0.5 rounded-full border capitalize ${u.role === 'manager' ? 'text-purple-400 bg-purple-500/10 border-purple-500/20' : 'text-blue-400 bg-blue-500/10 border-blue-500/20'}`}>{u.role}</span>
-                <span className="text-xs text-neutral">{u.department}</span>
+                <span className={`text-[16px] ml-auto px-1.5 py-0.5 rounded-full border capitalize ${u.role === 'manager' ? 'text-purple-400 bg-purple-500/10 border-purple-500/20' : 'text-blue-400 bg-blue-500/10 border-blue-500/20'}`}>{u.role}</span>
+                <span className="text-[16px] text-neutral">{u.department}</span>
               </label>
             ))}
           </div>
-          <p className="text-xs text-neutral">{absentIds.length} user(s) selected</p>
+          <p className="text-[16px] text-neutral">{absentIds.length} user(s) selected</p>
         </div>
       </Modal>
     </>
@@ -281,26 +281,26 @@ function LeaveApprovalTab({ onCountChange }) {
                     <div className="flex items-center gap-2 flex-wrap">
                       {/* Applicant */}
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[16px] flex-shrink-0">
                           {(leave.user_id?.name ?? '?').charAt(0).toUpperCase()}
                         </div>
                         <span className="font-semibold text-gray-800 text-sm">{leave.user_id?.name ?? 'Unknown'}</span>
                       </div>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full border capitalize ${roleBadge}`}>{leave.user_id?.role ?? '—'}</span>
-                      <span className="text-neutral text-xs">{leave.user_id?.department ?? ''}</span>
+                      <span className={`text-[16px] px-1.5 py-0.5 rounded-full border capitalize ${roleBadge}`}>{leave.user_id?.role ?? '—'}</span>
+                      <span className="text-neutral text-[16px]">{leave.user_id?.department ?? ''}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-sm text-gray-600 font-medium">{lt?.label ?? leave.leave_type}</span>
-                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${cfg.color}`}><StatusIcon size={11} /> {leave.status}</span>
-                      {leave.is_urgent && <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">🚨 Urgent</span>}
+                      <span className={`inline-flex items-center gap-1 text-[16px] px-2 py-0.5 rounded-full border ${cfg.color}`}><StatusIcon size={11} /> {leave.status}</span>
+                      {leave.is_urgent && <span className="text-[16px] px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400">🚨 Urgent</span>}
                     </div>
-                    <p className="text-neutral text-xs mt-1">
+                    <p className="text-neutral text-[16px] mt-1">
                       {leave.from_date ? format(parseISO(leave.from_date.slice(0, 10)), 'MMM d, yyyy') : '—'} → {leave.to_date ? format(parseISO(leave.to_date.slice(0, 10)), 'MMM d, yyyy') : '—'}
                       {leave.days && <span className="ml-2 text-primary font-semibold">{leave.days} day{leave.days !== 1 ? 's' : ''}</span>}
                     </p>
-                    {leave.reason && <p className="text-neutral text-xs mt-1 italic truncate max-w-md">"{leave.reason}"</p>}
+                    {leave.reason && <p className="text-neutral text-[16px] mt-1 italic truncate max-w-md">"{leave.reason}"</p>}
                     {leave.admin_note && (
-                      <p className={`text-xs mt-1.5 px-2 py-1 rounded-lg border inline-block ${leave.status === 'approved' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-red-500/5 border-red-500/20 text-red-400'}`}>
+                      <p className={`text-[16px] mt-1.5 px-2 py-1 rounded-lg border inline-block ${leave.status === 'approved' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-red-500/5 border-red-500/20 text-red-400'}`}>
                         Note: {leave.admin_note}
                       </p>
                     )}
@@ -308,7 +308,7 @@ function LeaveApprovalTab({ onCountChange }) {
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {leave.documents.map((doc, i) => (
                           <a key={i} href={doc.url} target="_blank" rel="noreferrer"
-                            className="flex items-center gap-1 text-xs text-neutral hover:text-gray-800 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 hover:border-gray-200 transition-all">
+                            className="flex items-center gap-1 text-[16px] text-neutral hover:text-gray-800 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 hover:border-gray-200 transition-all">
                             <Eye size={10} /> {doc.name ?? `Doc ${i + 1}`}
                           </a>
                         ))}
@@ -317,19 +317,19 @@ function LeaveApprovalTab({ onCountChange }) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                  <p className="text-xs text-neutral">{leave.createdAt ? format(new Date(leave.createdAt), 'MMM d, yyyy') : ''}</p>
+                  <p className="text-[16px] text-neutral">{leave.createdAt ? format(new Date(leave.createdAt), 'MMM d, yyyy') : ''}</p>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setViewModal(leave)} className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5">
+                    <button onClick={() => setViewModal(leave)} className="btn-secondary py-1.5 px-3 text-[16px] flex items-center gap-1.5">
                       <Eye size={13} /> View
                     </button>
                     {leave.status === 'pending' && (
                       <>
                         <button onClick={() => { setActionModal({ leave, action: 'approve' }); setAdminNote('') }}
-                          className="py-1.5 px-3 text-xs rounded-xl border font-medium transition-all bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1.5">
+                          className="py-1.5 px-3 text-[16px] rounded-xl border font-medium transition-all bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 flex items-center gap-1.5">
                           <CheckCircle2 size={13} /> Approve
                         </button>
                         <button onClick={() => { setActionModal({ leave, action: 'reject' }); setAdminNote('') }}
-                          className="py-1.5 px-3 text-xs rounded-xl border font-medium transition-all bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 flex items-center gap-1.5">
+                          className="py-1.5 px-3 text-[16px] rounded-xl border font-medium transition-all bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 flex items-center gap-1.5">
                           <XCircle size={13} /> Reject
                         </button>
                       </>
@@ -360,7 +360,7 @@ function LeaveApprovalTab({ onCountChange }) {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">{(viewModal.user_id?.name ?? '?').charAt(0).toUpperCase()}</div>
                 <div>
                   <p className="font-semibold text-gray-800">{viewModal.user_id?.name ?? 'Unknown'}</p>
-                  <p className="text-xs text-neutral capitalize">{viewModal.user_id?.role} · {viewModal.user_id?.department}</p>
+                  <p className="text-[16px] text-neutral capitalize">{viewModal.user_id?.role} · {viewModal.user_id?.department}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -375,30 +375,30 @@ function LeaveApprovalTab({ onCountChange }) {
                   ['Contact',     viewModal.contact_during_leave || '—'],
                 ].map(([k, v]) => (
                   <div key={k} className="bg-white/[0.02] p-3 rounded-xl border border-gray-100">
-                    <p className="text-xs text-neutral mb-0.5">{k}</p>
+                    <p className="text-[16px] text-neutral mb-0.5">{k}</p>
                     <p className="text-sm font-medium text-gray-800 capitalize">{v}</p>
                   </div>
                 ))}
               </div>
               {viewModal.reason && (
                 <div className="bg-white/[0.02] p-3 rounded-xl border border-gray-100">
-                  <p className="text-xs text-neutral mb-1">Reason</p>
+                  <p className="text-[16px] text-neutral mb-1">Reason</p>
                   <p className="text-sm text-gray-600">{viewModal.reason}</p>
                 </div>
               )}
               {viewModal.handover_notes && (
                 <div className="bg-white/[0.02] p-3 rounded-xl border border-gray-100">
-                  <p className="text-xs text-neutral mb-1">Handover Notes</p>
+                  <p className="text-[16px] text-neutral mb-1">Handover Notes</p>
                   <p className="text-sm text-gray-600">{viewModal.handover_notes}</p>
                 </div>
               )}
               {viewModal.documents?.length > 0 && (
                 <div>
-                  <p className="text-xs text-neutral mb-2">Attached Documents</p>
+                  <p className="text-[16px] text-neutral mb-2">Attached Documents</p>
                   <div className="flex flex-wrap gap-2">
                     {viewModal.documents.map((doc, i) => (
                       <a key={i} href={doc.url} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-1.5 text-xs text-neutral hover:text-gray-800 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
+                        className="flex items-center gap-1.5 text-[16px] text-neutral hover:text-gray-800 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
                         <Eye size={12} /> {doc.name ?? `Document ${i + 1}`}
                       </a>
                     ))}
@@ -442,7 +442,7 @@ function LeaveApprovalTab({ onCountChange }) {
                   <span className="text-xl">{lt?.icon}</span>
                   <div>
                     <p className="font-semibold text-gray-800">{actionModal.leave.user_id?.name} — {lt?.label}</p>
-                    <p className="text-xs text-neutral mt-0.5">
+                    <p className="text-[16px] text-neutral mt-0.5">
                       {actionModal.leave.from_date ? format(parseISO(actionModal.leave.from_date.slice(0, 10)), 'MMM d') : '—'} → {actionModal.leave.to_date ? format(parseISO(actionModal.leave.to_date.slice(0, 10)), 'MMM d, yyyy') : '—'}
                       {actionModal.leave.days && ` · ${actionModal.leave.days} day(s)`}
                     </p>
@@ -458,7 +458,7 @@ function LeaveApprovalTab({ onCountChange }) {
                   placeholder={actionModal.action === 'approve' ? 'Add a note for the employee (e.g. approved, enjoy your leave!)' : 'Reason for rejection...'}
                   className="input resize-none"
                 />
-                <p className="text-xs text-neutral mt-1">This note will be visible to the employee</p>
+                <p className="text-[16px] text-neutral mt-1">This note will be visible to the employee</p>
               </div>
             </div>
           )

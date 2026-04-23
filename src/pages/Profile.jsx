@@ -67,7 +67,7 @@ export default function Profile() {
             <span className={`badge border ${ROLE_COLOR[user?.role] ?? ''}`}>{user?.role}</span>
             <StatusBadge status={user?.status} />
             {user?.joining_date && (
-              <span className="text-xs text-neutral font-mono">
+              <span className="text-[16px] text-neutral font-mono">
                 Joined {format(new Date(user.joining_date), 'MMM d, yyyy')}
               </span>
             )}
@@ -146,7 +146,7 @@ export default function Profile() {
                 placeholder="Repeat new password"
               />
               {pwForm.confirm && pwForm.new_password !== pwForm.confirm && (
-                <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+                <p className="text-red-400 text-[16px] mt-1">Passwords do not match</p>
               )}
             </FormField>
 
@@ -175,7 +175,7 @@ export default function Profile() {
             <div key={label} className="bg-gray-100 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
                 <Icon size={13} className="text-primary"/>
-                <p className="text-xs text-neutral uppercase tracking-wider font-semibold">{label}</p>
+                <p className="text-[16px] text-neutral uppercase tracking-wider font-semibold">{label}</p>
               </div>
               <p className="text-sm text-gray-800 font-medium truncate">{value ?? '—'}</p>
             </div>

@@ -27,7 +27,7 @@ const safeNum = (v) => {
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs shadow-lg">
+    <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-[16px] shadow-lg">
       <p className="text-neutral mb-1">{label}</p>
       {payload.map(p => (
         <p key={p.name} style={{ color: p.fill || p.color }} className="font-semibold">
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
           <p className="text-sm text-yellow-700 flex-1">
             <span className="font-semibold">{leavePending} leave request{leavePending !== 1 ? 's' : ''}</span> pending your approval
           </p>
-          <span className="text-xs text-warning font-semibold">Review →</span>
+          <span className="text-[16px] text-warning font-semibold">Review →</span>
         </a>
       )}
 
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
       {taskChart.map(entry => (
         <div key={entry.name} className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: entry.color }} />
-          <span className="text-xs text-neutral">
+          <span className="text-[16px] text-neutral">
             {entry.name}: <span className="text-gray-700 font-semibold">{entry.count}</span>
           </span>
         </div>
@@ -233,8 +233,8 @@ export default function AdminDashboard() {
                 {userByRole.map((r, i) => (
                   <div key={r.name} className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full" style={{ background: ROLE_COLORS[i % ROLE_COLORS.length] }} />
-                    <span className="text-xs text-neutral">{r.name}</span>
-                    <span className="text-xs font-semibold text-gray-800">{r.value}</span>
+                    <span className="text-[16px] text-neutral">{r.name}</span>
+                    <span className="text-[16px] font-semibold text-gray-800">{r.value}</span>
                   </div>
                 ))}
               </div>
