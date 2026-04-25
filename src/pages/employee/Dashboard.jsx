@@ -93,7 +93,7 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
         await api.post('/email/send-approval-request', fd)
       }
 
-      toast.success('Approval request sent to admin ✅')
+      toast.success('Approval request sent to admin ')
       onSuccess(item._id, type)
       onClose()
     } catch (e) {
@@ -125,7 +125,7 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
             <div>
               <p className="text-sm font-semibold text-gray-800">Ask for Approval</p>
               <p className="text-[11px] text-gray-500 truncate max-w-[280px]">
-                {type === 'task' ? '📋 Task' : '📁 Project'}: {item.title}
+                {type === 'task' ? ' Task' : ' Project'}: {item.title}
               </p>
             </div>
           </div>

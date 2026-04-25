@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
+import ExcelUpload    from '../../components/excel/ExcelUpload'
+import ExcelTaskTable from '../../components/excel/ExcelTaskTable'
 import {
   ArrowLeft, Users, CheckSquare, Clock, Calendar, Building2,
   ChevronDown, ChevronRight, Mail, Phone, Globe, DollarSign, Check,
@@ -26,6 +28,7 @@ export default function ProjectDetail() {
   const [openPanels,   setOpenPanels]   = useState({})
   const [docUploading,  setDocUploading]  = useState(false)
   const [docDownloading,setDocDownloading] = useState(false)
+  const [taskRefreshKey, setTaskRefreshKey] = useState(0)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -223,6 +226,19 @@ export default function ProjectDetail() {
         </div>
       )}
 
+      {(role === 'admin' || role === 'manager') && (
+  <>
+    <ExcelUpload
+      projectId={id}
+      projectName={project.title}
+      onImported={() => setTaskRefreshKey(k => k + 1)}
+    />
+    <div className="card">
+      <h3 className="text-sm font-bold text-gray-800 mb-4">Project Tasks</h3>
+      <ExcelTaskTable key={taskRefreshKey} projectId={id} />
+    </div>
+  </>
+)}
       {/* Client info */}
       {hasClient && (
         <div className="card">
