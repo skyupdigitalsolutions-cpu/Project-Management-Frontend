@@ -1134,6 +1134,7 @@ export default function AdminProjects() {
   const [savingExcel,  setSavingExcel]  = useState(false)
   const [templateInfo, setTemplateInfo] = useState(null)
   const [savedProject, setSavedProject] = useState(null)
+  const savedProjectRef = useRef(null)
 
   const searchRef = useRef(null)
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -1266,20 +1267,38 @@ export default function AdminProjects() {
   function goToStep(n) { setCurrentStep(n); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
   async function ensureProjectSaved() {
+    if (savedProjectRef.current) return savedProjectRef.current
     if (savedProject) return savedProject
     try {
       const { project_types = [], ...rest } = project
-      const res = await api.post('/projects', {
-        ...rest,
-        project_type:  project_types[0] ?? 'other',
-        project_types,           // ← FIX: also save the full array
-        client_id,
+
+      // POST /projects uses multer — must be multipart/form-data
+      // Use native fetch so we fully control headers (axios default Content-Type interferes)
+      const fd = new FormData()
+      const payload = { ...rest, project_type: project_types[0] ?? 'other', client_id: clientId }
+      Object.entries(payload).forEach(([k, v]) => {
+        if (v === null || v === undefined) return
+        fd.append(k, String(v))
       })
-      const saved = res.data.data
+      project_types.forEach(t => fd.append('project_types[]', t))
+      if (docFile) fd.append('document', docFile)
+
+      const token = localStorage.getItem('token')
+      const baseURL = import.meta.env.VITE_API_BASE_URL
+      const response = await fetch(`${baseURL}/api/projects`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }, // NO Content-Type — browser sets multipart boundary
+        body: fd,
+      })
+      const json = await response.json()
+      if (!response.ok) throw new Error(json.message || 'Failed to save project')
+
+      const saved = json.data
       setSavedProject(saved)
+      savedProjectRef.current = saved
       return saved
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save project')
+      toast.error(err.message || 'Failed to save project')
       return null
     }
   }
@@ -1311,11 +1330,15 @@ export default function AdminProjects() {
     try {
       const { project_types = [], ...rest } = project
 
-      if (assignMode === 'auto_excel' && savedProject) {
+      if (assignMode === 'auto_excel') {
+        // Ensure project is saved first — use ref to avoid stale closure
+        const excelProject = savedProjectRef.current || savedProject || await ensureProjectSaved()
+        if (!excelProject) return
+
         if (docFile) {
           const fd = new FormData()
           fd.append('document', docFile)
-          await api.patch(`/projects/${savedProject._id}/document`, fd, {
+          await api.patch(`/projects/${excelProject._id}/document`, fd, {
             headers: { 'Content-Type': 'multipart/form-data' },
           }).catch(() => {})
         }
