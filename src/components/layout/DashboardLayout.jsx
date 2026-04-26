@@ -16,6 +16,7 @@ const NAV = {
     { to: '/admin/users',         label: 'Users',              icon: Users },
     { to: '/admin/projects',      label: 'Projects',           icon: FolderKanban },
     { to: '/admin/tasks',         label: 'Tasks',              icon: CheckSquare },
+    { to: '/admin/clients',        label: 'Clients',            icon: Users },
     { to: '/admin/attendance',    label: 'Attendance',         icon: Clock },
     { to: '/admin/meetings',      label: 'Meetings',           icon: Video },
     { to: '/admin/notifications', label: 'Notifications',      icon: Bell },
