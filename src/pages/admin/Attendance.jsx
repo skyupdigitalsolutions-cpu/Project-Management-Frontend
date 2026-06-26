@@ -5,6 +5,8 @@
  *   ✅ Fixed: users.filter is not a function — Array.isArray() guard on fingerprint map response
  *   ✅ Added: Collapsible WFH Policy panel inside WfhRequestsTab
  *   ✅ Added: "Require Manager Approval" toggle that PATCHes /policy/wfh
+ *   ✅ Added: Auto-refresh on the Attendance tab — silent poll every 30s + on tab focus,
+ *            so new device clock-in/out punches appear without a manual reload.
  *
  * PLACE AT: Project-Management-Frontend/src/pages/admin/Attendance.jsx
  */
@@ -369,6 +371,7 @@ function AttendanceTab() {
   const [saving,       setSaving]       = useState(false)
   const [pinging,      setPinging]      = useState(false)
   const [pingStatus,   setPingStatus]   = useState(null)   // { reachable, message }
+  const [lastSynced,   setLastSynced]   = useState(null)   // timestamp of last successful auto-refresh
 
   // Pre-fill device IP from backend .env (DEVICE_IP) so admin doesn't retype it every time
   useEffect(() => {
@@ -381,8 +384,10 @@ function AttendanceTab() {
       .catch(() => {}) // silent — field stays blank if endpoint unreachable
   }, [])
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  // load(quiet): when quiet=true (background poll) we don't flash the spinner
+  // or show an error toast — the table just updates silently in place.
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true)
     try {
       const params = {}
       if (dateF)     params.date      = dateF
@@ -395,10 +400,28 @@ function AttendanceTab() {
       ])
       setRecords(r.data.data ?? [])
       setUsers((u.data.data ?? []).filter(u => ['employee', 'manager'].includes(u.role)))
-    } catch { toast.error('Failed to load attendance') } finally { setLoading(false) }
+      setLastSynced(new Date())
+    } catch {
+      if (!quiet) toast.error('Failed to load attendance')
+    } finally {
+      if (!quiet) setLoading(false)
+    }
   }, [dateF, statusF, sourceF, workModeF])
 
   useEffect(() => { load() }, [load])
+
+  // ── Auto-refresh ────────────────────────────────────────────────────────────
+  // Silently re-fetch every 30s so new device clock-in/out punches appear without
+  // a manual reload. Also refreshes the moment the browser tab regains focus.
+  useEffect(() => {
+    const interval = setInterval(() => { load(true) }, 30000) // 30 seconds
+    const onFocus  = () => load(true)
+    window.addEventListener('focus', onFocus)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [load])
 
   const openEdit = (rec) => {
     setForm({
@@ -530,7 +553,19 @@ function AttendanceTab() {
             options={WORK_MODES.map(m => ({ value: m, label: m.charAt(0).toUpperCase() + m.slice(1) }))}
             className="w-36" />
 
-          <button onClick={load} className="btn-secondary px-3"><RefreshCw size={15} /></button>
+          <button onClick={() => load()} className="btn-secondary px-3" title="Refresh now"><RefreshCw size={15} /></button>
+
+          {/* Live auto-refresh indicator */}
+          <span className="flex items-center gap-1.5 text-xs text-gray-400">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Live
+            {lastSynced && (
+              <span className="text-gray-300">· updated {format(lastSynced, 'HH:mm:ss')}</span>
+            )}
+          </span>
         </div>
 
         <div className="flex gap-2">
