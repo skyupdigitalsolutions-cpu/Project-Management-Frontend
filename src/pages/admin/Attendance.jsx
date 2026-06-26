@@ -1662,11 +1662,23 @@ function LeaveApprovalTab({ onCountChange }) {
 
   const handleAction = async (action) => {
     setSaving(true)
+    // Backend expects the final status ('approved' / 'rejected'),
+    // but the UI uses the verb ('approve' / 'reject') — map it here.
+    const status = action === 'approve' ? 'approved' : 'rejected'
     try {
-      await updateLeaveStatus(actionModal.leave._id, action)
-      toast.success(`Leave ${action}d`)
+      // updateLeaveStatus catches its own errors and returns { ok, message }
+      // instead of throwing, so we must check result.ok — otherwise a failed
+      // request would still show a success toast and the row stays pending.
+      const result = await updateLeaveStatus(actionModal.leave._id, status)
+      if (!result || !result.ok) {
+        toast.error(result?.message || 'Action failed')
+        return
+      }
+      toast.success(`Leave ${status}`)
       setActionModal(null); load()
-    } catch (e) { toast.error(e.response?.data?.message || 'Failed') } finally { setSaving(false) }
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed')
+    } finally { setSaving(false) }
   }
 
   return (

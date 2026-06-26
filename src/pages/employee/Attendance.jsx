@@ -1,3 +1,5 @@
+// Employee Attendance page
+
 import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   LogIn, LogOut, Clock, CalendarOff, Upload, X, FileText, Image, Siren, BellElectric,
