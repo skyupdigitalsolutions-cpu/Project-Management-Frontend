@@ -45,7 +45,7 @@ import {
 const ROLES        = ['admin', 'manager', 'employee']
 const STATUSES     = ['active', 'inactive', 'on-leave']
 const DEPARTMENTS  = [
-  'SEO', 'Performance Marketing', 'Social Media Marketing', 'Content Marketing',
+  'SEO', 'Performance Marketing', 'Social Media Marketing', 'Content Marketing','IT',
   'Email Marketing', 'Web Design & Development', 'Graphic Design',
   'Video & Creative Production', 'Analytics & Reporting',
   'Business Development', 'Account Management', 'HR & Admin',
