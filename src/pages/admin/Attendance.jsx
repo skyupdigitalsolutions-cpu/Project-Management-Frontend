@@ -584,19 +584,20 @@ function AttendanceTab() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Employee', 'Department', 'Status', 'Work Mode', 'Clock In', 'Clock Out', 'Hours', 'Source', 'Actions']
+                {['Employee', 'Department', 'Status', 'Work Mode', 'Clock In', 'Clock Out', 'Break', 'Hours', 'Source', 'Actions']
                   .map(h => <th key={h} className="table-header text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>)}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading
-                ? <tr><td colSpan={9} className="py-16 text-center"><Spinner /></td></tr>
+                ? <tr><td colSpan={10} className="py-16 text-center"><Spinner /></td></tr>
                 : records.length === 0
-                  ? <tr><td colSpan={9}><EmptyState icon={Clock} title="No records found" description="Try a different date or filter" /></td></tr>
+                  ? <tr><td colSpan={10}><EmptyState icon={Clock} title="No records found" description="Try a different date or filter" /></td></tr>
                   : records.map(r => {
-                    const hrs = r.clock_in && r.clock_out
-                      ? ((new Date(r.clock_out) - new Date(r.clock_in)) / 3600000).toFixed(1)
-                      : null
+                    const breakMin = r.break_minutes ?? 0
+                    const grossH   = r.clock_in && r.clock_out ? (new Date(r.clock_out) - new Date(r.clock_in)) / 3600000 : null
+                    const hrs      = grossH != null ? Math.max(0, grossH - breakMin / 60).toFixed(1) : null
+                    const fmtMin   = (m) => m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`
                     return (
                       <tr key={r._id} className="hover:bg-gray-50 transition-colors">
                         <td className="table-cell px-4 py-3">
@@ -624,6 +625,7 @@ function AttendanceTab() {
                         <td className="table-cell px-4 py-3 text-gray-500 font-mono text-sm">
                           {r.clock_out ? format(new Date(r.clock_out), 'HH:mm') : '—'}
                         </td>
+                        <td className="table-cell px-4 py-3 text-sm text-orange-500">{breakMin > 0 ? fmtMin(breakMin) : '—'}</td>
                         <td className="table-cell px-4 py-3 text-sm text-gray-500">{hrs ? `${hrs}h` : '—'}</td>
                         <td className="table-cell px-4 py-3"><SourceBadge source={r.source} /></td>
                         <td className="table-cell px-4 py-3">
