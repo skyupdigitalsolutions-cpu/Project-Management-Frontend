@@ -28,20 +28,6 @@ const LEAVE_STATUS_CONFIG = {
   rejected: { color: 'text-red-600 bg-red-50 border-red-200',             icon: XCircle      },
 }
 
-// ─── Break helpers (localStorage-backed) ─────────────────────────────────────
-
-function breakKey(dateStr) { return `breaks_${dateStr}` }
-function todayStr()        { return format(new Date(), 'yyyy-MM-dd') }
-
-function loadBreaks(dateStr) {
-  try { return JSON.parse(localStorage.getItem(breakKey(dateStr)) || '[]') }
-  catch { return [] }
-}
-
-function saveBreaks(dateStr, breaks) {
-  localStorage.setItem(breakKey(dateStr), JSON.stringify(breaks))
-}
-
 function completedBreakMs(breaks) {
   return breaks.reduce((acc, b) => {
     if (b.start && b.end) return acc + (new Date(b.end) - new Date(b.start))
@@ -85,9 +71,8 @@ export default function EmployeeAttendance() {
   const [canClock,   setCanClock]   = useState(false)
   const [clockMode,  setClockMode]  = useState(null)   // 'wfh' | 'override' | null
   const [activeWfh,  setActiveWfh]  = useState(null)
-  const [breaks,     setBreaks]     = useState(() => loadBreaks(todayStr()))
+  const [breaks,     setBreaks]     = useState([])
 
-  const dateKey   = todayStr()
   const onBreak   = breaks.some(b => b.start && !b.end)
 
   useLiveTick(!!(today?.clock_in && !today?.clock_out))
@@ -101,6 +86,7 @@ export default function EmployeeAttendance() {
       ])
       if (t.status === 'fulfilled') {
         setToday(t.value.data.data)
+        setBreaks(t.value.data.data?.breaks ?? [])
         setCanClock(!!t.value.data.can_manual_clock)
         setClockMode(t.value.data.clock_mode ?? null)
         setActiveWfh(t.value.data.active_wfh ?? null)
@@ -110,7 +96,6 @@ export default function EmployeeAttendance() {
       setLeaves(myLeaves)
     } catch { toast.error('Failed to load attendance') }
     finally   { setLoading(false) }
-    setBreaks(loadBreaks(todayStr()))
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -126,40 +111,35 @@ export default function EmployeeAttendance() {
   }
 
   const clockOut = async () => {
-    if (onBreak) {
-      const closed = breaks.map(b => (!b.end ? { ...b, end: new Date().toISOString() } : b))
-      saveBreaks(dateKey, closed)
-      setBreaks(closed)
-      toast('Break ended automatically', { icon: <BellElectric /> })
-    }
     setClocking(true)
     try {
-      await api.patch('/attendance/clock-out')
+      await api.patch('/attendance/clock-out')   // backend auto-closes any open break
       toast.success('Clocked out!')
       load()
     } catch (e) { toast.error(e.response?.data?.message || 'Clock-out failed') }
     finally     { setClocking(false) }
   }
 
-  const startBreak = () => {
+  const startBreak = async () => {
     if (onBreak) return
     setBreaking(true)
-    const entry   = { id: Date.now(), start: new Date().toISOString(), end: null }
-    const updated = [...breaks, entry]
-    saveBreaks(dateKey, updated)
-    setBreaks(updated)
-    toast('Break started ', { icon: '🟡' })
-    setBreaking(false)
+    try {
+      await api.post('/attendance/break/start')
+      toast('Break started', { icon: '🟡' })
+      load()
+    } catch (e) { toast.error(e.response?.data?.message || 'Failed to start break') }
+    finally     { setBreaking(false) }
   }
 
-  const endBreak = () => {
+  const endBreak = async () => {
     if (!onBreak) return
     setBreaking(true)
-    const updated = breaks.map(b => (!b.end ? { ...b, end: new Date().toISOString() } : b))
-    saveBreaks(dateKey, updated)
-    setBreaks(updated)
-    toast.success('Break ended — back to work!')
-    setBreaking(false)
+    try {
+      await api.patch('/attendance/break/end')
+      toast.success('Break ended — back to work!')
+      load()
+    } catch (e) { toast.error(e.response?.data?.message || 'Failed to end break') }
+    finally     { setBreaking(false) }
   }
 
   const present = history.filter(r => r.status === 'present' || r.status === 'late').length
@@ -270,13 +250,7 @@ export default function EmployeeAttendance() {
 
               {/* ── Action buttons ── */}
               <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
-                {today?.source === 'fingerprint' ? (
-                  <div className="px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2 max-w-xs">
-                    <Lock size={15} className="text-gray-400 flex-shrink-0" />
-                    <p className="text-gray-500 text-sm">Recorded by the biometric machine</p>
-                  </div>
-
-                ) : !today?.clock_in ? (
+                {!today?.clock_in ? (
                   canClock ? (
                     <button onClick={clockIn} disabled={clocking} className="btn-primary py-3 px-6 text-base">
                       {clocking ? <Spinner size="sm" /> : <LogIn size={18} />} Clock In
@@ -296,6 +270,7 @@ export default function EmployeeAttendance() {
 
                 ) : !today?.clock_out ? (
                   <>
+                    {/* Breaks are always taken from the app — even on biometric attendance */}
                     {!onBreak ? (
                       <button
                         onClick={startBreak} disabled={breaking}
@@ -312,9 +287,17 @@ export default function EmployeeAttendance() {
                       </button>
                     )}
 
-                    <button onClick={clockOut} disabled={clocking} className="btn-secondary py-3 px-6 text-base">
-                      {clocking ? <Spinner size="sm" /> : <LogOut size={18} />} Clock Out
-                    </button>
+                    {/* Biometric records are clocked out by the machine, not the app */}
+                    {today?.source === 'fingerprint' ? (
+                      <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2">
+                        <Lock size={14} className="text-gray-400 flex-shrink-0" />
+                        <p className="text-gray-500 text-xs">Clock-out recorded by the machine</p>
+                      </div>
+                    ) : (
+                      <button onClick={clockOut} disabled={clocking} className="btn-secondary py-3 px-6 text-base">
+                        {clocking ? <Spinner size="sm" /> : <LogOut size={18} />} Clock Out
+                      </button>
+                    )}
                   </>
 
                 ) : (
@@ -426,8 +409,7 @@ export default function EmployeeAttendance() {
                     <tr><td colSpan={6}><EmptyState icon={Clock} title="No attendance records" /></td></tr>
                   ) : history.map(r => {
                     const rowDate    = r.date ? r.date.slice(0, 10) : null
-                    const rowBreaks  = rowDate ? loadBreaks(rowDate) : []
-                    const rowBreakMs = completedBreakMs(rowBreaks)
+                    const rowBreakMs = (r.break_minutes ?? 0) * 60000 || completedBreakMs(r.breaks ?? [])
                     const netHrs     = calcNetHours(r.clock_in, r.clock_out, rowBreakMs)
                     return (
                       <tr key={r._id} className="hover:bg-gray-50 transition-colors border-b border-gray-50">

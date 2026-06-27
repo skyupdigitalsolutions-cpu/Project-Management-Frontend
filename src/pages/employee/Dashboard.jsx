@@ -4,7 +4,7 @@ import {
   CalendarOff, AlertCircle, CheckCircle2, XCircle,
   ShieldAlert, ShieldCheck, ShieldX, ShieldQuestion,
   Send, Lock, Loader2, Paperclip, X, FileText, Image as ImageIcon,
-  Archive, MessageSquarePlus, Bell
+  Archive, MessageSquarePlus, Bell, Coffee, PlayCircle
 } from 'lucide-react'
 import api, { fetchMyLeaves } from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -294,7 +294,11 @@ export default function EmployeeDashboard() {
   const [projects,  setProjects]  = useState([])
   const [loading,   setLoading]   = useState(true)
   const [clocking,  setClocking]  = useState(false)
+  const [breaking,  setBreaking]  = useState(false)
+  const [canClock,  setCanClock]  = useState(false)
   const [approvalModal, setApprovalModal] = useState(null) // { item, type }
+
+  const onBreak = (today?.breaks ?? []).some(b => b.start && !b.end)
 
   const load = async () => {
     setLoading(true)
@@ -309,7 +313,10 @@ export default function EmployeeDashboard() {
       const allTasks = t.status === 'fulfilled' ? (t.value.data.data ?? []) : []
       setTasks(allTasks.slice(0, 5))
 
-      if (att.status === 'fulfilled') setToday(att.value.data.data)
+      if (att.status === 'fulfilled') {
+        setToday(att.value.data.data)
+        setCanClock(!!att.value.data.can_manual_clock)
+      }
 
       // Build project list: start with API result, then fill gaps from task data
       let fetchedProjects = p.status === 'fulfilled' ? (p.value.data.data ?? []) : []
@@ -386,6 +393,20 @@ export default function EmployeeDashboard() {
     finally { setClocking(false) }
   }
 
+  const handleStartBreak = async () => {
+    setBreaking(true)
+    try { await api.post('/attendance/break/start'); toast('Break started', { icon: '🟡' }); load() }
+    catch (e) { toast.error(e.response?.data?.message || 'Failed to start break') }
+    finally { setBreaking(false) }
+  }
+
+  const handleEndBreak = async () => {
+    setBreaking(true)
+    try { await api.patch('/attendance/break/end'); toast.success('Break ended — back to work!'); load() }
+    catch (e) { toast.error(e.response?.data?.message || 'Failed to end break') }
+    finally { setBreaking(false) }
+  }
+
   const handleApprovalSuccess = (itemId, type) => {
     if (type === 'task') {
       setTasks(prev => prev.map(t =>
@@ -420,20 +441,42 @@ export default function EmployeeDashboard() {
                   {today.clock_in  && <p className="text-xs text-neutral font-mono">In: <span className="text-emerald-400">{format(new Date(today.clock_in),  'HH:mm')}</span></p>}
                   {today.clock_out && <p className="text-xs text-neutral font-mono">Out: <span className="text-amber-400">{format(new Date(today.clock_out), 'HH:mm')}</span></p>}
                 </div>
-                {today.status && <StatusBadge status={today.status} />}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {today.status && <StatusBadge status={today.status} />}
+                  {onBreak && <span className="text-xs text-orange-500 font-semibold flex items-center gap-1"><Coffee size={11} /> On break</span>}
+                </div>
               </div>
             ) : (
               <p className="text-xs text-neutral mt-1">Not clocked in yet</p>
             )}
           </div>
           {!today?.clock_in ? (
-            <button onClick={handleClockIn} disabled={clocking} className="btn-primary py-2">
-              {clocking ? <Spinner size="sm" /> : <LogIn size={15} />} Clock In
-            </button>
+            canClock ? (
+              <button onClick={handleClockIn} disabled={clocking} className="btn-primary py-2">
+                {clocking ? <Spinner size="sm" /> : <LogIn size={15} />} Clock In
+              </button>
+            ) : (
+              <span className="text-xs text-gray-400 flex items-center gap-1 max-w-28 text-right"><Lock size={12} /> Recorded by machine</span>
+            )
           ) : !today?.clock_out ? (
-            <button onClick={handleClockOut} disabled={clocking} className="btn-secondary py-2">
-              {clocking ? <Spinner size="sm" /> : <LogOut size={15} />} Clock Out
-            </button>
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              {!onBreak ? (
+                <button onClick={handleStartBreak} disabled={breaking}
+                  className="flex items-center gap-1.5 py-2 px-3 text-xs font-semibold rounded-lg border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 transition-all">
+                  {breaking ? <Spinner size="sm" /> : <Coffee size={14} />} Break
+                </button>
+              ) : (
+                <button onClick={handleEndBreak} disabled={breaking}
+                  className="flex items-center gap-1.5 py-2 px-3 text-xs font-semibold rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all animate-pulse">
+                  {breaking ? <Spinner size="sm" /> : <PlayCircle size={14} />} End Break
+                </button>
+              )}
+              {today?.source !== 'fingerprint' && (
+                <button onClick={handleClockOut} disabled={clocking} className="btn-secondary py-2">
+                  {clocking ? <Spinner size="sm" /> : <LogOut size={15} />} Clock Out
+                </button>
+              )}
+            </div>
           ) : (
             <span className="text-xs text-emerald-400 font-semibold">Done </span>
           )}
