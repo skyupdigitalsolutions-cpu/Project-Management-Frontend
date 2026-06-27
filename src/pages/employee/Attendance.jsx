@@ -489,7 +489,7 @@ function LeaveHistoryTab({ leaves, loading, onApply }) {
                       <StatusIcon size={11} /> {leave.status}
                     </span>
                     {leave.is_urgent && (
-                      <span className="flex text-[16px] px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-600"><Siren className='w-6 h-6'/> Urgent</span>
+                      <span className="flex text-[16px] gap-2 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-red-600"><Siren className='w-4 h-4'/> Urgent</span>
                     )}
                   </div>
                   <p className="text-gray-400 text-[16px] mt-1">
