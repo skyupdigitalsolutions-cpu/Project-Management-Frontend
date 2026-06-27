@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   LogIn, LogOut, Clock, Users, CalendarOff, Upload, X, FileText, Image,
   CheckCircle2, XCircle, AlertCircle, RefreshCw, UserMinus, Wand2,
-  Coffee, PlayCircle,
+  Coffee, PlayCircle, Home, Lock,
 } from 'lucide-react'
 import api, { fetchMyLeaves, submitLeave } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { format, parseISO } from 'date-fns'
 import { PageHeader, SelectInput, Modal, StatusBadge, Spinner, EmptyState, StatCard } from '../../components/common/UI'
+import WfhRequestModal from '../../components/common/WfhRequestModal'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -137,6 +138,10 @@ function MyAttendanceTab() {
   const [clocking,setClocking]= useState(false)
   const [breaking,setBreaking]= useState(false)
   const [breaks,  setBreaks]  = useState(() => loadBreaks(todayStr()))
+  const [canClock,  setCanClock]  = useState(false)
+  const [clockMode, setClockMode] = useState(null)
+  const [activeWfh, setActiveWfh] = useState(null)
+  const [wfhModal,  setWfhModal]  = useState(false)
 
   const dateKey = todayStr()
   const onBreak = breaks.some(b => b.start && !b.end)
@@ -152,6 +157,9 @@ function MyAttendanceTab() {
         api.get('/attendance/my?limit=30'),
       ])
       setToday(t.data.data)
+      setCanClock(!!t.data.can_manual_clock)
+      setClockMode(t.data.clock_mode ?? null)
+      setActiveWfh(t.data.active_wfh ?? null)
       setHistory(h.data.data ?? [])
     } catch { toast.error('Failed to load attendance') }
     finally {
@@ -247,6 +255,9 @@ function MyAttendanceTab() {
             <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider">
               Today — {format(new Date(), 'EEEE, MMMM d, yyyy')}
             </p>
+            <button onClick={() => setWfhModal(true)} className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">
+              <Home size={13} /> Request WFH
+            </button>
 
             {loading ? <Spinner size="sm" /> : (
               <div className="mt-2 flex items-center gap-6 flex-wrap">
@@ -294,10 +305,29 @@ function MyAttendanceTab() {
 
           {/* ── Action buttons ── */}
           <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
-            {!today?.clock_in ? (
-              <button onClick={clockIn} disabled={clocking} className="btn-primary py-3 px-6 text-base flex items-center gap-2">
-                {clocking ? <Spinner size="sm" /> : <LogIn size={18} />} Clock In
-              </button>
+            {today?.source === 'fingerprint' ? (
+              <div className="px-5 py-3 bg-gray-500/10 border border-gray-500/20 rounded-xl flex items-center gap-2 max-w-xs">
+                <Lock size={15} className="text-neutral flex-shrink-0" />
+                <p className="text-neutral text-sm">Recorded by the biometric machine</p>
+              </div>
+
+            ) : !today?.clock_in ? (
+              canClock ? (
+                <button onClick={clockIn} disabled={clocking} className="btn-primary py-3 px-6 text-base flex items-center gap-2">
+                  {clocking ? <Spinner size="sm" /> : <LogIn size={18} />} Clock In
+                  {clockMode === 'wfh' && <span className="text-xs opacity-80">(WFH)</span>}
+                </button>
+              ) : (
+                <div className="px-5 py-3 bg-gray-500/10 border border-gray-500/20 rounded-xl flex items-start gap-2 max-w-xs">
+                  <Lock size={15} className="text-neutral flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-gray-300 text-sm font-medium">Clock-in via biometric machine</p>
+                    <button onClick={() => setWfhModal(true)} className="text-primary text-xs font-semibold hover:underline mt-0.5">
+                      Working from home? Request WFH →
+                    </button>
+                  </div>
+                </div>
+              )
 
             ) : !today?.clock_out ? (
               <>
@@ -330,6 +360,16 @@ function MyAttendanceTab() {
             )}
           </div>
         </div>
+
+        {/* ── Active WFH banner ── */}
+        {activeWfh && !today?.clock_out && (
+          <div className="flex items-center gap-3 px-4 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <Home size={16} className="text-blue-400 flex-shrink-0" />
+            <p className="text-blue-300 text-sm">
+              Work from home approved {format(new Date(activeWfh.from_date), 'MMM d')} – {format(new Date(activeWfh.to_date), 'MMM d')}. You can clock in/out from the app today.
+            </p>
+          </div>
+        )}
 
         {/* ── Live on-break banner ── */}
         {onBreak && ongoingBreak && (
@@ -451,6 +491,12 @@ function MyAttendanceTab() {
           </table>
         </div>
       </div>
+
+      <WfhRequestModal
+        open={wfhModal}
+        onClose={() => setWfhModal(false)}
+        onSuccess={() => { setWfhModal(false); load() }}
+      />
     </div>
   )
 }

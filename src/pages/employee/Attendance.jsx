@@ -3,12 +3,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   LogIn, LogOut, Clock, CalendarOff, Upload, X, FileText, Image, Siren, BellElectric,
-  CheckCircle2, XCircle, AlertCircle, Wand2, Coffee, PlayCircle,
+  CheckCircle2, XCircle, AlertCircle, Wand2, Coffee, PlayCircle, Home, Lock,
 } from 'lucide-react'
 import api, { fetchMyLeaves, submitLeave } from '../../api/axios'
 import toast from 'react-hot-toast'
 import { format, parseISO } from 'date-fns'
 import { PageHeader, StatusBadge, Spinner, EmptyState, StatCard } from '../../components/common/UI'
+import WfhRequestModal from '../../components/common/WfhRequestModal'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,10 @@ export default function EmployeeAttendance() {
   const [clocking,   setClocking]   = useState(false)
   const [breaking,   setBreaking]   = useState(false)
   const [leaveModal, setLeaveModal] = useState(false)
+  const [wfhModal,   setWfhModal]   = useState(false)
+  const [canClock,   setCanClock]   = useState(false)
+  const [clockMode,  setClockMode]  = useState(null)   // 'wfh' | 'override' | null
+  const [activeWfh,  setActiveWfh]  = useState(null)
   const [breaks,     setBreaks]     = useState(() => loadBreaks(todayStr()))
 
   const dateKey   = todayStr()
@@ -94,7 +99,12 @@ export default function EmployeeAttendance() {
         api.get('/attendance/today'),
         api.get('/attendance/my?limit=30'),
       ])
-      if (t.status === 'fulfilled') setToday(t.value.data.data)
+      if (t.status === 'fulfilled') {
+        setToday(t.value.data.data)
+        setCanClock(!!t.value.data.can_manual_clock)
+        setClockMode(t.value.data.clock_mode ?? null)
+        setActiveWfh(t.value.data.active_wfh ?? null)
+      }
       if (h.status === 'fulfilled') setHistory(h.value.data.data ?? [])
       const myLeaves = await fetchMyLeaves()
       setLeaves(myLeaves)
@@ -177,9 +187,14 @@ export default function EmployeeAttendance() {
         title="My Attendance"
         subtitle="Track your daily attendance and manage leave requests"
         action={
-          <button onClick={() => setLeaveModal(true)} className="btn-primary">
-            <CalendarOff size={16} /> Apply for Leave
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setWfhModal(true)} className="btn-secondary">
+              <Home size={16} /> Request WFH
+            </button>
+            <button onClick={() => setLeaveModal(true)} className="btn-primary">
+              <CalendarOff size={16} /> Apply for Leave
+            </button>
+          </div>
         }
       />
 
@@ -255,10 +270,29 @@ export default function EmployeeAttendance() {
 
               {/* ── Action buttons ── */}
               <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
-                {!today?.clock_in ? (
-                  <button onClick={clockIn} disabled={clocking} className="btn-primary py-3 px-6 text-base">
-                    {clocking ? <Spinner size="sm" /> : <LogIn size={18} />} Clock In
-                  </button>
+                {today?.source === 'fingerprint' ? (
+                  <div className="px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2 max-w-xs">
+                    <Lock size={15} className="text-gray-400 flex-shrink-0" />
+                    <p className="text-gray-500 text-sm">Recorded by the biometric machine</p>
+                  </div>
+
+                ) : !today?.clock_in ? (
+                  canClock ? (
+                    <button onClick={clockIn} disabled={clocking} className="btn-primary py-3 px-6 text-base">
+                      {clocking ? <Spinner size="sm" /> : <LogIn size={18} />} Clock In
+                      {clockMode === 'wfh' && <span className="ml-1 text-xs opacity-80">(WFH)</span>}
+                    </button>
+                  ) : (
+                    <div className="px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl flex items-start gap-2 max-w-xs">
+                      <Lock size={15} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-gray-600 text-sm font-medium">Clock-in via biometric machine</p>
+                        <button onClick={() => setWfhModal(true)} className="text-primary text-xs font-semibold hover:underline mt-0.5">
+                          Working from home? Request WFH →
+                        </button>
+                      </div>
+                    </div>
+                  )
 
                 ) : !today?.clock_out ? (
                   <>
@@ -290,6 +324,16 @@ export default function EmployeeAttendance() {
                 )}
               </div>
             </div>
+
+            {/* ── Active WFH banner ── */}
+            {activeWfh && !today?.clock_out && (
+              <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl">
+                <Home size={16} className="text-blue-500 flex-shrink-0" />
+                <p className="text-blue-700 text-sm">
+                  Work from home approved {format(new Date(activeWfh.from_date), 'MMM d')} – {format(new Date(activeWfh.to_date), 'MMM d')}. You can clock in/out from the app today.
+                </p>
+              </div>
+            )}
 
             {/* ── Live on-break banner ── */}
             {onBreak && ongoingBreak && (
@@ -423,6 +467,12 @@ export default function EmployeeAttendance() {
           onSuccess={() => { setLeaveModal(false); load(); setActiveTab('leaves') }}
         />
       )}
+
+      <WfhRequestModal
+        open={wfhModal}
+        onClose={() => setWfhModal(false)}
+        onSuccess={() => { setWfhModal(false); load() }}
+      />
     </div>
   )
 }
