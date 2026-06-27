@@ -517,7 +517,7 @@ export default function NotificationBell() {
   const prevUnread   = useRef(undefined)
   const prevNotifIds = useRef(new Set())
   const openRef      = useRef(open)
-  // FIX #3: flag so fetchCount won't fire until initializePrevUnread completes
+  // Baseline flag so the first poll doesn't fire sound/toast for existing items
   const initialized  = useRef(false)
 
   useEffect(() => { openRef.current = open }, [open])
@@ -532,99 +532,84 @@ export default function NotificationBell() {
     playSoundForCategory(kind, cfg)
   }, [])
 
-  // ── FIX #3: set initialized flag only after baseline is established ───────
-  const initializePrevUnread = useCallback(async () => {
+  // ── Poll for new notifications (list + unread count in ONE request) ────────
+  const checkForNew = useCallback(async () => {
     try {
-      const { data } = await api.get('/notifications/unread-count')
-      prevUnread.current = data.unread_count ?? 0
-      setUnread(prevUnread.current)
-    } catch {
-      prevUnread.current = 0
-    } finally {
-      // Mark as ready — fetchCount is now safe to compare counts
-      initialized.current = true
-    }
-  }, [])
+      const { data } = await api.get('/notifications?limit=10')
+      const incoming    = data.data ?? []
+      const unreadCount = data.unread_count ?? incoming.filter(n => !n.is_read).length
 
-  // ── poll unread count every 15 s ──────────────────────────────────────────
-  const fetchCount = useCallback(async () => {
-    // FIX #3: skip poll entirely until baseline has been set
-    if (!initialized.current) return
-
-    try {
-      const { data } = await api.get('/notifications/unread-count')
-      const newCount = data.unread_count ?? 0
-
-      if (prevUnread.current !== undefined && newCount > prevUnread.current) {
-        try {
-          const { data: nd } = await api.get('/notifications?limit=10')
-          const incoming = nd.data ?? []
-
-          const isFirstPoll = prevNotifIds.current.size === 0
-          const newOnes = isFirstPoll
-            ? []
-            : incoming.filter(n => !prevNotifIds.current.has(n._id))
-
-          if (newOnes.length > 0) {
-            const hasMeeting = newOnes.some(n => n.type === 'meeting_invite')
-            const hasTask    = newOnes.some(n =>
-              [
-                'task_assigned',
-                'task_updated',
-                'task_completed',
-                'task_reminder',
-                'task_overdue',
-                'task_comment',
-              ].includes(n.type)
-            )
-            const kind = hasMeeting ? 'meeting' : hasTask ? 'task' : 'general'
-
-            playSoundFor(kind)
-
-            if (!openRef.current) {
-              const label = hasMeeting ? '📅 New meeting invitation!'
-                          : hasTask    ? '✅ New task assigned!'
-                          :              '🔔 New notification!'
-              toast(label, {
-                duration: 4000,
-                style: {
-                  background: '#1e293b',
-                  color: '#e2e8f0',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '12px',
-                },
-              })
-            }
-          }
-
-          prevNotifIds.current = new Set(incoming.map(n => n._id))
-        } catch {
-          if (prevNotifIds.current.size > 0) {
-            playSoundFor('general')
-          }
-        }
+      // First run establishes a baseline — no sound/toast for already-existing items.
+      if (!initialized.current) {
+        prevNotifIds.current = new Set(incoming.map(n => n._id))
+        prevUnread.current   = unreadCount
+        setUnread(unreadCount)
+        initialized.current  = true
+        return
       }
 
-      prevUnread.current = newCount
-      setUnread(newCount)
+      // Any id we haven't seen before is genuinely new.
+      const newOnes = incoming.filter(n => !prevNotifIds.current.has(n._id))
+      if (newOnes.length > 0) {
+        const hasMeeting = newOnes.some(n => n.type === 'meeting_invite')
+        const hasTask    = newOnes.some(n => [
+          'task_assigned', 'task_updated', 'task_completed',
+          'task_reminder', 'task_overdue', 'task_comment',
+        ].includes(n.type))
+        const kind = hasMeeting ? 'meeting' : hasTask ? 'task' : 'general'
+
+        playSoundFor(kind)
+
+        if (!openRef.current) {
+          const label = hasMeeting ? '📅 New meeting invitation!'
+                      : hasTask    ? '✅ New task assigned!'
+                      :              '🔔 New notification!'
+          toast(label, {
+            duration: 4000,
+            style: {
+              background: '#1e293b',
+              color: '#e2e8f0',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '12px',
+            },
+          })
+        }
+
+        // If the panel is open, surface the new items immediately.
+        if (openRef.current) setNotifs(incoming)
+      }
+
+      prevNotifIds.current = new Set(incoming.map(n => n._id))
+      prevUnread.current   = unreadCount
+      setUnread(unreadCount)
     } catch {}
   }, [playSoundFor])
 
+  // Run once immediately, then poll every 12s; also re-check on tab focus.
   useEffect(() => {
-    // FIX #3: start interval only after init resolves so first fetchCount
-    // never runs with initialized.current === false.
-    initializePrevUnread().then(() => {
-      const t = setInterval(fetchCount, 15_000)
-      // Store interval id in a ref for cleanup
-      intervalRef.current = t
-    })
+    checkForNew()
+    const t = setInterval(checkForNew, 12_000)
+    const onFocus = () => checkForNew()
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+      clearInterval(t)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
     }
-  }, [fetchCount, initializePrevUnread])
+  }, [checkForNew])
 
-  // Ref to hold interval id so the cleanup above can reach it
-  const intervalRef = useRef(null)
+  // Unlock the Web Audio context on the first user gesture, so timer-driven
+  // notification sounds can actually play (browsers block audio until then).
+  useEffect(() => {
+    const unlock = () => getOrResumeCtx()
+    window.addEventListener('pointerdown', unlock, { once: true })
+    window.addEventListener('keydown',     unlock, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
+  }, [])
 
   // ── FIX #4: fetchNotifs with AbortController to prevent setState on unmount ──
   const fetchNotifs = useCallback(async (signal) => {
