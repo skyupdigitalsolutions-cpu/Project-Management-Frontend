@@ -18,7 +18,7 @@ import {
   Wifi, WifiOff, Link2, Users, Settings, Home,
   Shield, ToggleLeft, ToggleRight, Plus, Trash2,
   Calendar, BookOpen, Loader2, ChevronDown, ChevronUp,
-  FileSpreadsheet, X, Upload, Download,
+  FileSpreadsheet, X, Upload, Download, Paperclip, FileText, ExternalLink,
 } from 'lucide-react'
 import api, { fetchAllLeaves, updateLeaveStatus } from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -1733,7 +1733,16 @@ function LeaveApprovalTab({ onCountChange }) {
                           {l.to_date ? format(new Date(l.to_date), 'dd MMM yyyy') : '—'}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-500">{l.days ?? '—'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500 max-w-[160px] truncate">{l.reason ?? '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500 max-w-[180px]">
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate">{l.reason ?? '—'}</span>
+                            {l.documents?.length > 0 && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-primary flex-shrink-0" title={`${l.documents.length} attachment(s)`}>
+                                <Paperclip size={11} />{l.documents.length}
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border capitalize font-medium ${cfg.color}`}>
                             <Icon size={10} /> {l.status}
@@ -1779,6 +1788,31 @@ function LeaveApprovalTab({ onCountChange }) {
               <div><p className="text-gray-400 text-xs mb-1">To</p><p>{viewModal.to_date ? format(new Date(viewModal.to_date), 'dd MMM yyyy') : '—'}</p></div>
             </div>
             <div><p className="text-gray-400 text-xs mb-1">Reason</p><p className="text-gray-800">{viewModal.reason}</p></div>
+
+            <div>
+              <p className="text-gray-400 text-xs mb-1">Attachments</p>
+              {viewModal.documents?.length > 0 ? (
+                <div className="space-y-1.5">
+                  {viewModal.documents.map((doc, i) => (
+                    <a
+                      key={i}
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-primary/30 transition-colors group"
+                    >
+                      <FileText size={15} className="text-primary flex-shrink-0" />
+                      <span className="text-sm text-gray-700 truncate flex-1" title={doc.name}>
+                        {doc.name || `Attachment ${i + 1}`}
+                      </span>
+                      <ExternalLink size={13} className="text-gray-400 group-hover:text-primary flex-shrink-0" />
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">No documents attached</p>
+              )}
+            </div>
           </div>
         )}
       </Modal>
