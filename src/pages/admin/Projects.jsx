@@ -666,22 +666,36 @@ function AssignmentCard({ asgn, aIdx, total, onUpdate, onRemove, onAddTask, onRe
 function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, projectStart, projectEnd, onApplyAutoAssign }) {
   const [loading, setLoading] = useState(false)
   const [plan, setPlan] = useState(null)
-  const [available, setAvailable] = useState([])
   const [applied, setApplied] = useState(false)
   const [showAutoAssign, setShowAutoAssign] = useState(false)
 
-  useEffect(() => {
-    api.get('/templates').then(r => setAvailable((r.data.data || []).filter(t => t.isActive).map(t => t.projectType))).catch(() => {})
-  }, [])
+  // Convert "2 days" / "3 day" → hours (8h per day). Falls back to blank.
+  const durationToHours = (raw) => {
+    if (!raw) return ''
+    const n = parseFloat(String(raw))
+    if (Number.isNaN(n)) return ''
+    return /day/i.test(String(raw)) ? n * 8 : n
+  }
 
   const handleGenerate = async () => {
     if (!selectedTypes?.length) { toast.error('Select at least one project type first'); return }
     setLoading(true)
     try {
-      const { data } = await api.post('/templates/generate-plan', { projectType: selectedTypes })
-      const tasks = data.data?.normalizedTasks || data.data?.mergedTasks || []
+      // Built-in plan generator — no template database needed.
+      const { data } = await api.post('/projects/generate-plan', {
+        projectTypes: selectedTypes,
+        description: '',
+      })
+      const phases = data.data?.phases || []
+      const tasks = phases.flatMap(ph => (ph.tasks || []).map(t => ({
+        title: t.title,
+        required_role: t.role || '',
+        priority: (t.priority || 'medium').toLowerCase(),
+        estimated_hours: durationToHours(t.duration),
+        phase: ph.name,
+      })))
       setPlan(tasks); setApplied(false); setShowAutoAssign(false)
-      if (tasks.length === 0) toast('No template tasks found', { icon: '⚠️' })
+      if (tasks.length === 0) toast('No tasks generated for these types', { icon: '⚠️' })
     } catch (e) { toast.error(e.response?.data?.message || 'Failed to generate plan') }
     finally { setLoading(false) }
   }
@@ -698,18 +712,11 @@ function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, p
     toast.success(`${wizardTasks.length} tasks applied from template`)
   }
 
-  const missingTypes = (selectedTypes || []).filter(t => !available.includes(t))
-
   return (
     <div className="space-y-4">
       <SectionCard>
-        <SectionHeader icon={Zap} title="Auto-Generate from Template" subtitle="Auto-fill tasks from your saved project templates" />
+        <SectionHeader icon={Zap} title="Auto-Generate from Template" subtitle="Auto-fill tasks based on the selected project type(s)" />
         <div className="p-5 space-y-4">
-          {missingTypes.length > 0 && (
-            <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl text-xs" style={{ backgroundColor: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', color: '#92400e' }}>
-              <AlertCircle size={13} className="flex-shrink-0 mt-0.5 text-amber-500" />No template for: <strong>{missingTypes.join(', ')}</strong>
-            </div>
-          )}
           <div className="flex items-center gap-3 flex-wrap">
             <button type="button" onClick={handleGenerate} disabled={loading || !selectedTypes?.length}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-40 hover:opacity-90" style={{ backgroundColor: '#6366f1' }}>
