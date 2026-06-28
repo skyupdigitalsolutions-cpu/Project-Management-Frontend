@@ -1434,16 +1434,22 @@ export default function AdminProjects() {
         const builtTasks = tasks
           .filter(t => t.title)
           .map(({ id: _tid, subTasks, assignee_id: taskOwner, ...t }) => {
-            if (taskOwner) memberSet.add(taskOwner)
+            // A task is assigned to: its own picked person, otherwise the
+            // assignment-level lead. This way assigning the group to someone
+            // gives them every task under it (so it shows in their panel).
+            const taskAssignee = taskOwner || leadId || null
+            if (taskAssignee) memberSet.add(taskAssignee)
 
             const builtSubs = (subTasks || [])
               .filter(stItem => stItem.title)
               .map(({ id: _sid, assignee_id: subOwner, ...stItem }) => {
-                if (subOwner) memberSet.add(subOwner)
+                // Sub-task → its own picked person, else inherit the task's owner.
+                const subAssignee = subOwner || taskAssignee || null
+                if (subAssignee) memberSet.add(subAssignee)
                 return {
                   ...stItem,
                   // Backend schema key is `assigned_to` (NOT `assignee_id`)
-                  assigned_to: subOwner || null,
+                  assigned_to: subAssignee,
                   due_date: stItem.due_date || t.due_date || a.end_date || project.end_date,
                   estimated_hours: stItem.estimated_hours !== '' && stItem.estimated_hours != null
                     ? Number(stItem.estimated_hours)
@@ -1454,7 +1460,7 @@ export default function AdminProjects() {
             return {
               ...t,
               // Backend schema key is `assigned_to` (NOT `assignee_id`)
-              assigned_to: taskOwner || null,
+              assigned_to: taskAssignee,
               due_date: t.due_date || a.end_date || project.end_date,
               estimated_hours: t.estimated_hours !== '' && t.estimated_hours != null
                 ? Number(t.estimated_hours)
