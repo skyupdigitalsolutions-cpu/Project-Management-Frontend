@@ -44,18 +44,18 @@ const CREATE_STEPS = [
 ]
 
 const PROJECT_TYPES = [
-  { value: 'website',         label: 'Website' },
-  { value: 'mobile_app',      label: 'Mobile App' },
-  { value: 'ecommerce',       label: 'E-Commerce' },
-  { value: 'admin_dashboard', label: 'Admin Dashboard' },
-  { value: 'api_service',     label: 'API / Backend' },
-  { value: 'ai_features',     label: 'AI Features' },
-  { value: 'design',          label: 'Design' },
-  { value: 'marketing',       label: 'Marketing' },
-  { value: 'seo',             label: 'SEO' },
-  { value: 'content',         label: 'Content' },
-  { value: 'data_analytics',  label: 'Data Analytics' },
-  { value: 'other',           label: 'Other' },
+  { value: 'social_media_marketing', label: 'Social Media Marketing' },
+  { value: 'mobile_app', label: 'Mobile App' },
+  { value: 'graphic_design',  label: 'Graphic Design' },
+  { value: 'ui_ux_design', label: 'UI UX Design' },
+  { value: 'automation',  label: 'Automation' },
+  { value: 'website_development',  label: 'Website Development' },
+  { value: 'seo', label: 'Search Engine Optimization' },
+  { value: 'email_marketing', label: 'Email Marketing' },
+  { value: 'branding', label: 'Branding' },
+  { value: 'machine_learning', label: 'Machine Learning' },
+  { value: 'google_ads', label:'Google Ads' },
+  { value: 'role_based_dashboards', label: 'Role Based Dashboards' },
 ]
 
 // ─── ID helpers ───────────────────────────────────────────────────────────────
