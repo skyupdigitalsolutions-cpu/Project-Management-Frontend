@@ -114,6 +114,71 @@ function matchScore(a = '', b = '') {
   return overlap > 0 ? 1 : 0
 }
 
+// ─── Designation family gate ──────────────────────────────────────────────────
+// Kept in sync with backend/services/roleMatching.js. Plain matchScore() above
+// is fine for comparing two departments, but for designation-vs-required-role
+// it's too loose on its own — e.g. "AI Developer" and "Full Stack Web
+// Developer" would tie via the shared word "developer", letting an AI
+// Developer show up as a suggested match for a backend/frontend web task.
+// This gate restricts each required_role to its real designation family
+// (backend/frontend web work → Backend/Frontend/Full-Stack titles only,
+// never AI/ML, marketing, etc.) before matchScore is allowed to count.
+const FAMILY_PATTERNS = {
+  frontend:   [/frontend/, /front[\s-]?end/],
+  backend:    [/backend/, /back[\s-]?end/, /server\s*developer/],
+  fullstack:  [/full[\s-]?stack/],
+  mobile:     [/mobile\s*developer/, /android\s*developer/, /ios\s*developer/, /app\s*developer/],
+  design:     [/designer/, /\bux\b/, /ui\/ux/, /ui\s*designer/],
+  qa:         [/\bqa\b/, /quality\s*assurance/, /quality\s*analyst/, /\btester\b/],
+  seo:        [/\bseo\b/],
+  marketing:  [/marketing/],
+  content:    [/content\s*writer/, /content\s*specialist/, /content\s*creator/],
+  ai_ml:      [/\bai\b/, /machine\s*learning/, /\bml\b/, /data\s*scientist/],
+  automation: [/automation/],
+  data:       [/data\s*analyst/, /data\s*engineer/],
+  devops:     [/devops/],
+  brand:      [/brand/],
+  pm:         [/project\s*manager/, /program\s*manager/],
+}
+const ROLE_FAMILY_RULES = [
+  { test: /full[\s-]?stack/,                  families: ['fullstack'] },
+  { test: /backend|server|api|database/,      families: ['backend', 'fullstack'] },
+  { test: /frontend|front[\s-]?end/,          families: ['frontend', 'fullstack'] },
+  { test: /mobile|android|ios|app\s*dev/,     families: ['mobile', 'fullstack'] },
+  { test: /devops/,                           families: ['devops', 'backend', 'fullstack'] },
+  { test: /ui\/ux|ux|ui\s*design|designer/,   families: ['design'] },
+  { test: /graphic/,                          families: ['design'] },
+  { test: /brand/,                            families: ['brand', 'design'] },
+  { test: /qa|quality|test/,                  families: ['qa'] },
+  { test: /seo/,                              families: ['seo'] },
+  { test: /google\s*ads/,                     families: ['marketing'] },
+  { test: /email\s*marketing/,                families: ['marketing'] },
+  { test: /marketing/,                        families: ['marketing'] },
+  { test: /content/,                          families: ['content'] },
+  { test: /automation/,                       families: ['automation'] },
+  { test: /machine\s*learning|\bml\b|\bai\b/, families: ['ai_ml'] },
+  { test: /data\s*analy|data\s*engineer/,     families: ['data'] },
+  { test: /project\s*manager/,                families: ['pm'] },
+]
+function getEligibleFamilies(requiredRole = '') {
+  const role = String(requiredRole || '').toLowerCase()
+  if (!role) return []
+  const matched = new Set()
+  for (const rule of ROLE_FAMILY_RULES) if (rule.test.test(role)) rule.families.forEach(f => matched.add(f))
+  return Array.from(matched)
+}
+function roleFamilyMatch(designation, requiredRole) {
+  const families = getEligibleFamilies(requiredRole)
+  const desig = String(designation || '').toLowerCase()
+  if (families.length === 0) {
+    // No explicit rule for this role string — fall back to permissive
+    // matchScore so unusual/manually-typed roles still get a chance.
+    return matchScore(designation, requiredRole) > 0
+  }
+  if (!desig) return false
+  return families.some(fam => (FAMILY_PATTERNS[fam] || []).some(p => p.test(desig)))
+}
+
 function datesOverlap(s1, e1, s2, e2) {
   if (!s1 || !e1 || !s2 || !e2) return false
   return new Date(s1) <= new Date(e2) && new Date(s2) <= new Date(e1)
@@ -124,7 +189,7 @@ function scoreEmployee({ emp, requiredRole, requiredDept, priority, taskStart, t
   const pWeight    = PRIORITY_META[priority]?.weight ?? 2
   const totalLoad  = (wl.active_tasks || 0) + (inProjectCount || 0)
   const isBusy     = (wl.date_ranges || []).some(dr => datesOverlap(taskStart, taskEnd, dr.start, dr.end))
-  const roleScore  = matchScore(emp.designation, requiredRole)
+  const roleScore  = roleFamilyMatch(emp.designation, requiredRole) ? matchScore(emp.designation, requiredRole) : 0
   const deptScore  = matchScore(emp.department, requiredDept)
   const availScore = Math.max(0, 10 - totalLoad)
   const priorityBonus = pWeight >= 3 ? availScore * 0.5 : 0
@@ -156,7 +221,7 @@ function runAutoAssign({ assignments, employees, workloads, projectStart, projec
     if (asgnResult?.emp) bump(asgnResult.emp._id)
 
     const taskResults = asgn.tasks.map(task => {
-      const roleAll   = employees.filter(e => matchScore(e.designation, task.required_role) > 0)
+      const roleAll   = employees.filter(e => roleFamilyMatch(e.designation, task.required_role))
       const roleDept  = roleAll.filter(e => matchScore(e.department, asgn.department) > 0)
       const pool      = roleDept.length ? roleDept : roleAll.length ? roleAll : deptPool.length ? deptPool : employees
 
@@ -164,7 +229,7 @@ function runAutoAssign({ assignments, employees, workloads, projectStart, projec
       if (taskResult?.emp) bump(taskResult.emp._id)
 
       const subResults = (task.subTasks || []).map(sub => {
-        const subRoleAll  = employees.filter(e => matchScore(e.designation, sub.required_role) > 0)
+        const subRoleAll  = employees.filter(e => roleFamilyMatch(e.designation, sub.required_role))
         const subPool     = subRoleAll.length ? subRoleAll : pool
         const subResult   = pickBest({ candidates: subPool, requiredRole: sub.required_role, requiredDept: asgn.department, priority: sub.priority || task.priority || 'medium', taskStart: sub.due_date || task.due_date, taskEnd: sub.due_date || task.due_date, workloads, inProjectAssigned: tracker })
         if (subResult?.emp) bump(subResult.emp._id)
@@ -493,7 +558,7 @@ function ClientStep({ clientId, setClientId, clients, clientsLoading }) {
 
 // ─── Sub-Task Card ────────────────────────────────────────────────────────────
 function SubTaskCard({ sub, subIdx, total, onRemove, onUpdate, employees = [] }) {
-  const roleMatches = sub.required_role ? employees.filter(e => matchScore(e.designation, sub.required_role) > 0) : []
+  const roleMatches = sub.required_role ? employees.filter(e => roleFamilyMatch(e.designation, sub.required_role)) : []
   return (
     <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-3 space-y-2">
       <div className="flex items-center justify-between">
@@ -527,10 +592,10 @@ function SubTaskCard({ sub, subIdx, total, onRemove, onUpdate, employees = [] })
 function TaskCard({ task, tIdx, aIdx, total, onRemove, onUpdate, onAddSubTask, onRemoveSubTask, onUpdateSubTask, employees = [], deptEmployees = [] }) {
   const [showSubs, setShowSubs] = useState(false)
   const subCount  = (task.subTasks || []).length
-  const roleMatches = task.required_role ? employees.filter(e => matchScore(e.designation, task.required_role) > 0) : []
+  const roleMatches = task.required_role ? employees.filter(e => roleFamilyMatch(e.designation, task.required_role)) : []
   const pool      = roleMatches.length > 0 ? roleMatches : deptEmployees.length > 0 ? deptEmployees : []
   const assigned  = employees.find(e => e._id === task.assignee_id)
-  const mismatch  = assigned && task.required_role && matchScore(assigned.designation, task.required_role) === 0
+  const mismatch  = assigned && task.required_role && !roleFamilyMatch(assigned.designation, task.required_role)
 
   return (
     <div className="rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
@@ -662,8 +727,88 @@ function AssignmentCard({ asgn, aIdx, total, onUpdate, onRemove, onAddTask, onRe
   )
 }
 
+// ─── Team Member Picker ────────────────────────────────────────────────────────
+// Lets the admin choose the actual pool of employees eligible for this
+// project before generating/auto-assigning tasks — without this, template
+// auto-assign considers every active employee company-wide by role match,
+// which isn't always what's wanted (e.g. only 2 of 5 Full Stack Web
+// Developers are actually free for this project).
+function TeamMemberPicker({ employees = [], selectedIds = [], onChange }) {
+  const [search, setSearch] = useState('')
+  const filtered = employees.filter(e =>
+    !search || normalize(`${e.name} ${e.designation} ${e.department}`).includes(normalize(search))
+  )
+  const toggle = (id) => onChange(selectedIds.includes(id) ? selectedIds.filter(x => x !== id) : [...selectedIds, id])
+  const selectAll = () => onChange(employees.map(e => e._id))
+  const clearAll  = () => onChange([])
+
+  return (
+    <SectionCard>
+      <SectionHeader
+        icon={Users}
+        title="Select Team for This Project"
+        subtitle="Only these people will be considered when tasks are auto-generated / auto-assigned"
+        right={
+          <span className="text-xs px-2.5 py-1 rounded-full font-semibold whitespace-nowrap" style={{ backgroundColor: selectedIds.length ? 'rgba(16,185,129,0.1)' : 'rgba(0,0,0,0.05)', color: selectedIds.length ? '#059669' : '#9ca3af', border: `1px solid ${selectedIds.length ? 'rgba(16,185,129,0.25)' : 'rgba(0,0,0,0.1)'}` }}>
+            {selectedIds.length} selected
+          </span>
+        }
+      />
+      <div className="p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, role, or department…" className={inputCls} style={inputStyle} />
+          <button type="button" onClick={selectAll}
+            className="text-xs px-3 py-2.5 rounded-lg font-medium whitespace-nowrap" style={{ backgroundColor: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', color: '#3b82f6' }}>
+            Select All
+          </button>
+          <button type="button" onClick={clearAll}
+            className="text-xs px-3 py-2.5 rounded-lg font-medium whitespace-nowrap" style={{ backgroundColor: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.1)', color: '#6b7280' }}>
+            Clear
+          </button>
+        </div>
+
+        {employees.length === 0 ? (
+          <p className="text-xs text-gray-400 italic text-center py-4">No employees found.</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-xs text-gray-400 italic text-center py-4">No matches for "{search}".</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+            {filtered.map(e => {
+              const checked = selectedIds.includes(e._id)
+              return (
+                <div key={e._id} onClick={() => toggle(e._id)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all select-none"
+                  style={checked
+                    ? { backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.3)' }
+                    : { backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                  <span className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: checked ? T.accent : 'rgba(0,0,0,0.05)', border: checked ? `1px solid ${T.accent}` : '1px solid rgba(0,0,0,0.2)' }}>
+                    {checked && <svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                  </span>
+                  <EmpAvatar emp={e} size="lg" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-800 truncate">{e.name}</p>
+                    <p className="text-[10px] text-gray-400 truncate">{e.designation} · {e.department}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {selectedIds.length === 0 && (
+          <p className="text-[11px] text-amber-600 flex items-center gap-1.5 pt-1">
+            <AlertCircle size={11} className="flex-shrink-0" />
+            No one selected yet — auto-assign will consider every active employee company-wide (matched by role) instead of just this project's team.
+          </p>
+        )}
+      </div>
+    </SectionCard>
+  )
+}
+
 // ─── Template Auto-Generate Panel ─────────────────────────────────────────────
-function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, projectStart, projectEnd, onApplyAutoAssign }) {
+function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, projectStart, projectEnd, onApplyAutoAssign, employees = [], selectedTeamIds = [], onTeamChange }) {
   const [loading, setLoading] = useState(false)
   const [plan, setPlan] = useState(null)
   const [applied, setApplied] = useState(false)
@@ -714,6 +859,8 @@ function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, p
 
   return (
     <div className="space-y-4">
+      <TeamMemberPicker employees={employees} selectedIds={selectedTeamIds} onChange={onTeamChange} />
+
       <SectionCard>
         <SectionHeader icon={Zap} title="Auto-Generate from Template" subtitle="Auto-fill tasks based on the selected project type(s)" />
         <div className="p-5 space-y-4">
@@ -776,6 +923,7 @@ function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, p
                 projectStart={projectStart}
                 projectEnd={projectEnd}
                 onApply={onApplyAutoAssign}
+                restrictToIds={selectedTeamIds}
                 embedded
               />
             </div>
@@ -789,8 +937,8 @@ function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, p
 // ═══════════════════════════════════════════════════════════════════════════════
 // SMART AUTO-ASSIGN PANEL
 // ═══════════════════════════════════════════════════════════════════════════════
-function SmartAutoAssignPanel({ assignments, projectStart, projectEnd, onApply, embedded = false }) {
-  const [employees,  setEmployees]  = useState([])
+function SmartAutoAssignPanel({ assignments, projectStart, projectEnd, onApply, embedded = false, restrictToIds = [] }) {
+  const [allPool,    setAllPool]    = useState([])
   const [workloads,  setWorkloads]  = useState({})
   const [loading,    setLoading]    = useState(false)
   const [results,    setResults]    = useState(null)
@@ -807,14 +955,24 @@ function SmartAutoAssignPanel({ assignments, projectStart, projectEnd, onApply, 
     ]).then(([eRes, mRes, wRes]) => {
       const pool = [...(eRes.data.data || []), ...(mRes.data.data || [])]
       const seen = new Set()
-      setEmployees(pool.filter(u => u && !seen.has(u._id) && seen.add(u._id)))
+      setAllPool(pool.filter(u => u && !seen.has(u._id) && seen.add(u._id)))
       setWorkloads(wRes.data?.data || {})
     }).catch(() => toast.error('Failed to load employee data'))
       .finally(() => setLoading(false))
   }, [])
 
+  // Restrict to the project's selected team, if one was picked. Derived (not
+  // stored) so toggling the team-member checkboxes updates this instantly
+  // without re-fetching from the API.
+  const employees = restrictToIds.length > 0
+    ? allPool.filter(u => restrictToIds.includes(u._id))
+    : allPool
+
   const handleRun = () => {
-    if (!employees.length) { toast.error('No employees loaded'); return }
+    if (!employees.length) {
+      toast.error(restrictToIds.length > 0 ? 'None of the selected team members were found — check the team selection above' : 'No employees loaded')
+      return
+    }
     const hasContent = assignments.some(a => a.title || a.tasks.some(t => t.title))
     if (!hasContent) { toast('Fill in at least one assignment title first', { icon: '⚠️' }); return }
     const res = runAutoAssign({ assignments, employees, workloads, projectStart, projectEnd })
@@ -997,9 +1155,9 @@ function SmartAutoAssignPanel({ assignments, projectStart, projectEnd, onApply, 
                             <select value={overrides[ovKey] ?? (tr.result?.emp?._id || '')} onChange={e => setOv(ovKey, e.target.value)}
                               className="text-[10px] border border-gray-200 rounded px-1.5 py-1 bg-white outline-none focus:ring-1 focus:ring-blue-400 max-w-[120px]">
                               <option value="">— Override —</option>
-                              {tr.task.required_role && employees.filter(e => matchScore(e.designation, tr.task.required_role) > 0).length > 0 && (
+                              {tr.task.required_role && employees.filter(e => roleFamilyMatch(e.designation, tr.task.required_role)).length > 0 && (
                                 <optgroup label="✓ Role Match">
-                                  {employees.filter(e => matchScore(e.designation, tr.task.required_role) > 0).map(e => <option key={e._id} value={e._id}>{e.name} · {e.designation}</option>)}
+                                  {employees.filter(e => roleFamilyMatch(e.designation, tr.task.required_role)).map(e => <option key={e._id} value={e._id}>{e.name} · {e.designation}</option>)}
                                 </optgroup>
                               )}
                               <optgroup label="All Employees">
@@ -1081,6 +1239,7 @@ function TeamAndTasksStep({
   addSubTask, removeSubTask, updateSubTask,
   selectedProjectTypes, onApplyTemplateTasks, onApplyAutoAssign,
   projectStart, projectEnd, employees,
+  selectedTeamIds, setSelectedTeamIds,
 }) {
   return (
     <div className="space-y-4">
@@ -1115,6 +1274,9 @@ function TeamAndTasksStep({
         projectStart={projectStart}
         projectEnd={projectEnd}
         onApplyAutoAssign={onApplyAutoAssign}
+        employees={employees}
+        selectedTeamIds={selectedTeamIds}
+        onTeamChange={setSelectedTeamIds}
       />}
 
       {assignMode === 'manual' && (
@@ -1278,6 +1440,7 @@ export default function AdminProjects() {
   const [assignments,    setAssignments]    = useState([emptyAssignment()])
   const [creating,       setCreating]       = useState(false)
   const [docFile,        setDocFile]        = useState(null)
+  const [selectedTeamIds, setSelectedTeamIds] = useState([])
 
   const searchRef = useRef(null)
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -1332,7 +1495,7 @@ export default function AdminProjects() {
   function openCreate() {
     setProject(emptyProject()); setClientId(''); setAssignments([emptyAssignment()])
     setFormMsg({ type: '', text: '' }); setAssignMode('manual'); setCurrentStep(1)
-    setCompletedSteps([]); setDocFile(null); setView('create')
+    setCompletedSteps([]); setDocFile(null); setSelectedTeamIds([]); setView('create')
   }
 
   const updateProject    = (f, v) => setProject(p => ({ ...p, [f]: v }))
@@ -1532,6 +1695,7 @@ export default function AdminProjects() {
           onApplyAutoAssign={handleApplyAutoAssign}
           projectStart={project.start_date} projectEnd={project.end_date}
           employees={employees}
+          selectedTeamIds={selectedTeamIds} setSelectedTeamIds={setSelectedTeamIds}
         />
       )
       case 4: return <ReviewStep project={project} clientId={clientId} clients={clients} assignments={assignments} assignMode={assignMode} docFile={docFile} employees={employees} />
