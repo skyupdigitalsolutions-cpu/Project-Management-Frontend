@@ -735,7 +735,7 @@ export default function AdminUsers() {
                     {fmtDate(u.joining_date || u.createdAt)}
                   </td>
                   <td className="table-cell">
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1">
                       <button onClick={() => openDrawer(u)}       title="View Profile"         className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Eye size={13} /></button>
                       <button onClick={() => openEdit(u)}         title="Edit"                 className="p-1.5 rounded hover:bg-amber-50 text-amber-500"><Pencil size={13} /></button>
                       <button onClick={() => openDesignation(u)}  title="Update Designation"   className="p-1.5 rounded hover:bg-blue-50 text-blue-500"><Briefcase size={13} /></button>
