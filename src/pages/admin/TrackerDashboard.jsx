@@ -2,22 +2,21 @@
  * pages/admin/TrackerDashboard.jsx
  *
  * Desktop tracker productivity dashboard.
- * Reads from the tracker backend routes:
- *   GET /api/tracker/summary?date=YYYY-MM-DD   -> KPIs + per-user split
- *   GET /api/tracker/activity?user_id=&date=   -> one employee's timeline
+ * Backend routes used:
+ *   GET /api/tracker/summary?date=YYYY-MM-DD          -> KPIs + per-user split
+ *   GET /api/tracker/employee-summary?user_id=&date=  -> one employee's daily summary
+ *   GET /api/tracker/activity?user_id=&date=          -> one employee's raw timeline
  *
  * PLACE AT: Project-Management-Frontend/src/pages/admin/TrackerDashboard.jsx
  *
- * Route (in App.jsx, inside the /admin block):
- *   <Route path="tracker" element={<TrackerDashboard />} />
- * Sidebar (in DashboardLayout.jsx admin nav array):
- *   { to: '/admin/tracker', label: 'Productivity', icon: MonitorSmartphone },
+ * Route (App.jsx, inside /admin block):  <Route path="tracker" element={<TrackerDashboard />} />
+ * Sidebar (DashboardLayout.jsx admin nav): { to: '/admin/tracker', label: 'Productivity', icon: Clock }
  */
 
 import { useEffect, useState, useCallback } from 'react'
 import {
   Clock, Activity, TrendingUp, Users as UsersIcon,
-  RefreshCw, Download, ChevronRight,
+  RefreshCw, Download, ChevronDown, ChevronRight, LogIn, LogOut,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import api from '../../api/axios'
@@ -36,12 +35,13 @@ const fmtDuration = (sec = 0) => {
   const parts = []
   if (h > 0) parts.push(`${h}h`)
   if (m > 0) parts.push(`${m}m`)
-  // Show seconds when they exist, or when nothing else would be shown (e.g. 0s / 45s)
   if (s > 0 || parts.length === 0) parts.push(`${s}s`)
   return parts.join(' ')
 }
 
 const pct = (part, whole) => (whole > 0 ? Math.round((part / whole) * 100) : 0)
+
+const fmtTime = (iso) => (iso ? format(new Date(iso), 'h:mm a') : '—')
 
 const CATEGORY_COLORS = {
   productive: '#1D9E75',
@@ -50,27 +50,188 @@ const CATEGORY_COLORS = {
   idle: '#E5E7EB',
 }
 
-// Show all entries (only drop sub-second flickers) so exact durations are visible
-const buildTimeline = (logs) => {
-  return logs
+const CATEGORY_BADGE = {
+  productive: { bg: 'var(--bg-success)', fg: 'var(--text-success)', label: 'Productive' },
+  neutral: { bg: 'var(--fill-control)', fg: 'var(--text-secondary)', label: 'Neutral' },
+  unproductive: { bg: 'var(--bg-danger)', fg: 'var(--text-danger)', label: 'Unproductive' },
+}
+
+const buildTimeline = (logs) =>
+  logs
     .filter((l) => l.duration_sec >= 1)
     .map((l) => ({
       ...l,
-      label: l.is_idle
-        ? 'Idle'
-        : l.app_name + (l.window_title ? ` — ${l.window_title}` : ''),
+      label: l.is_idle ? 'Idle' : l.app_name + (l.window_title ? ` — ${l.window_title}` : ''),
     }))
+
+// ─── Expanded per-employee summary ──────────────────────────────────────────────
+
+function EmployeeSummary({ userId, date }) {
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState(null)
+  const [showTimeline, setShowTimeline] = useState(false)
+  const [timeline, setTimeline] = useState([])
+  const [tlLoading, setTlLoading] = useState(false)
+
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
+    try {
+      const res = await api.get('/tracker/employee-summary', { params: { user_id: userId, date } })
+      setData(res.data.data)
+    } catch {
+      if (!silent) toast.error('Failed to load summary')
+    } finally {
+      if (!silent) setLoading(false)
+    }
+  }, [userId, date])
+
+  useEffect(() => { load() }, [load])
+
+  // Keep the open summary live
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') load({ silent: true })
+    }, 30000)
+    return () => clearInterval(id)
+  }, [load])
+
+  const loadTimeline = async () => {
+    if (showTimeline) { setShowTimeline(false); return }
+    setShowTimeline(true)
+    setTlLoading(true)
+    try {
+      const res = await api.get('/tracker/activity', { params: { user_id: userId, date } })
+      setTimeline(buildTimeline(res.data.data || []))
+    } catch {
+      toast.error('Failed to load timeline')
+    } finally {
+      setTlLoading(false)
+    }
+  }
+
+  if (loading) return <div className="py-8 flex justify-center"><Spinner /></div>
+  if (!data) return <p className="text-sm text-neutral py-4">No summary available.</p>
+
+  const total = data.tracked_sec || 0
+
+  return (
+    <div className="px-2 pb-4 pt-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="bg-gray-50 rounded-lg p-3">
+          <p className="text-xs text-neutral flex items-center gap-1"><LogIn size={12} /> First activity</p>
+          <p className="text-sm font-medium text-gray-800 mt-1">{fmtTime(data.first_activity)}</p>
+        </div>
+        <div className="bg-gray-50 rounded-lg p-3">
+          <p className="text-xs text-neutral flex items-center gap-1"><LogOut size={12} /> Last activity</p>
+          <p className="text-sm font-medium text-gray-800 mt-1">{fmtTime(data.last_activity)}</p>
+        </div>
+        <div className="bg-gray-50 rounded-lg p-3">
+          <p className="text-xs text-neutral">Tracked</p>
+          <p className="text-sm font-medium text-gray-800 mt-1">{fmtDuration(data.tracked_sec)}</p>
+        </div>
+        <div className="bg-gray-50 rounded-lg p-3">
+          <p className="text-xs text-neutral">Idle</p>
+          <p className="text-sm font-medium text-gray-800 mt-1">{fmtDuration(data.idle_sec)}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <p className="text-sm font-medium text-gray-800 mb-2">Productivity</p>
+          <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100 mb-3">
+            <span style={{ width: `${pct(data.productive_sec, total)}%`, background: CATEGORY_COLORS.productive }} />
+            <span style={{ width: `${pct(data.neutral_sec, total)}%`, background: CATEGORY_COLORS.neutral }} />
+            <span style={{ width: `${pct(data.unproductive_sec, total)}%`, background: CATEGORY_COLORS.unproductive }} />
+          </div>
+          <div className="space-y-1.5">
+            {['productive', 'neutral', 'unproductive'].map((cat) => (
+              <div key={cat} className="flex items-center gap-2 text-sm">
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: CATEGORY_COLORS[cat] }} />
+                <span className="flex-1 capitalize text-gray-700">{cat}</span>
+                <span className="text-neutral">{fmtDuration(data[`${cat}_sec`])}</span>
+                <span className="w-10 text-right text-gray-700">{pct(data[`${cat}_sec`], total)}%</span>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-sm font-medium text-gray-800 mb-2 mt-5">Top apps</p>
+          <div className="space-y-1.5">
+            {data.top_apps.length === 0 && <p className="text-sm text-neutral">No app activity.</p>}
+            {data.top_apps.map((a) => {
+              const b = CATEGORY_BADGE[a.category]
+              return (
+                <div key={a.app_name} className="flex items-center gap-2 text-sm">
+                  <span className="flex-1 truncate text-gray-700">{a.app_name}</span>
+                  <span className="text-neutral">{fmtDuration(a.seconds)}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: b.bg, color: b.fg }}>
+                    {b.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-gray-800 mb-2">Time by project</p>
+          <div className="space-y-1.5">
+            {data.projects.length === 0 && <p className="text-sm text-neutral">No project time.</p>}
+            {data.projects.map((p) => (
+              <div key={p.project_name} className="flex items-center gap-2 text-sm">
+                <span className="flex-1 truncate text-gray-700">{p.project_name}</span>
+                <div className="w-24 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                  <span className="block h-full" style={{ width: `${pct(p.seconds, total)}%`, background: '#0037CA' }} />
+                </div>
+                <span className="text-neutral w-16 text-right">{fmtDuration(p.seconds)}</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={loadTimeline}
+            className="mt-5 text-sm text-blue-600 hover:underline flex items-center gap-1"
+          >
+            {showTimeline ? 'Hide' : 'Show'} detailed timeline
+            <ChevronDown size={14} style={{ transform: showTimeline ? 'rotate(180deg)' : 'none' }} />
+          </button>
+
+          {showTimeline && (
+            <div className="mt-3">
+              {tlLoading ? (
+                <div className="py-4 flex justify-center"><Spinner /></div>
+              ) : timeline.length === 0 ? (
+                <p className="text-sm text-neutral">No detailed activity.</p>
+              ) : (
+                <div className="max-h-56 overflow-y-auto divide-y divide-gray-100 border border-gray-100 rounded-lg">
+                  {timeline.map((b) => (
+                    <div key={b._id} className="flex items-center gap-2 py-1.5 px-2 text-sm">
+                      <span className="text-neutral w-20 shrink-0">{fmtTime(b.start)}</span>
+                      <span className="flex-1 truncate text-gray-700">{b.label}</span>
+                      {b.task_id?.title && (
+                        <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded shrink-0">
+                          {b.task_id.title}
+                        </span>
+                      )}
+                      <span className="text-neutral w-16 text-right shrink-0">{fmtDuration(b.duration_sec)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main dashboard ──────────────────────────────────────────────────────────────
 
 export default function TrackerDashboard() {
   const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'))
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState(null)
-  const [selectedUser, setSelectedUser] = useState(null)
-  const [timeline, setTimeline] = useState([])
-  const [timelineLoading, setTimelineLoading] = useState(false)
+  const [expandedUser, setExpandedUser] = useState(null)
 
   const loadSummary = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true)
@@ -86,13 +247,9 @@ export default function TrackerDashboard() {
 
   useEffect(() => { loadSummary() }, [loadSummary])
 
-  // Live updates: silent poll every 30s + refetch when the tab regains focus.
   useEffect(() => {
-    const POLL_MS = 30000
-    const tick = () => {
-      if (document.visibilityState === 'visible') loadSummary({ silent: true })
-    }
-    const id = setInterval(tick, POLL_MS)
+    const tick = () => { if (document.visibilityState === 'visible') loadSummary({ silent: true }) }
+    const id = setInterval(tick, 30000)
     const onFocus = () => loadSummary({ silent: true })
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onFocus)
@@ -103,46 +260,14 @@ export default function TrackerDashboard() {
     }
   }, [loadSummary])
 
-  const fetchTimeline = useCallback(async (userId, { silent = false } = {}) => {
-    if (!silent) setTimelineLoading(true)
-    try {
-      const res = await api.get('/tracker/activity', {
-        params: { user_id: userId, date },
-      })
-      setTimeline(buildTimeline(res.data.data || []))
-    } catch (err) {
-      if (!silent) { toast.error('Failed to load timeline'); setTimeline([]) }
-    } finally {
-      if (!silent) setTimelineLoading(false)
-    }
-  }, [date])
-
-  const openTimeline = (user) => {
-    setSelectedUser(user)
-    fetchTimeline(user.user_id)
-  }
-
-  // Keep the open timeline live too.
-  useEffect(() => {
-    if (!selectedUser) return
-    const id = setInterval(() => {
-      if (document.visibilityState === 'visible') fetchTimeline(selectedUser.user_id, { silent: true })
-    }, 30000)
-    return () => clearInterval(id)
-  }, [selectedUser, fetchTimeline])
-
   const exportCsv = () => {
     if (!summary?.users?.length) return
     const rows = [
       ['Employee', 'Designation', 'Tracked', 'Productive %', 'Neutral %', 'Unproductive %', 'Idle'],
       ...summary.users.map((u) => [
-        u.name,
-        u.designation || '',
-        fmtDuration(u.tracked),
-        pct(u.productive, u.tracked),
-        pct(u.neutral, u.tracked),
-        pct(u.unproductive, u.tracked),
-        fmtDuration(u.idle),
+        u.name, u.designation || '', fmtDuration(u.tracked),
+        pct(u.productive, u.tracked), pct(u.neutral, u.tracked),
+        pct(u.unproductive, u.tracked), fmtDuration(u.idle),
       ]),
     ]
     const csv = rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n')
@@ -168,7 +293,7 @@ export default function TrackerDashboard() {
               type="date"
               value={date}
               max={format(new Date(), 'yyyy-MM-dd')}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => { setDate(e.target.value); setExpandedUser(null) }}
               className="input"
               style={{ width: 'auto' }}
             />
@@ -203,15 +328,9 @@ export default function TrackerDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-800">Employees</h2>
               <div className="flex items-center gap-4 text-xs text-neutral">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm" style={{ background: CATEGORY_COLORS.productive }} /> Productive
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm" style={{ background: CATEGORY_COLORS.neutral }} /> Neutral
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm" style={{ background: CATEGORY_COLORS.unproductive }} /> Unproductive
-                </span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: CATEGORY_COLORS.productive }} /> Productive</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: CATEGORY_COLORS.neutral }} /> Neutral</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: CATEGORY_COLORS.unproductive }} /> Unproductive</span>
               </div>
             </div>
 
@@ -222,91 +341,35 @@ export default function TrackerDashboard() {
                   const p = pct(u.productive, u.tracked)
                   const n = pct(u.neutral, u.tracked)
                   const up = pct(u.unproductive, u.tracked)
+                  const isOpen = expandedUser === u.user_id
                   return (
-                    <button
-                      key={u.user_id}
-                      onClick={() => openTimeline(u)}
-                      className="w-full flex items-center gap-3 py-3 text-left hover:bg-gray-50 transition-colors rounded-lg px-2"
-                    >
-                      <div className="w-9 h-9 rounded-full bg-purple-100 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
-                        {u.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="w-36 shrink-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{u.name}</p>
-                        <p className="text-xs text-neutral truncate">{u.designation || '—'}</p>
-                      </div>
-                      <div className="flex-1 flex h-2 rounded-full overflow-hidden bg-gray-100">
-                        <span style={{ width: `${p}%`, background: CATEGORY_COLORS.productive }} />
-                        <span style={{ width: `${n}%`, background: CATEGORY_COLORS.neutral }} />
-                        <span style={{ width: `${up}%`, background: CATEGORY_COLORS.unproductive }} />
-                      </div>
-                      <span className="text-sm text-gray-700 w-16 text-right tabular-nums shrink-0">
-                        {fmtDuration(u.tracked)}
-                      </span>
-                      <span className="text-sm font-medium w-12 text-right shrink-0" style={{ color: CATEGORY_COLORS.productive }}>
-                        {p}%
-                      </span>
-                      <ChevronRight size={16} className="text-neutral shrink-0" />
-                    </button>
+                    <div key={u.user_id}>
+                      <button
+                        onClick={() => setExpandedUser(isOpen ? null : u.user_id)}
+                        className="w-full flex items-center gap-3 py-3 text-left hover:bg-gray-50 transition-colors rounded-lg px-2"
+                      >
+                        {isOpen ? <ChevronDown size={16} className="text-neutral shrink-0" /> : <ChevronRight size={16} className="text-neutral shrink-0" />}
+                        <div className="w-9 h-9 rounded-full bg-purple-100 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+                          {u.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="w-36 shrink-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{u.name}</p>
+                          <p className="text-xs text-neutral truncate">{u.designation || '—'}</p>
+                        </div>
+                        <div className="flex-1 flex h-2 rounded-full overflow-hidden bg-gray-100">
+                          <span style={{ width: `${p}%`, background: CATEGORY_COLORS.productive }} />
+                          <span style={{ width: `${n}%`, background: CATEGORY_COLORS.neutral }} />
+                          <span style={{ width: `${up}%`, background: CATEGORY_COLORS.unproductive }} />
+                        </div>
+                        <span className="text-sm text-gray-700 w-20 text-right shrink-0">{fmtDuration(u.tracked)}</span>
+                        <span className="text-sm font-medium w-12 text-right shrink-0" style={{ color: CATEGORY_COLORS.productive }}>{p}%</span>
+                      </button>
+                      {isOpen && <EmployeeSummary userId={u.user_id} date={date} />}
+                    </div>
                   )
                 })}
             </div>
           </div>
-
-          {selectedUser && (
-            <div className="card mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  {selectedUser.name} — timeline
-                </h2>
-                <button onClick={() => setSelectedUser(null)} className="text-sm text-neutral hover:text-gray-700">
-                  Close
-                </button>
-              </div>
-
-              {timelineLoading ? (
-                <div className="flex justify-center py-10"><Spinner /></div>
-              ) : !timeline.length ? (
-                <p className="text-sm text-neutral py-6 text-center">No detailed activity for this day.</p>
-              ) : (
-                <>
-                  <div className="flex gap-0.5 mb-2 h-6 rounded overflow-hidden">
-                    {timeline.map((b) => (
-                      <span
-                        key={b._id}
-                        title={`${b.label} (${fmtDuration(b.duration_sec)})`}
-                        style={{
-                          flex: b.duration_sec,
-                          background: b.is_idle
-                            ? CATEGORY_COLORS.idle
-                            : CATEGORY_COLORS.productive,
-                          minWidth: '2px',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div className="max-h-72 overflow-y-auto mt-4 divide-y divide-gray-100">
-                    {timeline.map((b) => (
-                      <div key={b._id} className="flex items-center gap-3 py-2 text-sm">
-                        <span className="text-neutral w-28 shrink-0 tabular-nums">
-                          {format(new Date(b.start), 'h:mm a')}
-                        </span>
-                        <span className="flex-1 truncate text-gray-700">{b.label}</span>
-                        {b.task_id?.title && (
-                          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full shrink-0">
-                            {b.task_id.title}
-                          </span>
-                        )}
-                        <span className="text-neutral w-16 text-right shrink-0 tabular-nums">
-                          {fmtDuration(b.duration_sec)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
         </>
       )}
     </div>
