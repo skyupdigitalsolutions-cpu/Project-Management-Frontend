@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
-  LayoutDashboard, Users, FolderKanban, CheckSquare, Clock,
+  LayoutDashboard, Users, FolderKanban, MonitorSmartphone, CheckSquare, Clock,
   Bell, LogOut, Menu, X, User, UserCheck, Video, ClipboardList,
   GitBranch, ChevronLeft, ChevronRight
 } from 'lucide-react'
