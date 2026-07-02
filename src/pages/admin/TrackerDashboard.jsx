@@ -72,35 +72,64 @@ export default function TrackerDashboard() {
   const [timeline, setTimeline] = useState([])
   const [timelineLoading, setTimelineLoading] = useState(false)
 
-  const loadSummary = useCallback(async () => {
-    setLoading(true)
+  const loadSummary = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
     try {
       const res = await api.get('/tracker/summary', { params: { date } })
       setSummary(res.data.data)
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to load productivity data')
+      if (!silent) toast.error(err.response?.data?.message || 'Failed to load productivity data')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [date])
 
   useEffect(() => { loadSummary() }, [loadSummary])
 
-  const openTimeline = async (user) => {
-    setSelectedUser(user)
-    setTimelineLoading(true)
+  // Live updates: silent poll every 30s + refetch when the tab regains focus.
+  useEffect(() => {
+    const POLL_MS = 30000
+    const tick = () => {
+      if (document.visibilityState === 'visible') loadSummary({ silent: true })
+    }
+    const id = setInterval(tick, POLL_MS)
+    const onFocus = () => loadSummary({ silent: true })
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      clearInterval(id)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [loadSummary])
+
+  const fetchTimeline = useCallback(async (userId, { silent = false } = {}) => {
+    if (!silent) setTimelineLoading(true)
     try {
       const res = await api.get('/tracker/activity', {
-        params: { user_id: user.user_id, date },
+        params: { user_id: userId, date },
       })
       setTimeline(buildTimeline(res.data.data || []))
     } catch (err) {
-      toast.error('Failed to load timeline')
-      setTimeline([])
+      if (!silent) { toast.error('Failed to load timeline'); setTimeline([]) }
     } finally {
-      setTimelineLoading(false)
+      if (!silent) setTimelineLoading(false)
     }
+  }, [date])
+
+  const openTimeline = (user) => {
+    setSelectedUser(user)
+    fetchTimeline(user.user_id)
   }
+
+  // Keep the open timeline live too.
+  useEffect(() => {
+    if (!selectedUser) return
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchTimeline(selectedUser.user_id, { silent: true })
+    }, 30000)
+    return () => clearInterval(id)
+  }, [selectedUser, fetchTimeline])
 
   const exportCsv = () => {
     if (!summary?.users?.length) return
@@ -143,7 +172,7 @@ export default function TrackerDashboard() {
               className="input"
               style={{ width: 'auto' }}
             />
-            <Button variant="secondary" onClick={loadSummary}>
+            <Button variant="secondary" onClick={() => loadSummary()}>
               <RefreshCw size={15} className="mr-1.5" /> Refresh
             </Button>
             <Button variant="primary" onClick={exportCsv}>
