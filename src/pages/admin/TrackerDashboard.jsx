@@ -29,10 +29,16 @@ import {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmtDuration = (sec = 0) => {
+  sec = Math.round(sec)
   const h = Math.floor(sec / 3600)
   const m = Math.floor((sec % 3600) / 60)
-  if (h === 0) return `${m}m`
-  return `${h}h ${String(m).padStart(2, '0')}m`
+  const s = sec % 60
+  const parts = []
+  if (h > 0) parts.push(`${h}h`)
+  if (m > 0) parts.push(`${m}m`)
+  // Show seconds when they exist, or when nothing else would be shown (e.g. 0s / 45s)
+  if (s > 0 || parts.length === 0) parts.push(`${s}s`)
+  return parts.join(' ')
 }
 
 const pct = (part, whole) => (whole > 0 ? Math.round((part / whole) * 100) : 0)
@@ -44,10 +50,10 @@ const CATEGORY_COLORS = {
   idle: '#E5E7EB',
 }
 
-// Merge consecutive short blocks so the timeline stays readable
+// Show all entries (only drop sub-second flickers) so exact durations are visible
 const buildTimeline = (logs) => {
   return logs
-    .filter((l) => l.duration_sec >= 5)
+    .filter((l) => l.duration_sec >= 1)
     .map((l) => ({
       ...l,
       label: l.is_idle
