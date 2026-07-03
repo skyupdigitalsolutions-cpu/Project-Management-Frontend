@@ -72,6 +72,7 @@ function EmployeeSummary({ userId, date }) {
   const [showTimeline, setShowTimeline] = useState(false)
   const [timeline, setTimeline] = useState([])
   const [tlLoading, setTlLoading] = useState(false)
+  const [openRow, setOpenRow] = useState(null)
 
   const load = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true)
@@ -170,6 +171,24 @@ function EmployeeSummary({ userId, date }) {
               )
             })}
           </div>
+
+          {data.unproductive_items && data.unproductive_items.length > 0 && (
+            <>
+              <p className="text-sm font-medium mb-2 mt-5" style={{ color: '#D85A30' }}>
+                Unproductive activity
+              </p>
+              <div className="space-y-1.5">
+                {data.unproductive_items.map((u, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <span className="flex-1 truncate text-gray-700" title={`${u.app_name} — ${u.window_title}`}>
+                      {u.app_name}{u.window_title ? ` — ${u.window_title}` : ''}
+                    </span>
+                    <span className="text-neutral shrink-0">{fmtDuration(u.seconds)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div>
@@ -203,16 +222,31 @@ function EmployeeSummary({ userId, date }) {
                 <p className="text-sm text-neutral">No detailed activity.</p>
               ) : (
                 <div className="max-h-56 overflow-y-auto divide-y divide-gray-100 border border-gray-100 rounded-lg">
-                  {timeline.map((b) => (
-                    <div key={b._id} className="flex items-center gap-2 py-1.5 px-2 text-sm">
-                      <span className="text-neutral w-20 shrink-0">{fmtTime(b.start)}</span>
-                      <span className="flex-1 truncate text-gray-700">{b.label}</span>
-                      {b.task_id?.title && (
-                        <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded shrink-0">
-                          {b.task_id.title}
-                        </span>
+                  {timeline.map((b, i) => (
+                    <div key={b._id}>
+                      <div
+                        onClick={() => setOpenRow(openRow === i ? null : i)}
+                        className="flex items-center gap-2 py-1.5 px-2 text-sm cursor-pointer hover:bg-gray-50"
+                      >
+                        <span className="text-neutral w-20 shrink-0">{fmtTime(b.start)}</span>
+                        <span className="flex-1 truncate text-gray-700">{b.label}</span>
+                        {b.task_id?.title && (
+                          <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded shrink-0">
+                            {b.task_id.title}
+                          </span>
+                        )}
+                        <span className="text-neutral w-16 text-right shrink-0">{fmtDuration(b.duration_sec)}</span>
+                        <ChevronDown
+                          size={14}
+                          className="text-neutral shrink-0"
+                          style={{ transform: openRow === i ? 'rotate(180deg)' : 'none' }}
+                        />
+                      </div>
+                      {openRow === i && (
+                        <div className="px-2 pb-2 text-sm text-gray-700 break-words bg-gray-50">
+                          <span className="text-neutral">Full title: </span>{b.label}
+                        </div>
                       )}
-                      <span className="text-neutral w-16 text-right shrink-0">{fmtDuration(b.duration_sec)}</span>
                     </div>
                   ))}
                 </div>
