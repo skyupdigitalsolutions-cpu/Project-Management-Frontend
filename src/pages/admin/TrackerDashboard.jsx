@@ -16,7 +16,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   Clock, Activity, TrendingUp, Users as UsersIcon,
-  RefreshCw, Download, ChevronDown, ChevronRight, LogIn, LogOut,
+  RefreshCw, Download, ChevronDown, ChevronRight, LogIn, LogOut, Calendar,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import api from '../../api/axios'
@@ -323,14 +323,48 @@ export default function TrackerDashboard() {
         subtitle="Desktop activity tracked across the team"
         action={
           <div className="flex items-center gap-2">
+          <div className="relative flex items-center">
+            <Calendar
+              size={16}
+              className="absolute left-3 pointer-events-none"
+              style={{ color: '#0037CA' }}
+            />
             <input
               type="date"
               value={date}
               max={format(new Date(), 'yyyy-MM-dd')}
               onChange={(e) => { setDate(e.target.value); setExpandedUser(null) }}
-              className="input"
-              style={{ width: 'auto' }}
+              className="tracker-date-input"
             />
+          </div>
+          <style>{`
+            .tracker-date-input {
+              padding: 8px 12px 8px 34px;
+              border: 1px solid #e5e7eb;
+              border-radius: 10px;
+              font-family: inherit;
+              font-size: 14px;
+              color: #16181d;
+              background: #fff;
+              outline: none;
+              cursor: pointer;
+              transition: border-color .15s, box-shadow .15s;
+            }
+            .tracker-date-input:hover { border-color: #c3cbe0; }
+            .tracker-date-input:focus {
+              border-color: #0037CA;
+              box-shadow: 0 0 0 3px rgba(0,55,202,0.12);
+            }
+            /* Hide the browser's default calendar icon (we show our own) but keep it clickable */
+            .tracker-date-input::-webkit-calendar-picker-indicator {
+              position: absolute;
+              left: 0; top: 0;
+              width: 100%; height: 100%;
+              margin: 0; padding: 0;
+              cursor: pointer;
+              opacity: 0;
+            }
+          `}</style>
             <Button variant="secondary" onClick={() => loadSummary()}>
               <RefreshCw size={15} className="mr-1.5" /> Refresh
             </Button>
