@@ -1651,6 +1651,9 @@ export default function AdminProjects() {
           project_type: project_types[0] ?? 'other',
           project_types,
           clientId,
+          // Persist the selected team so backend auto-generation/assignment
+          // only considers these people (fixes tasks leaking to everyone).
+          team_members: selectedTeamIds,
         },
         auto_assign: false,
         auto_plan: isAutoTemplate && assignmentsPayload.length === 0,
