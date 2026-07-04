@@ -289,7 +289,7 @@ export default function TaskTemplates() {
           </div>
         }
       >
-        <div className="space-y-5">
+        <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
           {/* Template meta */}
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Template Name *">
