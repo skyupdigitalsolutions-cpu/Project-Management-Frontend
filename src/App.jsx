@@ -18,6 +18,7 @@ import AdminAttendance from "./pages/admin/Attendance";
 import AdminNotifications from "./pages/admin/Notifications";
 import ProjectExcelDashboard from "./pages/shared/ProjectExcelDashboard";
 import Clients from "./pages/admin/Clients";
+import TaskTemplates from "./pages/admin/TaskTemplates";
 import TrackerDashboard from "./pages/admin/TrackerDashboard";
 
 // ── NEW: Smart project creator + workload dashboard ──────────────────────────
@@ -125,6 +126,7 @@ export default function App() {
           <Route path="attendance" element={<AdminAttendance />} />
           <Route path="meetings" element={<AdminMeetings />} />
           <Route path="Clients" element={<Clients />} />
+          <Route path="task-templates" element={<TaskTemplates />} />
 
           <Route path="notifications" element={<AdminNotifications />} />
           <Route path="daily-reports" element={<AdminDailyReports />} />
