@@ -50,6 +50,7 @@ const uid = () => `${Date.now()}-${Math.floor(Math.random() * 1e6)}`
 const emptyTask = () => ({
   _key: uid(),
   name: '', description: '', designation: '', department: '',
+  assignedTo: '',
   estimatedHours: 8, priority: 'medium',
   subtasks: [],
 })
@@ -70,6 +71,15 @@ export default function TaskTemplates() {
 
   const [confirm, setConfirm]     = useState({ open: false, id: null, name: '' })
   const [deleting, setDeleting]   = useState(false)
+
+  const [employees, setEmployees] = useState([])
+
+  // ── Load employees (for per-task pre-assignment) ──────────────────────────────
+  useEffect(() => {
+    api.get('/users?role=employee&limit=500')
+      .then((r) => setEmployees(r.data.data || []))
+      .catch(() => {/* non-fatal; picker just shows "role fallback" */})
+  }, [])
 
   // ── Load templates ──────────────────────────────────────────────────────────
   const load = useCallback(async () => {
@@ -106,6 +116,7 @@ export default function TaskTemplates() {
         description:    t.description || '',
         designation:    t.designation || '',
         department:     t.department || '',
+        assignedTo:     t.assignedTo ? String(t.assignedTo) : '',
         estimatedHours: t.estimatedHours || 8,
         priority:       t.priority || 'medium',
         subtasks: (t.subtasks || []).map((s) => ({ _key: uid(), name: s.name || '' })),
@@ -179,6 +190,7 @@ export default function TaskTemplates() {
         description:    t.description?.trim() || null,
         designation:    t.designation?.trim() || null,
         department:     t.department?.trim() || null,
+        assignedTo:     t.assignedTo || null,
         estimatedHours: Number(t.estimatedHours) > 0 ? Number(t.estimatedHours) : 8,
         priority:       t.priority,
         subtasks: (t.subtasks || [])
@@ -343,6 +355,7 @@ export default function TaskTemplates() {
                   key={task._key}
                   task={task}
                   index={tIdx}
+                  employees={employees}
                   canRemove={form.tasks.length > 1}
                   onChange={(key, val) => setTask(tIdx, key, val)}
                   onRemove={() => removeTask(tIdx)}
@@ -429,6 +442,11 @@ function TemplateCard({ tpl, onEdit, onDelete }) {
                     {t.designation && (
                       <span className="text-xs text-slate-500">· {t.designation}</span>
                     )}
+                    {t.assignedTo && (
+                      <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-600">
+                        pinned
+                      </span>
+                    )}
                     <span className="ml-auto text-xs text-slate-400">
                       {t.estimatedHours || 8}h
                     </span>
@@ -450,7 +468,7 @@ function TemplateCard({ tpl, onEdit, onDelete }) {
 
 // ─── Single task editor (with subtasks) ───────────────────────────────────────
 function TaskEditor({
-  task, index, canRemove,
+  task, index, canRemove, employees = [],
   onChange, onRemove, onAddSubtask, onSetSubtask, onRemoveSubtask,
 }) {
   return (
@@ -508,6 +526,21 @@ function TaskEditor({
             />
           </FormField>
         </div>
+
+        <FormField label="Assign to (specific employee)">
+          <select
+            className="input"
+            value={task.assignedTo}
+            onChange={(e) => onChange('assignedTo', e.target.value)}
+          >
+            <option value="">— Auto-match by role above —</option>
+            {employees.map((emp) => (
+              <option key={emp._id} value={emp._id}>
+                {emp.name}{emp.designation ? ` · ${emp.designation}` : ''}
+              </option>
+            ))}
+          </select>
+        </FormField>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <FormField label="Estimated Hours">

@@ -826,7 +826,34 @@ function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, p
     if (!selectedTypes?.length) { toast.error('Select at least one project type first'); return }
     setLoading(true)
     try {
-      // Built-in plan generator — no template database needed.
+      // 1. Try the admin-defined DB template for the FIRST selected type.
+      //    This carries pre-assigned employees per task.
+      try {
+        const { data: tpl } = await api.get('/task-templates/for-project', {
+          params: { projectType: selectedTypes[0] },
+        })
+        const tplTasks = tpl.data?.tasks || []
+        if (tplTasks.length > 0) {
+          const tasks = tplTasks.map(t => ({
+            title:           t.title,
+            description:     t.description || '',
+            required_role:   t.required_role || '',
+            assignee_id:     t.assignee_id || '',
+            priority:        (t.priority || 'medium').toLowerCase(),
+            estimated_hours: t.estimated_hours || '',
+            subtasks:        (t.subTasks || []).map(s => ({ title: s.title })),
+            phase:           tpl.data?.name || 'Template',
+          }))
+          setPlan(tasks); setApplied(false); setShowAutoAssign(false)
+          toast.success(`Loaded "${tpl.data.name}" template`)
+          return
+        }
+      } catch (tplErr) {
+        // 404 = no template for this type → fall through to AI generator.
+        if (tplErr.response && tplErr.response.status !== 404) throw tplErr
+      }
+
+      // 2. Fallback: built-in AI plan generator (no template defined yet).
       const { data } = await api.post('/projects/generate-plan', {
         projectTypes: selectedTypes,
         description: '',
@@ -851,6 +878,8 @@ function TemplateAutoGeneratePanel({ selectedTypes, onApplyTasks, assignments, p
       ...emptyTask(), title: t.title || t.name || '', description: t.description || '',
       priority: t.priority || 'medium', estimated_hours: t.estimated_hours || t.estimatedHours || '',
       required_role: t.required_role || t.designation || '',
+      // Pre-assigned employee from the template (empty for AI-generated plans).
+      assignee_id: t.assignee_id || '',
       subTasks: (t.subtasks || []).map(st => ({ ...emptySubTask(), title: st.title || st.name || '' })),
     }))
     onApplyTasks(wizardTasks); setApplied(true)
