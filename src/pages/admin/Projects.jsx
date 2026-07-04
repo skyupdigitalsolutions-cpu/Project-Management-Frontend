@@ -81,7 +81,7 @@ const emptyAssignment = () => ({
 
 const emptyProject = () => ({
   title: '', description: '', manager_id: '',
-  priority: 'medium', project_types: ['website'],
+  priority: 'medium', project_types: [],
   start_date: '', end_date: '', status: 'planning',
 })
 
