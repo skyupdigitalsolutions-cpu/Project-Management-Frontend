@@ -56,9 +56,14 @@ function isToday(date) {
 }
 
 function isOverdue(task) {
-  if (!task.due_date) return false
-  if (task.status === 'completed') return false
-  return new Date(task.due_date) < new Date()
+  if (task.status === 'completed' || task.status === 'cancelled') return false
+  if (task.is_locked) return false                     // clock hasn't started yet
+  if (task.is_delayed) return true                     // server already flagged it
+  // For phased tasks the deadline is unlocked_at + duration (effective_due_date);
+  // fall back to the static due_date for everything else.
+  const deadline = task.effective_due_date || task.due_date
+  if (!deadline) return false
+  return new Date(deadline) < new Date()
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────

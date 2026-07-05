@@ -274,7 +274,8 @@ export default function EmployeeMyTasksEnhanced() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {tasks.map(t => {
-            const overdue      = t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed'
+            const overdue      = !t.is_locked && t.status !== 'completed' && t.status !== 'cancelled' &&
+                                 (t.is_delayed || (() => { const d = t.effective_due_date || t.due_date; return d && new Date(d) < new Date() })())
             const isOpen       = expanded === t._id
             const project      = t.project_id
             const needsPerm    = t.requires_permission && t.permission_status !== 'granted'
