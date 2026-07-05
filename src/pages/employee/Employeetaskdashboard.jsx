@@ -19,7 +19,7 @@ import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import {
   Clock, Calendar, CheckCircle2, Circle, AlertTriangle,
-  ChevronRight, Loader2, RefreshCw, BarChart2, ArrowRight,
+  ChevronRight, Loader2, RefreshCw, BarChart2, ArrowRight, Lock,
 } from 'lucide-react'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -111,13 +111,17 @@ export default function EmployeeTaskDashboard() {
 
   // ─── Status update ─────────────────────────────────────────────────────────
   const handleStatusChange = async (task, newStatus) => {
+    if (task.is_locked) {
+      toast.error(task.lock_reason || 'This task is locked until earlier phases are completed.')
+      return
+    }
     setUpdating(task._id)
     try {
       await api.patch(`/tasks/${task._id}`, { status: newStatus })
       setTasks(prev => prev.map(t => t._id === task._id ? { ...t, status: newStatus } : t))
       toast.success(newStatus === 'completed' ? '✅ Task completed!' : `Status updated to ${newStatus}`)
-    } catch {
-      toast.error('Failed to update status')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to update status')
     } finally {
       setUpdating(null)
     }
@@ -299,6 +303,14 @@ function TaskCard({ task, updating, onStatusChange }) {
                   <AlertTriangle className="w-3 h-3" /> Overdue
                 </span>
               )}
+              {task.is_locked && (
+                <span
+                  className="flex items-center gap-0.5 text-[16px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-medium"
+                  title={task.lock_reason || 'Locked until earlier phases are completed'}
+                >
+                  <Lock className="w-3 h-3" /> Locked
+                </span>
+              )}
             </div>
 
             {/* Project / assignment */}
@@ -337,7 +349,14 @@ function TaskCard({ task, updating, onStatusChange }) {
         </div>
 
         {/* Status action */}
-        {statusInfo.next && task.status !== 'completed' && (
+        {task.is_locked ? (
+          <div className="mt-3 flex justify-end">
+            <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[16px] font-medium bg-amber-50 text-amber-700 border border-amber-200"
+                  title={task.lock_reason || ''}>
+              <Lock className="w-3 h-3" /> {task.phase_name ? `${task.phase_name} locked` : 'Locked'}
+            </span>
+          </div>
+        ) : statusInfo.next && task.status !== 'completed' && (
           <div className="mt-3 flex justify-end">
             <button
               onClick={() => onStatusChange(task, statusInfo.next)}

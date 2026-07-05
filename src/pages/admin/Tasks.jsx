@@ -8,7 +8,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   Plus, Pencil, Trash2, RefreshCw, CheckSquare,
-  ChevronDown, ChevronUp, ListTodo, Circle, CheckCircle2
+  ChevronDown, ChevronUp, ListTodo, Circle, CheckCircle2, Lock
 } from 'lucide-react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -283,6 +283,19 @@ export default function AdminTasks() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <StatusBadge status={task.status} />
                       <PriorityBadge priority={task.priority} />
+                      {task.phase_name && (
+                        <span className="text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">
+                          {task.phase_name}
+                        </span>
+                      )}
+                      {task.is_locked && (
+                        <span
+                          className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full"
+                          title={task.lock_reason || 'Locked until earlier phases are completed (admins can override)'}
+                        >
+                          <Lock size={11} /> Locked
+                        </span>
+                      )}
                       {(task.subtasks?.length > 0) && (
                         <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
                           {task.subtasks.filter(s => s.status === 'completed').length}/{task.subtasks.length} subtasks

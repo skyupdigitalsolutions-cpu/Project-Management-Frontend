@@ -195,6 +195,9 @@ export default function EmployeeMyTasksEnhanced() {
 
   const updateStatus = async (taskId, newStatus) => {
     const task = tasks.find(t => t._id === taskId)
+    if (task?.is_locked) {
+      toast.error(task.lock_reason || 'This task is locked until earlier phases are completed.'); return
+    }
     if (task?.requires_permission && task.permission_status !== 'granted' && newStatus !== task.status) {
       toast.error('This task is blocked. Request permission from admin first.'); return
     }
@@ -301,6 +304,14 @@ export default function EmployeeMyTasksEnhanced() {
                             <Lock size={9} /> Blocked
                           </span>
                         )}
+                        {t.is_locked && (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-amber-50 border-amber-200 text-amber-700"
+                            title={t.lock_reason || 'Locked until earlier phases are completed'}
+                          >
+                            <Lock size={9} /> {t.phase_name ? `${t.phase_name} locked` : 'Locked'}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -332,8 +343,8 @@ export default function EmployeeMyTasksEnhanced() {
                       <select
                         value={t.status}
                         onChange={e => updateStatus(t._id, e.target.value)}
-                        disabled={updating === t._id || isBlocked}
-                        title={isBlocked ? 'Task is blocked — get permission first' : undefined}
+                        disabled={updating === t._id || isBlocked || t.is_locked}
+                        title={t.is_locked ? (t.lock_reason || 'Locked until earlier phases are completed') : (isBlocked ? 'Task is blocked — get permission first' : undefined)}
                         className="text-[16px] py-1.5 pl-2 pr-7 w-32 appearance-none cursor-pointer rounded-lg
                                    border border-gray-200 bg-white text-gray-700 outline-none
                                    focus:border-primary focus:ring-1 focus:ring-primary
