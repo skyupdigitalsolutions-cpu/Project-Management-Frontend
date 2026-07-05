@@ -41,7 +41,7 @@ import EmployeeDashboard from "./pages/employee/Dashboard";
 import EmployeeProjects from "./pages/employee/Projects";
 import EmployeeAttendance from "./pages/employee/Attendance";
 import EmployeeDailyReport from "./pages/employee/Dailyreport";
-
+import EmployeeTeamChat from "./pages/employee/TeamChat";
 // Meetings
 import AdminMeetings from "./pages/admin/AdminMeetings";
 import ManagerMeetings from "./pages/manager/ManagerMeeting";
@@ -184,6 +184,7 @@ export default function App() {
           <Route path="attendance" element={<EmployeeAttendance />} />
           <Route path="meetings" element={<EmployeeMeetings />} />
           <Route path="daily-report" element={<EmployeeDailyReport />} />
+          <Route path="team-chat" element={<EmployeeTeamChat />} />
           <Route path="profile" element={<Profile />} />
         </Route>
 

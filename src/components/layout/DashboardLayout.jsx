@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, Users, FolderKanban, MonitorSmartphone, CheckSquare, Clock,
   Bell, LogOut, Menu, X, User, UserCheck, Video, ClipboardList,
-  GitBranch, ChevronLeft, ChevronRight, LayoutTemplate
+  GitBranch, ChevronLeft, ChevronRight, LayoutTemplate, MessageCircle
 } from 'lucide-react'
 import NotificationBell from '../common/NotificationBell'
 import EmailComposer from '../common/EmailComposer'
@@ -42,6 +42,7 @@ const NAV = {
     { to: '/employee/attendance',    label: 'Attendance',   icon: Clock },
     { to: '/employee/meetings',      label: 'Meetings',     icon: Video },
     { to: '/employee/daily-report',  label: 'Daily Report', icon: ClipboardList },
+    { to: '/employee/team-chat',     label: 'Team Chat',    icon: MessageCircle },
   ],
 }
 
