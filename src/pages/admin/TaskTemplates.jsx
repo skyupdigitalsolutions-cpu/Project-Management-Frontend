@@ -8,12 +8,29 @@
  * SKIPS the automatic AI generation for that project.
  *
  * Backend: /api/task-templates  (GET list/one, POST, PUT, DELETE)
+ *
+ * CSV IMPORT
+ * ──────────
+ * Tasks can be imported from a CSV instead of typing them in the form.
+ * Expected columns (header row required, case-insensitive, extra columns ignored):
+ *
+ *   task_name*, description, designation, department, assigned_to,
+ *   estimated_hours, priority, subtasks
+ *
+ * Aliases accepted: name/task → task_name, role → designation,
+ * assignee/employee → assigned_to, hours → estimated_hours.
+ *
+ * - assigned_to matches an employee by exact name or email (case-insensitive).
+ *   Unmatched values fall back to role-based auto-match with a warning.
+ * - subtasks are separated by "|" (or ";") within the cell,
+ *   e.g.  "Setup repo|Install deps|Configure CI"
+ * - priority: low | medium | high | critical (defaults to medium)
  */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   Plus, Pencil, Trash2, RefreshCw, LayoutTemplate,
-  ChevronDown, ChevronRight, X, ListChecks,
+  ChevronDown, ChevronRight, X, ListChecks, Upload, FileDown,
 } from 'lucide-react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -60,6 +77,168 @@ const emptyForm = () => ({
   tasks: [emptyTask()],
 })
 
+// ─── CSV parsing ──────────────────────────────────────────────────────────────
+// Minimal RFC-4180 parser: handles quoted cells, escaped quotes (""),
+// commas/newlines inside quotes, and CRLF line endings. No dependencies.
+function parseCsv(text) {
+  const rows = []
+  let row = []
+  let cell = ''
+  let inQuotes = false
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cell += '"'; i++ }
+        else inQuotes = false
+      } else {
+        cell += ch
+      }
+      continue
+    }
+
+    if (ch === '"') { inQuotes = true; continue }
+    if (ch === ',') { row.push(cell); cell = ''; continue }
+    if (ch === '\r') continue
+    if (ch === '\n') {
+      row.push(cell); cell = ''
+      rows.push(row); row = []
+      continue
+    }
+    cell += ch
+  }
+  // trailing cell/row (file may not end with newline)
+  if (cell !== '' || row.length > 0) {
+    row.push(cell)
+    rows.push(row)
+  }
+  // drop fully-empty rows
+  return rows.filter((r) => r.some((c) => c.trim() !== ''))
+}
+
+// Map header names (with aliases) → canonical keys
+const HEADER_ALIASES = {
+  task_name: 'name', task: 'name', name: 'name', title: 'name',
+  description: 'description', details: 'description',
+  designation: 'designation', role: 'designation',
+  department: 'department', dept: 'department',
+  assigned_to: 'assignedTo', assignee: 'assignedTo', employee: 'assignedTo',
+  estimated_hours: 'estimatedHours', hours: 'estimatedHours', estimate: 'estimatedHours',
+  priority: 'priority',
+  subtasks: 'subtasks', subtask: 'subtasks',
+}
+
+const normalizeHeader = (h) =>
+  h.trim().toLowerCase().replace(/\s+/g, '_')
+
+/**
+ * Turns raw CSV text into form-shaped tasks.
+ * Returns { tasks, warnings, error }.
+ */
+function csvToTasks(text, employees) {
+  const rows = parseCsv(text)
+  if (rows.length === 0) return { tasks: [], warnings: [], error: 'The file is empty.' }
+
+  const headers = rows[0].map((h) => HEADER_ALIASES[normalizeHeader(h)] || null)
+  if (!headers.includes('name')) {
+    return {
+      tasks: [], warnings: [],
+      error: 'Missing a "task_name" (or "name"/"task") column in the header row.',
+    }
+  }
+
+  // Employee lookup by lowercase name/email
+  const empIndex = new Map()
+  employees.forEach((e) => {
+    if (e.name)  empIndex.set(String(e.name).trim().toLowerCase(), e._id)
+    if (e.email) empIndex.set(String(e.email).trim().toLowerCase(), e._id)
+  })
+
+  const tasks = []
+  const warnings = []
+
+  rows.slice(1).forEach((cells, i) => {
+    const rowNum = i + 2 // 1-based, after header
+    const rec = {}
+    headers.forEach((key, ci) => {
+      if (key) rec[key] = (cells[ci] ?? '').trim()
+    })
+
+    if (!rec.name) {
+      warnings.push(`Row ${rowNum}: skipped (no task name).`)
+      return
+    }
+
+    // Priority
+    let priority = (rec.priority || 'medium').toLowerCase()
+    if (!PRIORITIES.includes(priority)) {
+      warnings.push(`Row ${rowNum}: unknown priority "${rec.priority}", using "medium".`)
+      priority = 'medium'
+    }
+
+    // Hours
+    let estimatedHours = Number(rec.estimatedHours)
+    if (!Number.isFinite(estimatedHours) || estimatedHours <= 0) estimatedHours = 8
+
+    // Assignee: match by name or email; fall back to role auto-match
+    let assignedTo = ''
+    if (rec.assignedTo) {
+      const match = empIndex.get(rec.assignedTo.toLowerCase())
+      if (match) assignedTo = String(match)
+      else warnings.push(
+        `Row ${rowNum}: employee "${rec.assignedTo}" not found — will auto-match by role.`
+      )
+    }
+
+    // Subtasks: split on | or ;
+    const subtasks = (rec.subtasks || '')
+      .split(/[|;]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((name) => ({ _key: uid(), name }))
+
+    tasks.push({
+      _key: uid(),
+      name:        rec.name,
+      description: rec.description || '',
+      designation: rec.designation || '',
+      department:  rec.department || '',
+      assignedTo,
+      estimatedHours,
+      priority,
+      subtasks,
+    })
+  })
+
+  if (tasks.length === 0) {
+    return { tasks: [], warnings, error: 'No valid task rows found in the file.' }
+  }
+  return { tasks, warnings, error: null }
+}
+
+const SAMPLE_CSV = [
+  'task_name,description,designation,department,assigned_to,estimated_hours,priority,subtasks',
+  'Requirement gathering,Collect client requirements and sitemap,Project Manager,Management,,6,high,Kickoff call|Prepare sitemap|Client sign-off',
+  'UI design,Design homepage and inner pages,UI UX Designer,Design,,16,high,Wireframes|High-fidelity mockups|Design review',
+  'Frontend development,Build responsive pages from approved designs,Frontend Developer,Engineering,,24,medium,Setup project|Build components|Responsive testing',
+  'Backend development,APIs and database schema,Backend Developer,Engineering,,24,medium,Schema design|Auth APIs|CRUD APIs',
+  'QA & launch,Cross-browser testing and go-live,Frontend Developer,Engineering,,8,critical,Test checklist|Bug fixes|Deploy',
+].join('\n')
+
+function downloadSampleCsv() {
+  const blob = new Blob([SAMPLE_CSV], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'task-template-sample.csv'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 export default function TaskTemplates() {
   const [templates, setTemplates] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -74,7 +253,12 @@ export default function TaskTemplates() {
 
   const [employees, setEmployees] = useState([])
 
-  // ── Load employees (for per-task pre-assignment) ──────────────────────────────
+  // CSV import: 'new' opens a fresh template from the file,
+  // 'tasks' imports into the currently open editor.
+  const fileInputRef = useRef(null)
+  const importModeRef = useRef('new')
+
+  // ── Load employees (for per-task pre-assignment + CSV assignee matching) ─────
   useEffect(() => {
     api.get('/users?role=employee&limit=500')
       .then((r) => setEmployees(r.data.data || []))
@@ -126,6 +310,45 @@ export default function TaskTemplates() {
       setForm((f) => ({ ...f, tasks: [emptyTask()] }))
     }
     setModalOpen(true)
+  }
+
+  // ── CSV import ────────────────────────────────────────────────────────────────
+  const triggerImport = (mode) => {
+    importModeRef.current = mode
+    // reset so picking the same file twice still fires onChange
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    fileInputRef.current?.click()
+  }
+
+  const onCsvFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onerror = () => toast.error('Could not read the file')
+    reader.onload = () => {
+      const { tasks, warnings, error } = csvToTasks(String(reader.result || ''), employees)
+      if (error) return toast.error(error)
+
+      warnings.slice(0, 3).forEach((w) => toast(w, { icon: '⚠️' }))
+      if (warnings.length > 3) toast(`…and ${warnings.length - 3} more warnings`, { icon: '⚠️' })
+
+      if (importModeRef.current === 'new') {
+        // Fresh template pre-filled from the CSV; admin picks name + type.
+        setEditingId(null)
+        setForm({ ...emptyForm(), tasks })
+        setModalOpen(true)
+      } else {
+        // Import into the open editor: replace a single blank task, else append.
+        setForm((f) => {
+          const onlyBlank =
+            f.tasks.length === 1 && !f.tasks[0].name.trim() && f.tasks[0].subtasks.length === 0
+          return { ...f, tasks: onlyBlank ? tasks : [...f.tasks, ...tasks] }
+        })
+      }
+      toast.success(`Imported ${tasks.length} task${tasks.length === 1 ? '' : 's'} from CSV`)
+    }
+    reader.readAsText(file)
   }
 
   // ── Form field helpers ──────────────────────────────────────────────────────
@@ -239,6 +462,15 @@ export default function TaskTemplates() {
 
   return (
     <div className="space-y-6">
+      {/* Hidden file input shared by both import entry points */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,text/csv"
+        className="hidden"
+        onChange={onCsvFile}
+      />
+
       <PageHeader
         title="Task Templates"
         subtitle="Define the tasks created automatically when a project of each service type is added. A template fully replaces AI task generation for that service."
@@ -246,6 +478,9 @@ export default function TaskTemplates() {
           <div className="flex gap-2">
             <Button variant="secondary" onClick={load}>
               <RefreshCw size={16} /> Refresh
+            </Button>
+            <Button variant="secondary" onClick={() => triggerImport('new')}>
+              <Upload size={16} /> Import CSV
             </Button>
             <Button variant="primary" onClick={openCreate}>
               <Plus size={16} /> New Template
@@ -260,7 +495,7 @@ export default function TaskTemplates() {
         <EmptyState
           icon={LayoutTemplate}
           title="No templates yet"
-          description="Create a template for a service type. When a project of that type is created, these tasks are generated automatically."
+          description="Create a template for a service type, or import its tasks from a CSV. When a project of that type is created, these tasks are generated automatically."
         />
       ) : (
         <div className="grid gap-4">
@@ -344,9 +579,21 @@ export default function TaskTemplates() {
               <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                 <ListChecks size={16} /> Tasks ({form.tasks.length})
               </h4>
-              <Button variant="secondary" onClick={addTask}>
-                <Plus size={14} /> Add Task
-              </Button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={downloadSampleCsv}
+                  className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700"
+                  title="Download a sample CSV showing the expected columns"
+                >
+                  <FileDown size={13} /> Sample CSV
+                </button>
+                <Button variant="secondary" onClick={() => triggerImport('tasks')}>
+                  <Upload size={14} /> Import CSV
+                </Button>
+                <Button variant="secondary" onClick={addTask}>
+                  <Plus size={14} /> Add Task
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-4">
