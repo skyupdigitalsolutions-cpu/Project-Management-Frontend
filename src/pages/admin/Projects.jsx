@@ -56,6 +56,7 @@ const PROJECT_TYPES = [
   { value: 'machine_learning', label: 'Machine Learning' },
   { value: 'google_ads', label:'Google Ads' },
   { value: 'meta_ads', label:'Meta Ads' },
+  { value: 'video_editing', label: 'Video Editing' },
   { value: 'role_based_dashboards', label: 'Role Based Dashboards' },
 ]
 
