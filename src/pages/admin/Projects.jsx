@@ -55,6 +55,7 @@ const PROJECT_TYPES = [
   { value: 'branding', label: 'Branding' },
   { value: 'machine_learning', label: 'Machine Learning' },
   { value: 'google_ads', label:'Google Ads' },
+  { value: 'meta_ads', label:'Meta Ads' },
   { value: 'role_based_dashboards', label: 'Role Based Dashboards' },
 ]
 
