@@ -236,7 +236,7 @@ export default function AdminTasks() {
       />
 
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <StatCard label="Total"       value={total}                              icon={CheckSquare} color="primary" />
           <StatCard label="To Do"       value={s.by_status?.todo ?? 0}            icon={CheckSquare} color="info" />
           <StatCard label="In Progress" value={s.by_status?.['in-progress'] ?? 0} icon={CheckSquare} color="amber" />
@@ -376,7 +376,7 @@ export default function AdminTasks() {
           <FormField label="Description">
             <textarea className="input resize-none" rows={3} value={form.description} onChange={e => f('description', e.target.value)} placeholder="Task description…" />
           </FormField>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField label="Project">
               <select className="input" value={form.project_id} onChange={e => f('project_id', e.target.value)}>
                 <option value="">Select project</option>
@@ -390,7 +390,7 @@ export default function AdminTasks() {
               </select>
             </FormField>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FormField label="Status">
               <select className="input" value={form.status} onChange={e => f('status', e.target.value)}>
                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}

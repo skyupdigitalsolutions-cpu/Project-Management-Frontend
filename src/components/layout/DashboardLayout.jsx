@@ -244,13 +244,13 @@ export default function DashboardLayout() {
             <div className="hidden lg:block" />
           </div>
 
-          <div className="flex items-center gap-3 ">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             {(isAdmin || isManager) && <EmailComposer />}
             <NotificationBell />
             <div className="h-5 w-px bg-gray-200" />
             <NavLink
               to={`/${user?.role}/profile`}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-purple-50 transition-colors"
+              className="flex items-center gap-2 px-1.5 sm:px-3 py-1.5 rounded-xl hover:bg-purple-50 transition-colors"
             >
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-[16px] shadow-sm">
                 {user?.name?.charAt(0)?.toUpperCase()}
@@ -263,7 +263,7 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

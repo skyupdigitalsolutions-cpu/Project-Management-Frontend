@@ -35,7 +35,7 @@ export default function ManagerTeam() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader title="My Team" subtitle="View your team members and their current status" />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Total Members" value={users.length} icon={Users}     color="primary" />
         <StatCard label="Active"        value={active}       icon={UserCheck} color="emerald" />
         <StatCard label="On Leave"      value={onLeave}      icon={Clock}     color="amber" />

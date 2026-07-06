@@ -95,7 +95,7 @@ export default function ManagerTasks() {
       />
 
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Total"       value={s.total}               icon={CheckSquare} color="primary" />
           <StatCard label="In Progress" value={s['in-progress'] ?? 0} icon={CheckSquare} color="amber" />
           <StatCard label="Completed"   value={s.completed ?? 0}      icon={CheckSquare} color="emerald" />
@@ -180,7 +180,7 @@ export default function ManagerTasks() {
           <FormField label="Description"><textarea className="input resize-none" rows={2} value={form.description} onChange={e => f('description', e.target.value)} /></FormField>
           <FormField label="Project"><SelectInput value={form.project_id} onChange={v => f('project_id', v)} placeholder="Select project" options={projects.map(p => ({ value:p._id, label:p.title }))} /></FormField>
           <FormField label="Assign To"><SelectInput value={form.assigned_to} onChange={v => f('assigned_to', v)} placeholder="Select member" options={users.map(u => ({ value:u._id, label:`${u.name} (${u.role})` }))} /></FormField>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField label="Status"><SelectInput value={form.status} onChange={v => f('status', v)} options={STATUSES.map(s => ({ value:s, label:s }))} /></FormField>
             <FormField label="Priority"><SelectInput value={form.priority} onChange={v => f('priority', v)} options={PRIORITIES.map(p => ({ value:p, label:p }))} /></FormField>
           </div>

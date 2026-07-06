@@ -117,7 +117,7 @@ function EmployeeSummary({ userId, date }) {
 
   return (
     <div className="px-2 pb-4 pt-1">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-xs text-neutral flex items-center gap-1"><LogIn size={12} /> First activity</p>
           <p className="text-sm font-medium text-gray-800 mt-1">{fmtTime(data.first_activity)}</p>

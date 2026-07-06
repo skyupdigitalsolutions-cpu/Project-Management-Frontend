@@ -325,7 +325,7 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
           {tab === 'basic' && (
             <>
               <SectionHeader icon={Building2} title="Company Information" color="blue" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Company Name" value={c.companyName} />
                 <InfoRow label="Business Type" value={c.businessType} />
                 <InfoRow label="Industry" value={c.industry} />
@@ -345,7 +345,7 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
           {tab === 'contact' && (
             <>
               <SectionHeader icon={User} title="Primary Contact" color="blue" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Name" value={c.primaryContactName || c.name} />
                 <InfoRow label="Designation" value={c.primaryDesignation} />
                 <InfoRow label="Email" value={c.email} />
@@ -354,7 +354,7 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
               {(c.secondaryContactName || c.secondaryEmail) && (
                 <>
                   <SectionHeader icon={User} title="Secondary Contact" color="teal" />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InfoRow label="Name" value={c.secondaryContactName} />
                     <InfoRow label="Email" value={c.secondaryEmail} />
                     <InfoRow label="Phone" value={c.secondaryPhone} />
@@ -367,13 +367,13 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
           {tab === 'legal' && (
             <>
               <SectionHeader icon={Shield} title="Legal & Tax Details" color="indigo" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="PAN Number" value={c.panNumber} mono />
                 <InfoRow label="GST Number" value={c.gstNumber} mono />
                 <InfoRow label="Company Reg. No." value={c.companyRegNumber} mono />
               </div>
               <SectionHeader icon={CheckSquare} title="Legal Agreements" color="purple" />
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <InfoRow label="NDA Required" value={c.ndaRequired || '—'} badge />
                 <InfoRow label="Contract Signed" value={c.contractSigned || '—'} badge />
                 <InfoRow label="SLA Required" value={c.slaRequired || '—'} badge />
@@ -384,7 +384,7 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
           {tab === 'billing' && (
             <>
               <SectionHeader icon={CreditCard} title="Billing Details" color="green" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Payment Terms" value={c.paymentTerms} />
                 <InfoRow label="Payment Method" value={c.preferredPaymentMethod} />
                 <InfoRow label="PO Required" value={c.purchaseOrderRequired || '—'} badge />
@@ -393,7 +393,7 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
               {(c.bankName || c.bankAccountNumber) && (
                 <>
                   <SectionHeader icon={Hash} title="Bank Details" color="amber" />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InfoRow label="Bank Name" value={c.bankName} />
                     <InfoRow label="Account Holder" value={c.accountHolderName} />
                     <InfoRow label="Account Number" value={c.bankAccountNumber} mono />
@@ -407,7 +407,7 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
           {tab === 'project' && (
             <>
               <SectionHeader icon={Briefcase} title="Project Details" color="orange" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Project Name" value={c.projectName} />
                 <InfoRow label="Timeline / Deadline" value={c.timeline} />
                 <InfoRow label="Budget" value={c.budget} />
@@ -442,7 +442,7 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
           {tab === 'comm' && (
             <>
               <SectionHeader icon={MessageSquare} title="Communication Preferences" color="rose" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Preferred Mode" value={c.preferredCommMode} />
                 <InfoRow label="Meeting Frequency" value={c.meetingFrequency} />
                 <InfoRow label="Reporting Format" value={c.reportingFormat} />
@@ -460,7 +460,7 @@ function ClientDetailDrawer({ client, onClose, onEdit }) {
           {tab === 'approvals' && (
             <>
               <SectionHeader icon={CheckSquare} title="Approval Authority" color="slate" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Project Approver" value={c.projectApproverName} />
                 <InfoRow label="Billing Approver" value={c.billingApproverName} />
               </div>
@@ -594,7 +594,7 @@ export default function Clients() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Clients"  value={total}                                    icon={Building2} color="primary" />
         <StatCard label="Active"         value={clients.filter(c => c.isActive).length}   icon={Building2} color="emerald" />
         <StatCard label="Contract Signed" value={clients.filter(c => c.contractSigned === 'Yes').length} icon={CheckSquare} color="info" />
@@ -723,7 +723,7 @@ export default function Clients() {
           {formTab === 'basic' && (
             <div className="space-y-4">
               <SectionHeader icon={Building2} title="Basic Company Information" color="blue" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Company Name *">
                   <input className="input" value={form.companyName} onChange={e => f('companyName', e.target.value)} placeholder="Acme Corp" />
                 </FormField>
@@ -756,7 +756,7 @@ export default function Clients() {
           {formTab === 'contact' && (
             <div className="space-y-4">
               <SectionHeader icon={User} title="Primary Contact" color="blue" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Contact Name *">
                   <input className="input" value={form.primaryContactName} onChange={e => f('primaryContactName', e.target.value)} placeholder="John Doe" />
                 </FormField>
@@ -772,7 +772,7 @@ export default function Clients() {
               </div>
 
               <SectionHeader icon={User} title="Secondary Contact" color="teal" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Contact Name">
                   <input className="input" value={form.secondaryContactName} onChange={e => f('secondaryContactName', e.target.value)} placeholder="Jane Smith" />
                 </FormField>
@@ -790,7 +790,7 @@ export default function Clients() {
           {formTab === 'legal' && (
             <div className="space-y-4">
               <SectionHeader icon={Shield} title="Legal & Tax Details" color="indigo" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="PAN Number">
                   <input className="input font-mono uppercase" value={form.panNumber} onChange={e => f('panNumber', e.target.value.toUpperCase())} placeholder="ABCDE1234F" maxLength={10} />
                 </FormField>
@@ -803,7 +803,7 @@ export default function Clients() {
               </div>
 
               <SectionHeader icon={CheckSquare} title="Legal Agreements" color="purple" />
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <FormField label="NDA Required?">
                   <select className="input" value={form.ndaRequired} onChange={e => f('ndaRequired', e.target.value)}>
                     <option value="No">No</option>
@@ -836,7 +836,7 @@ export default function Clients() {
               <FormField label="Billing Address">
                 <textarea className="input resize-none" rows={2} value={form.billingAddress} onChange={e => f('billingAddress', e.target.value)} placeholder="Billing address (if different from registered)" />
               </FormField>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Payment Terms">
                   <select className="input" value={form.paymentTerms} onChange={e => f('paymentTerms', e.target.value)}>
                     <option value="">Select terms</option>
@@ -858,7 +858,7 @@ export default function Clients() {
               </div>
 
               <SectionHeader icon={Hash} title="Bank Details (if required)" color="amber" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Bank Name">
                   <input className="input" value={form.bankName} onChange={e => f('bankName', e.target.value)} placeholder="e.g. HDFC Bank" />
                 </FormField>
@@ -879,7 +879,7 @@ export default function Clients() {
           {formTab === 'project' && (
             <div className="space-y-4">
               <SectionHeader icon={Briefcase} title="Project Details" color="orange" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Project Name">
                   <input className="input" value={form.projectName} onChange={e => f('projectName', e.target.value)} placeholder="e.g. Brand Redesign 2025" />
                 </FormField>
@@ -929,7 +929,7 @@ export default function Clients() {
           {formTab === 'comm' && (
             <div className="space-y-4">
               <SectionHeader icon={MessageSquare} title="Communication & Reporting" color="rose" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Preferred Communication Mode">
                   <select className="input" value={form.preferredCommMode} onChange={e => f('preferredCommMode', e.target.value)}>
                     <option value="">Select mode</option>
@@ -964,7 +964,7 @@ export default function Clients() {
           {formTab === 'approvals' && (
             <div className="space-y-4">
               <SectionHeader icon={CheckSquare} title="Approval Authority" color="slate" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Project Approver Name">
                   <input className="input" value={form.projectApproverName} onChange={e => f('projectApproverName', e.target.value)} placeholder="Name of project sign-off authority" />
                 </FormField>

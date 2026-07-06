@@ -54,7 +54,7 @@ export default function ManagerDashboard() {
         <p className="text-neutral text-sm mt-1">Here's an overview of your projects and team.</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="My Projects"  value={p.total}               icon={FolderKanban} color="primary"   trend={`${p.active||0} active`} />
         <StatCard label="Total Tasks"  value={ts.total}              icon={CheckSquare}  color="amber"   trend={`${ts.completed||0} done`} />
         <StatCard label="In Progress"  value={ts['in-progress']||0}  icon={TrendingUp}   color="info" />

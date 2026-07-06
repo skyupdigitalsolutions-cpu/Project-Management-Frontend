@@ -72,7 +72,7 @@ export default function WfhRequestModal({ open, onClose, onSuccess }) {
           clock in/out from the app for the approved dates only.
         </p>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField label="From Date" error={errors.from_date}>
             <input type="date" className="input" value={form.from_date}
               onChange={e => f('from_date', e.target.value)} />

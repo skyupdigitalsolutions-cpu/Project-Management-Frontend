@@ -303,7 +303,7 @@ function ImportHolidaysModal({ onClose, onSuccess }) {
                 </div>
               )}
               {rows.length > 0 && (
-                <div className="border border-gray-100 rounded-xl overflow-hidden">
+                <div className="border border-gray-100 rounded-xl overflow-hidden overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50"><tr>
                       {['Date','Day','Holiday Name','Description'].map(h =>
@@ -529,7 +529,7 @@ function AttendanceTab() {
   return (
     <>
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard label="Present"    value={present} icon={CheckCircle2}  color="emerald" />
         <StatCard label="Absent"     value={absent}  icon={XCircle}       color="red"     />
         <StatCard label="Late"       value={late}    icon={Clock}         color="amber"   />
@@ -667,7 +667,7 @@ function AttendanceTab() {
             <SelectInput value={form.status} onChange={v => setForm(f => ({ ...f, status: v }))}
               options={STATUSES.map(s => ({ value: s, label: s }))} />
           </FormField>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField label="Clock In (HH:mm)">
               <input className="input" type="time" value={form.clock_in}
                 onChange={e => setForm(f => ({ ...f, clock_in: e.target.value }))} />
@@ -976,7 +976,7 @@ function WfhRequestsTab({ onCountChange }) {
       </div>
       {/* ─────────────────────────────────────────────────────────────────── */}
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Pending"  value={pending}  icon={AlertCircle}  color="amber"   />
         <StatCard label="Approved" value={approved} icon={CheckCircle2} color="emerald" />
         <StatCard label="Total"    value={requests.length} icon={Home}  color="blue"    />
@@ -1241,7 +1241,7 @@ function PolicySettingsTab() {
         {section === 'hours' && (
           <div className="space-y-5">
             <h3 className="font-semibold text-gray-800 flex items-center gap-2"><Clock size={16} /> Working Hours Configuration</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Work Start Time">
                 <input className="input" type="time" value={policy?.work_start_time ?? '09:00'}
                   onChange={e => pd('work_start_time', e.target.value)} />
@@ -1308,7 +1308,7 @@ function PolicySettingsTab() {
                       </label>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="text-xs text-gray-400 mb-1 block">Per Month</label>
                       <input className="input text-sm" type="number" min={0}
@@ -1352,7 +1352,7 @@ function PolicySettingsTab() {
 
             {policy?.comp_off_enabled && (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3">
                     <p className="text-sm text-gray-700">On Holidays</p>
                     <button onClick={() => pd('comp_off_on_holiday', !policy?.comp_off_on_holiday)}>
@@ -1370,7 +1370,7 @@ function PolicySettingsTab() {
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField label="Min Hours to Earn Comp-Off">
                     <input className="input" type="number" min={1} max={12}
                       value={policy?.min_hours_for_comp_off ?? 8}
@@ -1530,7 +1530,7 @@ function FingerprintSetupTab() {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Total Employees" value={(Array.isArray(users) ? users : []).length} icon={Users}       color="blue"    />
         <StatCard label="Linked"          value={linked}                                      icon={Fingerprint} color="emerald" />
         <StatCard label="Not Linked"      value={unlinked}                                    icon={WifiOff}     color="amber"   />
@@ -1781,7 +1781,7 @@ function LeaveApprovalTab({ onCountChange }) {
         footer={<button className="btn-secondary" onClick={() => setViewModal(null)}>Close</button>}>
         {viewModal && (
           <div className="space-y-3 text-sm">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><p className="text-gray-400 text-xs mb-1">Employee</p><p className="font-medium">{viewModal.user_id?.name}</p></div>
               <div><p className="text-gray-400 text-xs mb-1">Type</p><p className="capitalize">{LEAVE_TYPES.find(t => t.value === viewModal.leave_type)?.label}</p></div>
               <div><p className="text-gray-400 text-xs mb-1">From</p><p>{viewModal.from_date ? format(new Date(viewModal.from_date), 'dd MMM yyyy') : '—'}</p></div>

@@ -172,7 +172,7 @@ export default function Profile() {
           {tab === 'personal' && (
             <>
               <SectionHeader icon={User} title="Personal Information" color="blue" />
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoRow label="Full Name"      value={user?.name} />
                 <InfoRow label="Email"          value={user?.email} />
                 <InfoRow label="Phone"          value={user?.phone} />
@@ -189,7 +189,7 @@ export default function Profile() {
               )}
 
               <SectionHeader icon={Building} title="Employment Details" color="green" />
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoRow label="Department"       value={user?.department} />
                 <InfoRow label="Designation"      value={user?.designation} />
                 <InfoRow label="Role"             value={user?.role} />
@@ -211,7 +211,7 @@ export default function Profile() {
               ) : (
                 <>
                   <SectionHeader icon={Briefcase} title="Previous Employment" color="purple" />
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <InfoRow label="Previous Company"     value={user?.previousCompany} />
                     <InfoRow label="Previous Designation" value={user?.previousDesignation} />
                     <InfoRow label="Previous CTC"         value={user?.previousCTC} />
@@ -230,14 +230,14 @@ export default function Profile() {
           {tab === 'banking' && (
             <>
               <SectionHeader icon={CreditCard} title="Bank Account Details" color="green" />
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoRow label="Bank Name"      value={user?.bankName} />
                 <InfoRow label="Account Holder" value={user?.accountHolderName} />
                 <InfoRow label="Account Number" value={user?.accountNumber} mono />
                 <InfoRow label="IFSC Code"      value={user?.ifscCode} mono />
               </div>
               <SectionHeader icon={Hash} title="Statutory / Tax Details" color="amber" />
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoRow label="PAN Number" value={user?.panNumber} mono />
                 <InfoRow
                   label="Aadhaar Number"
@@ -254,12 +254,12 @@ export default function Profile() {
           {tab === 'health' && (
             <>
               <SectionHeader icon={Heart} title="Health Information" color="red" />
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoRow label="Blood Group"          value={user?.bloodGroup} />
                 <InfoRow label="Medical Conditions"   value={user?.medicalConditions || 'None declared'} />
               </div>
               <SectionHeader icon={User} title="Insurance Nominee" color="purple" />
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoRow label="Nominee Name"         value={user?.insuranceNomineeName} />
                 <InfoRow label="Nominee Relationship" value={user?.insuranceNomineeRelation} />
               </div>
@@ -270,7 +270,7 @@ export default function Profile() {
           {tab === 'emergency' && (
             <>
               <SectionHeader icon={AlertCircle} title="Emergency Contact" color="red" />
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <InfoRow label="Contact Name"  value={user?.emergencyContactName} />
                 <InfoRow label="Relationship"  value={user?.emergencyContactRelation} />
                 <InfoRow label="Phone"         value={user?.emergencyContactPhone} />

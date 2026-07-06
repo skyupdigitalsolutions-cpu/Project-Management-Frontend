@@ -130,7 +130,7 @@ export default function WorkflowDashboard() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
   <KPICard label="Total Tasks"         value={totalTasks}          color="blue"   icon={<ClipboardList />} />
   <KPICard label="Completed"           value={completedCount}      color="green"  icon={<CheckSquare />} />
   <KPICard label="Delayed"             value={delayedTasks.length} color="red"    icon={<AlertTriangle />} />
@@ -311,7 +311,7 @@ export default function WorkflowDashboard() {
       {/* Delay Modal */}
       {delayModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="w-full max-w-md rounded-xl p-6 space-y-4 bg-white border border-gray-200 shadow-xl">
+          <div className="w-full max-w-md rounded-xl p-4 sm:p-6 space-y-4 bg-white border border-gray-200 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start">
               <h3 className="font-bold text-gray-800 text-lg">Log Delay</h3>
               <button onClick={() => setDelayModal(null)} className="text-gray-400 hover:text-gray-700 text-xl transition-colors">✕</button>

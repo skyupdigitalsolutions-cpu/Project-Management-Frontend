@@ -145,7 +145,7 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 pt-5 border-t border-gray-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-5 pt-5 border-t border-gray-100">
           <div>
             <p className="text-xs text-neutral uppercase tracking-wider font-semibold mb-1">Manager</p>
             <p className="text-sm font-medium text-gray-800">{project.manager_id?.name ?? '—'}</p>
@@ -269,7 +269,7 @@ export default function ProjectDetail() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2 border-t border-gray-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2 border-t border-gray-100">
                 {client.name    && <InfoItem icon={Users}    label="Contact" value={client.name} />}
                 {client.email   && <InfoItem icon={Mail}     label="Email"   value={client.email} />}
                 {client.phone   && <InfoItem icon={Phone}    label="Phone"   value={client.phone} />}
@@ -298,7 +298,7 @@ export default function ProjectDetail() {
             </div>
           ) : (
             /* ── Legacy: client_info blob fallback ── */
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {(legacyCi.clientName || legacyCi.name)    && <InfoItem icon={Users}    label="Client"  value={legacyCi.clientName ?? legacyCi.name} />}
               {(legacyCi.companyName || legacyCi.company) && <InfoItem icon={Building2} label="Company" value={legacyCi.companyName ?? legacyCi.company} />}
               {legacyCi.email   && <InfoItem icon={Mail}     label="Email"   value={legacyCi.email} />}

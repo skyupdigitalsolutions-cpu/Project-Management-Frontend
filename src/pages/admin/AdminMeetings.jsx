@@ -189,7 +189,7 @@ function MeetingForm({ users, initial, onSave, onClose, saving }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-[16px] text-neutral mb-1.5 font-medium">Platform *</label>
           <select

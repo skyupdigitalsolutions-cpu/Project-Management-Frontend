@@ -187,7 +187,7 @@ function DesignationHistoryPanel({ history = [], currentDesignation, joiningDate
                 </div>
 
                 {/* Date range */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
                   <div>
                     <p className="text-xs text-gray-400 font-medium">From</p>
                     <p className="text-xs text-gray-600 font-semibold">{fmtDate(h.fromDate)}</p>
@@ -404,7 +404,7 @@ function UserDetailDrawer({ user, onClose }) {
           {tab === 'personal' && (
             <>
               <SectionHeader icon={User} title="Personal Details" color="blue" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Full Name"      value={user.name} />
                 <InfoRow label="Date of Birth"  value={fmtDate(user.dateOfBirth)} />
                 <InfoRow label="Gender"         value={user.gender} />
@@ -417,7 +417,7 @@ function UserDetailDrawer({ user, onClose }) {
               <InfoRow label="Current Address"   value={user.currentAddress} />
               <div className="pt-2">
                 <SectionHeader icon={Building2} title="Employment Details" color="green" />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InfoRow label="Department"       value={user.department} />
                   <InfoRow label="Designation"      value={user.designation} />
                   <InfoRow label="Role"             value={user.role} />
@@ -437,7 +437,7 @@ function UserDetailDrawer({ user, onClose }) {
                   This employee is a fresher — no prior experience records.
                 </p>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InfoRow label="Previous Company"    value={user.previousCompany} />
                   <InfoRow label="Previous Designation" value={user.previousDesignation} />
                   <InfoRow label="Previous CTC"        value={user.previousCTC} />
@@ -462,7 +462,7 @@ function UserDetailDrawer({ user, onClose }) {
           {tab === 'banking' && (
             <>
               <SectionHeader icon={CreditCard} title="Banking & Statutory Details" color="green" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Bank Name"       value={user.bankName} />
                 <InfoRow label="Account Holder"  value={user.accountHolderName} />
                 <InfoRow label="Account Number"  value={user.accountNumber} mono />
@@ -470,7 +470,7 @@ function UserDetailDrawer({ user, onClose }) {
               </div>
               <div className="pt-2">
                 <SectionHeader icon={Hash} title="Statutory Info" color="amber" />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InfoRow label="PAN Number"   value={user.panNumber} mono />
                   <InfoRow label="Aadhaar"      value={user.aadhaarNumber ? `XXXX-XXXX-${user.aadhaarNumber.slice(-4)}` : null} mono />
                   <InfoRow label="UAN Number"   value={user.uanNumber} mono />
@@ -483,13 +483,13 @@ function UserDetailDrawer({ user, onClose }) {
           {tab === 'health' && (
             <>
               <SectionHeader icon={Heart} title="Health & Insurance" color="red" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Blood Group"       value={user.bloodGroup} />
                 <InfoRow label="Medical Conditions" value={user.medicalConditions || 'None declared'} />
               </div>
               <div className="pt-2">
                 <SectionHeader icon={User} title="Insurance Nominee" color="purple" />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InfoRow label="Nominee Name"  value={user.insuranceNomineeName} />
                   <InfoRow label="Relationship"  value={user.insuranceNomineeRelation} />
                 </div>
@@ -500,7 +500,7 @@ function UserDetailDrawer({ user, onClose }) {
           {tab === 'emergency' && (
             <>
               <SectionHeader icon={AlertCircle} title="Emergency Contact" color="red" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Contact Name"  value={user.emergencyContactName} />
                 <InfoRow label="Relationship"  value={user.emergencyContactRelation} />
                 <InfoRow label="Phone"         value={user.emergencyContactPhone} />
@@ -672,7 +672,7 @@ export default function AdminUsers() {
       />
 
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Total"    value={stats.total}                        icon={Users}     color="primary" />
           <StatCard label="Active"   value={stats.by_status?.active}            icon={UserCheck} color="emerald" />
           <StatCard label="Managers" value={stats.by_role?.manager}             icon={Shield}    color="info" />
@@ -785,7 +785,7 @@ export default function AdminUsers() {
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {formTab === 'basic' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Full Name *">
                   <input className="input" value={form.name} onChange={e => f('name', e.target.value)} placeholder="Jane Smith" />
                 </FormField>
@@ -798,7 +798,7 @@ export default function AdminUsers() {
                   <input className="input" type="password" value={form.password} onChange={e => f('password', e.target.value)} placeholder="Min 6 characters" />
                 </FormField>
               )}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Phone">
                   <input className="input" value={form.phone} onChange={e => f('phone', e.target.value)} placeholder="+91 99999 00000" />
                 </FormField>
@@ -808,7 +808,7 @@ export default function AdminUsers() {
                   </select>
                 </FormField>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Department *">
                   <select className="input" value={form.department} onChange={e => f('department', e.target.value)}>
                     <option value="">Select department</option>
@@ -851,7 +851,7 @@ export default function AdminUsers() {
           {formTab === 'personal' && (
             <div className="space-y-4">
               <SectionHeader icon={User} title="Personal Information" color="blue" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Date of Birth">
                   <input className="input" type="date" value={form.dateOfBirth} onChange={e => f('dateOfBirth', e.target.value)} />
                 </FormField>
@@ -890,7 +890,7 @@ export default function AdminUsers() {
               ) : (
                 <>
                   <SectionHeader icon={Briefcase} title="Previous Employment" color="purple" />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="Previous Company *">
                       <input className="input" value={form.previousCompany} onChange={e => f('previousCompany', e.target.value)} />
                     </FormField>
@@ -908,7 +908,7 @@ export default function AdminUsers() {
                     <input className="input" value={form.reasonForLeaving} onChange={e => f('reasonForLeaving', e.target.value)} />
                   </FormField>
                   <SectionHeader icon={Hash} title="Statutory Employment Details" color="amber" />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="PF Account No.">
                       <input className="input" value={form.pfDetails} onChange={e => f('pfDetails', e.target.value)} />
                     </FormField>
@@ -927,7 +927,7 @@ export default function AdminUsers() {
           {formTab === 'banking' && (
             <div className="space-y-4">
               <SectionHeader icon={CreditCard} title="Bank Account Details" color="green" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Bank Name">
                   <input className="input" value={form.bankName} onChange={e => f('bankName', e.target.value)} />
                 </FormField>
@@ -942,7 +942,7 @@ export default function AdminUsers() {
                 </FormField>
               </div>
               <SectionHeader icon={Hash} title="Statutory / Tax Details" color="amber" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="PAN Number">
                   <input className="input" value={form.panNumber} onChange={e => f('panNumber', e.target.value.toUpperCase())} maxLength={10} />
                 </FormField>
@@ -956,7 +956,7 @@ export default function AdminUsers() {
           {formTab === 'health' && (
             <div className="space-y-4">
               <SectionHeader icon={Heart} title="Health Information" color="red" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Blood Group">
                   <select className="input" value={form.bloodGroup} onChange={e => f('bloodGroup', e.target.value)}>
                     <option value="">Select blood group</option>
@@ -968,7 +968,7 @@ export default function AdminUsers() {
                 </FormField>
               </div>
               <SectionHeader icon={User} title="Insurance Nominee" color="purple" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Nominee Name">
                   <input className="input" value={form.insuranceNomineeName} onChange={e => f('insuranceNomineeName', e.target.value)} />
                 </FormField>
@@ -985,7 +985,7 @@ export default function AdminUsers() {
           {formTab === 'emergency' && (
             <div className="space-y-4">
               <SectionHeader icon={AlertCircle} title="Emergency Contact Details" color="red" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Contact Name *">
                   <input className="input" value={form.emergencyContactName} onChange={e => f('emergencyContactName', e.target.value)} />
                 </FormField>
@@ -1053,7 +1053,7 @@ export default function AdminUsers() {
           </FormField>
 
           {/* Effective From + Note side by side */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField label="Effective From">
               <input
                 className="input"
@@ -1270,7 +1270,7 @@ export function MyProfilePanel({ userId }) {
               <SectionHeader icon={User} title="Personal Details" color="blue" />
               {editing ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="Full Name">
                       <input className="input" value={form.name} onChange={e => f('name', e.target.value)} />
                     </FormField>
@@ -1305,7 +1305,7 @@ export function MyProfilePanel({ userId }) {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InfoRow label="Full Name"      value={user.name} />
                     <InfoRow label="Phone"          value={user.phone} />
                     <InfoRow label="Email"          value={user.email} />
@@ -1324,7 +1324,7 @@ export function MyProfilePanel({ userId }) {
           {tab === 'professional' && (
             <>
               <SectionHeader icon={Building2} title="Current Employment" color="green" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="Department"      value={user.department} />
                 <InfoRow label="Designation"     value={user.designation} />
                 <InfoRow label="Role"            value={user.role} />
@@ -1336,7 +1336,7 @@ export function MyProfilePanel({ userId }) {
               {!user.isFresher && (
                 <>
                   <SectionHeader icon={Briefcase} title="Previous Employment" color="purple" />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InfoRow label="Previous Company"    value={user.previousCompany} />
                     <InfoRow label="Previous Designation" value={user.previousDesignation} />
                     <InfoRow label="Previous CTC"        value={user.previousCTC} />
@@ -1359,7 +1359,7 @@ export function MyProfilePanel({ userId }) {
             <>
               <SectionHeader icon={CreditCard} title="Banking Details" color="green" />
               {editing ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField label="Bank Name">
                     <input className="input" value={form.bankName || ''} onChange={e => f('bankName', e.target.value)} />
                   </FormField>
@@ -1374,7 +1374,7 @@ export function MyProfilePanel({ userId }) {
                   </FormField>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InfoRow label="Bank Name"       value={user.bankName} />
                   <InfoRow label="Account Holder"  value={user.accountHolderName} />
                   <InfoRow label="Account Number"  value={user.accountNumber} mono />
@@ -1382,7 +1382,7 @@ export function MyProfilePanel({ userId }) {
                 </div>
               )}
               <SectionHeader icon={Hash} title="Statutory Details" color="amber" />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow label="PAN Number"  value={user.panNumber} mono />
                 <InfoRow label="Aadhaar"     value={user.aadhaarNumber ? `XXXX-XXXX-${user.aadhaarNumber.slice(-4)}` : null} mono />
                 <InfoRow label="UAN Number"  value={user.uanNumber} mono />
@@ -1395,7 +1395,7 @@ export function MyProfilePanel({ userId }) {
             <>
               <SectionHeader icon={Heart} title="Health Information" color="red" />
               {editing ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField label="Blood Group">
                     <select className="input" value={form.bloodGroup || ''} onChange={e => f('bloodGroup', e.target.value)}>
                       <option value="">Select</option>
@@ -1416,7 +1416,7 @@ export function MyProfilePanel({ userId }) {
                   </FormField>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InfoRow label="Blood Group"       value={user.bloodGroup} />
                   <InfoRow label="Medical Conditions" value={user.medicalConditions || 'None declared'} />
                   <InfoRow label="Insurance Nominee" value={user.insuranceNomineeName} />
@@ -1430,7 +1430,7 @@ export function MyProfilePanel({ userId }) {
             <>
               <SectionHeader icon={AlertCircle} title="Emergency Contact" color="red" />
               {editing ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField label="Contact Name">
                     <input className="input" value={form.emergencyContactName || ''} onChange={e => f('emergencyContactName', e.target.value)} />
                   </FormField>
@@ -1448,7 +1448,7 @@ export function MyProfilePanel({ userId }) {
                   </FormField>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InfoRow label="Contact Name"  value={user.emergencyContactName} />
                   <InfoRow label="Relationship"  value={user.emergencyContactRelation} />
                   <InfoRow label="Phone"         value={user.emergencyContactPhone} />

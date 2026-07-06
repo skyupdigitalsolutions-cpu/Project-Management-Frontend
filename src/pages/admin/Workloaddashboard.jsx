@@ -130,7 +130,7 @@ export default function WorkloadDashboard() {
       </div>
 
       {/* ── Top Stats ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <StatBox label="Active Tasks"    value={totalActive}          icon={CheckSquare}  color="indigo" />
         <StatBox label="In Progress"     value={inProgress}           icon={TrendingUp}   color="info" />
         <StatBox label="Completed"       value={totalComplete}        icon={CheckSquare}  color="green" />

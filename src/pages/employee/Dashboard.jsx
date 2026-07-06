@@ -110,7 +110,7 @@ function AskApprovalModal({ item, type, onClose, onSuccess }) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       <div
-        className="relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden bg-white"
+        className="relative w-full max-w-lg rounded-2xl shadow-2xl bg-white max-h-[90vh] overflow-y-auto"
         style={{ border: '1px solid #e5e7eb' }}
       >
         {/* Header */}
@@ -484,7 +484,7 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="My Tasks"    value={s.total         ?? 0} icon={CheckSquare} color="primary"   />
         <StatCard label="In Progress" value={s['in-progress'] ?? 0} icon={TrendingUp}  color="amber"   />
         <StatCard label="Completed"   value={s.completed     ?? 0} icon={CheckSquare} color="emerald" />

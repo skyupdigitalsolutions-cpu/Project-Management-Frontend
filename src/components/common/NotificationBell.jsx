@@ -419,7 +419,7 @@ function SoundSettingsPanel({ onClose }) {
   }
 
   return (
-    <div className="absolute right-0 top-11 w-80 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 animate-slide-up overflow-hidden">
+    <div className="absolute right-0 top-11 w-80 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 animate-slide-up overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white/2">
         <div className="flex items-center gap-2">
@@ -722,7 +722,7 @@ export default function NotificationBell() {
 
       {/* ── Notification Panel ── */}
       {open && !showSettings && (
-        <div className="absolute right-0 top-11 w-80 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 animate-slide-up">
+        <div className="absolute right-0 top-11 w-80 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 animate-slide-up">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <span className="text-sm font-semibold text-gray-800">Notifications</span>

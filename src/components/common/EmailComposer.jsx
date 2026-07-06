@@ -4,7 +4,7 @@ import {
   Users, User, Check, AlertCircle, Loader2, Trash2,
   FileText, Image, File, Minimize2, Maximize2
 } from 'lucide-react'
-import api from '../../api/axios'
+import api from '../../api/axios' 
 import toast from 'react-hot-toast'
 
 // ─── File icon helper ─────────────────────────────────────────────────────────
@@ -277,7 +277,7 @@ export default function EmailComposer() {
             className={`fixed z-50 transition-all duration-300 ease-out bg-white shadow-2xl
               ${minimized
                 ? 'bottom-4 right-4 w-64 rounded-2xl overflow-hidden'
-                : 'bottom-6 right-6 w-[540px] rounded-2xl max-h-[90vh] flex flex-col'
+                : 'bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[540px] rounded-2xl max-h-[90vh] flex flex-col'
               }`}
             style={{ border: '1px solid #e5e7eb' }}
           >

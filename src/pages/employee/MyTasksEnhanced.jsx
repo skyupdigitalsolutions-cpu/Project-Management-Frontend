@@ -51,7 +51,7 @@ function RequestPermissionModal({ task, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden animate-slide-up">
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden animate-slide-up max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-yellow-50">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-yellow-100 border border-yellow-200 flex items-center justify-center">
@@ -236,7 +236,7 @@ export default function EmployeeMyTasksEnhanced() {
       <PageHeader title="My Tasks" subtitle="View and update your assigned tasks" />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <StatCard label="Total"          value={stats.total}      icon={CheckSquare} color="primary" />
         <StatCard label="Todo"           value={stats.todo}       icon={CheckSquare} color="info"    />
         <StatCard label="In Progress"    value={stats.inProgress} icon={CheckSquare} color="amber"   />

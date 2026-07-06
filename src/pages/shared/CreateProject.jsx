@@ -366,7 +366,7 @@ export default function CreateProject({ editMode = false }) {
               <Briefcase size={18} /> Project Information
             </h2>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Project Title *" className="col-span-2">
                 <input className="input" value={projectData.title}
                   onChange={e => pd('title', e.target.value)} placeholder="e.g. Company Website Redesign" />
@@ -503,7 +503,7 @@ export default function CreateProject({ editMode = false }) {
                   </div>
                   <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
                 </div>
-                <div className="grid grid-cols-2 divide-x divide-blue-100">
+                <div className="grid grid-cols-1 divide-y sm:grid-cols-2 sm:divide-y-0 sm:divide-x divide-blue-100">
                   {selectedClient.name && (
                     <div className="px-4 py-2.5">
                       <p className="text-xs text-gray-400 mb-0.5">Contact Person</p>
@@ -573,7 +573,7 @@ export default function CreateProject({ editMode = false }) {
                       <Trash2 size={14} />
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <select className="input" value={assign.department}
                       onChange={e => updateAssign(assign._tempId, 'department', e.target.value)}>
                       <option value="">Department</option>
@@ -643,8 +643,8 @@ export default function CreateProject({ editMode = false }) {
 
                   {/* Tasks */}
                   {assign.tasks.filter(t => !t._deleted).map(task => (
-                    <div key={task._tempId} className="px-4 py-2.5 border-t border-gray-100 grid grid-cols-6 gap-2 items-center">
-                      <input className="input text-sm col-span-2 py-1.5" placeholder="Task title"
+                    <div key={task._tempId} className="px-4 py-2.5 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-2 items-center">
+                      <input className="input text-sm sm:col-span-2 py-1.5" placeholder="Task title"
                         value={task.title}
                         onChange={e => updateTask(assign._tempId, task._tempId, 'title', e.target.value)} />
                       <select className="input text-sm py-1.5" value={task.assigned_to}
@@ -677,7 +677,7 @@ export default function CreateProject({ editMode = false }) {
               <Eye size={18} /> Review & Submit
             </h2>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Project summary */}
               <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
                 <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Project</p>

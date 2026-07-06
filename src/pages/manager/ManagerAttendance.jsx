@@ -401,7 +401,7 @@ function MyAttendanceTab() {
               })}
 
               {/* Summary row */}
-              <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-1 text-[16px]">
+              <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[16px]">
                 <span className="text-neutral">Total break time</span>
                 <span className="text-right font-bold text-orange-400">{fmtDuration(totalBreakMs)}</span>
                 {netHoursToday !== null && (
@@ -417,7 +417,7 @@ function MyAttendanceTab() {
       </div>
 
       {/* ── Stat cards ── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Present Days" value={present} icon={Clock} color="emerald" />
         <StatCard label="Absent Days"  value={absent}  icon={Clock} color="red"     />
         <StatCard label="On Leave"     value={onLeave} icon={Clock} color="amber"   />
@@ -603,7 +603,7 @@ function TeamAttendanceTab() {
           <UserMinus size={16} /> Mark Absent
         </button>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Present" value={present} icon={Clock} color="emerald" />
         <StatCard label="Absent"  value={absent}  icon={Clock} color="red"     />
         <StatCard label="Late"    value={late}    icon={Clock} color="amber"   />
@@ -836,7 +836,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
             <>
               <div>
                 <label className="label">Leave Type <span className="text-red-400">*</span></label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-1">
                   {LEAVE_TYPES.map(t => (
                     <button key={t.value} type="button" onClick={() => f('leave_type', t.value)}
                       className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all ${
@@ -852,7 +852,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
                 </div>
                 {errors.leave_type && <p className="text-red-400 text-[16px] mt-1">{errors.leave_type}</p>}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label">From Date <span className="text-red-400">*</span></label>
                   <input type="date" value={form.from_date} min={format(new Date(), 'yyyy-MM-dd')}
@@ -998,7 +998,7 @@ function ApplyLeaveModal({ onClose, onSuccess }) {
               </div>
               <div className="p-4 bg-white/[0.02] border border-gray-100 rounded-xl">
                 <p className="text-[16px] font-semibold text-neutral uppercase tracking-wider mb-3">Summary</p>
-                <div className="grid grid-cols-2 gap-y-2.5 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2.5 text-sm">
                   {[
                     ['Type',      `${selectedType?.icon ?? ''} ${selectedType?.label ?? '—'}`],
                     ['Duration',  `${days} day${days !== 1 ? 's' : ''}`],

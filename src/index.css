@@ -29,7 +29,7 @@
 
 @layer components {
   .card {
-    @apply bg-white rounded-2xl shadow-md p-6;
+    @apply bg-white rounded-2xl shadow-md p-4 sm:p-6;
   }
 
   .card-sm {
@@ -131,7 +131,8 @@
   }
 
   .modal-box {
-    @apply bg-white rounded-2xl shadow-lg w-full max-w-lg animate-slide-up;
+    @apply bg-white rounded-2xl shadow-lg w-full max-w-lg animate-slide-up
+           max-h-[90vh] flex flex-col overflow-hidden;
   }
 }
 

@@ -172,7 +172,7 @@ export default function ExcelTaskTable({ projectId, tasks: externalTasks, onTask
 
       {/* Expanded filters */}
       {showFilters && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 animate-fade-in">
           <FilterSelect label="Role"       value={filterRole}     onChange={setFilterRole}     options={roles} placeholder="All roles" />
           <FilterSelect label="Department" value={filterDept}     onChange={setFilterDept}     options={depts} placeholder="All depts" />
           <FilterSelect label="Status"     value={filterStatus}   onChange={setFilterStatus}   options={STATUSES} placeholder="All statuses" />

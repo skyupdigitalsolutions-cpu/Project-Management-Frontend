@@ -140,7 +140,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Users"     value={safeNum(u.total)}   icon={Users}        color="primary" trend={`${safeNum(byStat.active)} active`} />
         <StatCard label="Total Projects"  value={safeNum(p.total)}   icon={FolderKanban} color="emerald" trend={`${safeNum(pByStat['in-progress'] ?? pByStat.active)} in progress`} />
         <StatCard label="Total Tasks"     value={totalTasks}         icon={CheckSquare}  color="amber"   trend={`${completedTasks} completed`} />

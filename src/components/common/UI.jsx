@@ -59,7 +59,7 @@ export const StatCard = ({ label, value, icon: Icon, color = 'primary', trend })
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold text-neutral uppercase tracking-wider">{label}</p>
-          <p className="text-3xl font-bold text-gray-800 mt-2">{value ?? '—'}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-gray-800 mt-2">{value ?? '—'}</p>
           {trend && <p className="text-xs text-neutral mt-1">{trend}</p>}
         </div>
         {Icon && (
@@ -78,14 +78,14 @@ export const Modal = ({ open, onClose, title, children, footer }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 flex-shrink-0">
+          <h2 className="text-base font-semibold text-gray-800 pr-2 min-w-0 truncate">{title}</h2>
           <button onClick={onClose} className="text-neutral hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors">
             <X size={18} />
           </button>
         </div>
-        <div className="px-6 py-5">{children}</div>
-        {footer && <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">{footer}</div>}
+        <div className="px-4 sm:px-6 py-5 overflow-y-auto flex-1 min-h-0">{children}</div>
+        {footer && <div className="px-4 sm:px-6 py-4 border-t border-gray-100 flex flex-wrap justify-end gap-3 flex-shrink-0">{footer}</div>}
       </div>
     </div>
   )
@@ -137,12 +137,12 @@ export const FormField = ({ label, error, children }) => (
 
 // ─── Page header ─────────────────────────────────────────────────────────────
 export const PageHeader = ({ title, subtitle, action }) => (
-  <div className="page-header flex items-start justify-between">
-    <div>
+  <div className="page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+    <div className="min-w-0">
       <h1 className="page-title">{title}</h1>
       {subtitle && <p className="page-subtitle">{subtitle}</p>}
     </div>
-    {action && <div>{action}</div>}
+    {action && <div className="flex flex-wrap gap-2">{action}</div>}
   </div>
 )
 

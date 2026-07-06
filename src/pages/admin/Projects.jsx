@@ -547,7 +547,7 @@ function ClientStep({ clientId, setClientId, clients, clientsLoading }) {
               </div>
               <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
             </div>
-            <div className="grid grid-cols-2 divide-x divide-gray-100">
+            <div className="grid grid-cols-1 divide-y sm:grid-cols-2 sm:divide-y-0 sm:divide-x divide-gray-100">
               {selected.name  && <div className="px-4 py-2.5"><p className="text-xs text-gray-400 mb-0.5">Contact</p><p className="text-xs text-gray-700 font-medium">{selected.name}</p></div>}
               {selected.email && <div className="px-4 py-2.5"><p className="text-xs text-gray-400 mb-0.5">Email</p><p className="text-xs text-gray-700 font-medium truncate">{selected.email}</p></div>}
             </div>
@@ -1120,7 +1120,7 @@ function SmartAutoAssignPanel({ assignments, projectStart, projectEnd, onApply, 
 
         {results && stats && (
           <div className="space-y-4">
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 { label: 'Assignments',   value: `${stats.asgnFilled}/${results.length}`, color: '#6366f1' },
                 { label: 'Tasks assigned', value: `${stats.taskFilled}/${stats.taskTotal}`, color: '#10b981' },
@@ -1772,7 +1772,7 @@ export default function AdminProjects() {
         action={<PrimaryBtn onClick={openCreate}><Plus size={14} /> New Project</PrimaryBtn>} />
 
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Total"     value={stats.total}                       icon={FolderKanban} color="primary"  />
           <StatCard label="Active"    value={stats.by_status?.active ?? 0}      icon={FolderCheck}  color="emerald" />
           <StatCard label="On Hold"   value={stats.by_status?.['on-hold'] ?? 0} icon={FolderClock}  color="amber"   />
