@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Mail as MailIcon, Inbox, Send, Reply, Forward, RefreshCw, Paperclip, X,
   Plus, Loader2, Link2, AlertCircle, Search, Trash2, FileText, ShieldAlert,
@@ -143,6 +143,7 @@ export default function Mail() {
   const [composer, setComposer] = useState(null)
   const [search, setSearch] = useState('')
   const [query, setQuery] = useState('')            // applied search
+  const reqRef = useRef(0)                           // guards against out-of-order folder loads
 
   const checkStatus = useCallback(async () => {
     setChecking(true)
@@ -158,24 +159,42 @@ export default function Mail() {
     } catch { /* non-fatal */ }
   }, [])
 
-  const loadList = useCallback(async (targetBox = box, q = query) => {
+  const loadList = useCallback(async (targetBox, q = '') => {
+    const my = ++reqRef.current
     setLoadingList(true); setActive(null)
     try {
       const { data } = await api.get('/mail/messages', { params: { box: targetBox, limit: 40, search: q || undefined } })
+      if (my !== reqRef.current) return               // a newer request superseded this one
       setMessages(data.data ?? [])
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to load mail') }
-    finally { setLoadingList(false) }
-  }, [box, query])
+    } catch (err) {
+      if (my === reqRef.current) toast.error(err.response?.data?.message || 'Failed to load mail')
+    } finally {
+      if (my === reqRef.current) setLoadingList(false)
+    }
+  }, [])
 
   const loadContacts = useCallback(async () => {
+    const my = ++reqRef.current
     setLoadingList(true)
-    try { const { data } = await api.get('/mail/contacts'); setContacts(data.data ?? []) }
-    catch (err) { toast.error(err.response?.data?.message || 'Failed to load contacts') }
-    finally { setLoadingList(false) }
+    try {
+      const { data } = await api.get('/mail/contacts')
+      if (my !== reqRef.current) return
+      setContacts(data.data ?? [])
+    } catch (err) {
+      if (my === reqRef.current) toast.error(err.response?.data?.message || 'Failed to load contacts')
+    } finally {
+      if (my === reqRef.current) setLoadingList(false)
+    }
   }, [])
 
   useEffect(() => { checkStatus() }, [checkStatus])
-  useEffect(() => { if (connected) { loadFolders(); loadList('INBOX', '') } }, [connected, loadFolders, loadList])
+  useEffect(() => {
+    if (!connected) return
+    loadFolders()
+    loadList('INBOX', '')
+    // run once when the mailbox connects — folder switches are handled by selectFolder
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected])
 
   const selectFolder = (path) => {
     setView('mail'); setBox(path); setSearch(''); setQuery(''); loadList(path, '')
