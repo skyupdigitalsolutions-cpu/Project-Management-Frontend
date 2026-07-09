@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, Users, FolderKanban, MonitorSmartphone, CheckSquare, Clock,
   Bell, LogOut, Menu, X, User, UserCheck, Video, ClipboardList,
-  GitBranch, ChevronLeft, ChevronRight, LayoutTemplate, MessageCircle
+  GitBranch, ChevronLeft, ChevronRight, LayoutTemplate, MessageCircle, Mail
 } from 'lucide-react'
 import NotificationBell from '../common/NotificationBell'
 import EmailComposer from '../common/EmailComposer'
@@ -20,6 +20,7 @@ const NAV = {
     { to: '/admin/clients',       label: 'Clients',           icon: Users },
     { to: '/admin/attendance',    label: 'Attendance',         icon: Clock },
     { to: '/admin/meetings',      label: 'Meetings',           icon: Video, meetingBadge: true },
+    { to: '/admin/mail',          label: 'Mail',               icon: Mail },
     { to: '/admin/notifications', label: 'Notifications',      icon: Bell },
     { to: '/admin/daily-reports', label: 'Daily Reports',      icon: ClipboardList },
     { to: '/admin/workflow',      label: 'Workflow Dashboard', icon: GitBranch },
@@ -32,6 +33,7 @@ const NAV = {
     { to: '/manager/team',           label: 'My Team',       icon: UserCheck },
     { to: '/manager/attendance',     label: 'Attendance',    icon: Clock },
     { to: '/manager/meetings',       label: 'Meetings',      icon: Video, meetingBadge: true },
+    { to: '/manager/mail',           label: 'Mail',          icon: Mail },
     { to: '/manager/notifications',  label: 'Notifications', icon: Bell },
     { to: '/manager/daily-reports',  label: 'Daily Reports', icon: ClipboardList },
   ],
@@ -41,6 +43,7 @@ const NAV = {
     { to: '/employee/projects',      label: 'Projects',     icon: FolderKanban },
     { to: '/employee/attendance',    label: 'Attendance',   icon: Clock },
     { to: '/employee/meetings',      label: 'Meetings',     icon: Video, meetingBadge: true },
+    { to: '/employee/mail',          label: 'Mail',         icon: Mail },
     { to: '/employee/daily-report',  label: 'Daily Report', icon: ClipboardList },
     { to: '/employee/team-chat',     label: 'Team Chat',    icon: MessageCircle },
   ],

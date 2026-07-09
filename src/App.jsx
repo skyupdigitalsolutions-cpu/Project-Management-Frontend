@@ -52,6 +52,7 @@ import AdminDailyReports from "./pages/admin/Admindailyreports";
 import ManagerDailyReports from "./pages/manager/Managerdailyreports";
 
 import Profile from "./pages/Profile";
+import Mail from "./pages/shared/Mail";
 
 const ProtectedRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
@@ -125,6 +126,7 @@ export default function App() {
           <Route path="tasks" element={<AdminTasks />} />
           <Route path="attendance" element={<AdminAttendance />} />
           <Route path="meetings" element={<AdminMeetings />} />
+          <Route path="mail" element={<Mail />} />
           <Route path="Clients" element={<Clients />} />
           <Route path="task-templates" element={<TaskTemplates />} />
 
@@ -160,6 +162,7 @@ export default function App() {
           <Route path="team" element={<ManagerTeam />} />
           <Route path="attendance" element={<ManagerAttendance />} />
           <Route path="meetings" element={<ManagerMeetings />} />
+          <Route path="mail" element={<Mail />} />
           <Route path="notifications" element={<ManagerNotifications />} />
           <Route path="daily-reports" element={<ManagerDailyReports />} />
           <Route path="profile" element={<Profile />} />
@@ -183,6 +186,7 @@ export default function App() {
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="attendance" element={<EmployeeAttendance />} />
           <Route path="meetings" element={<EmployeeMeetings />} />
+          <Route path="mail" element={<Mail />} />
           <Route path="daily-report" element={<EmployeeDailyReport />} />
           <Route path="team-chat" element={<EmployeeTeamChat />} />
           <Route path="profile" element={<Profile />} />
