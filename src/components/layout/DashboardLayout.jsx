@@ -19,7 +19,7 @@ const NAV = {
     { to: '/admin/tasks',         label: 'Tasks',              icon: CheckSquare },
     { to: '/admin/clients',       label: 'Clients',           icon: Users },
     { to: '/admin/attendance',    label: 'Attendance',         icon: Clock },
-    { to: '/admin/meetings',      label: 'Meetings',           icon: Video },
+    { to: '/admin/meetings',      label: 'Meetings',           icon: Video, meetingBadge: true },
     { to: '/admin/notifications', label: 'Notifications',      icon: Bell },
     { to: '/admin/daily-reports', label: 'Daily Reports',      icon: ClipboardList },
     { to: '/admin/workflow',      label: 'Workflow Dashboard', icon: GitBranch },
@@ -31,7 +31,7 @@ const NAV = {
     { to: '/manager/tasks',          label: 'Tasks',         icon: CheckSquare },
     { to: '/manager/team',           label: 'My Team',       icon: UserCheck },
     { to: '/manager/attendance',     label: 'Attendance',    icon: Clock },
-    { to: '/manager/meetings',       label: 'Meetings',      icon: Video },
+    { to: '/manager/meetings',       label: 'Meetings',      icon: Video, meetingBadge: true },
     { to: '/manager/notifications',  label: 'Notifications', icon: Bell },
     { to: '/manager/daily-reports',  label: 'Daily Reports', icon: ClipboardList },
   ],
@@ -40,7 +40,7 @@ const NAV = {
     { to: '/employee/my-tasks',      label: 'My Tasks',     icon: CheckSquare, taskBadge: true },
     { to: '/employee/projects',      label: 'Projects',     icon: FolderKanban },
     { to: '/employee/attendance',    label: 'Attendance',   icon: Clock },
-    { to: '/employee/meetings',      label: 'Meetings',     icon: Video },
+    { to: '/employee/meetings',      label: 'Meetings',     icon: Video, meetingBadge: true },
     { to: '/employee/daily-report',  label: 'Daily Report', icon: ClipboardList },
     { to: '/employee/team-chat',     label: 'Team Chat',    icon: MessageCircle },
   ],
@@ -60,6 +60,21 @@ function saveSeenIds(ids) {
   localStorage.setItem(SEEN_KEY, JSON.stringify([...ids]))
 }
 
+const SEEN_MEETINGS_KEY = 'seen_meeting_ids'
+function getSeenMeetingIds() {
+  try { return new Set(JSON.parse(localStorage.getItem(SEEN_MEETINGS_KEY) || '[]')) } catch { return new Set() }
+}
+function saveSeenMeetingIds(ids) {
+  localStorage.setItem(SEEN_MEETINGS_KEY, JSON.stringify([...ids]))
+}
+
+function meetingIsLive(m) {
+  const start = new Date(m.scheduled_at).getTime()
+  const end   = start + (m.duration_minutes || 0) * 60000
+  const now   = Date.now()
+  return now >= start && now <= end
+}
+
 export default function DashboardLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -68,11 +83,14 @@ export default function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [newTaskCount, setNewTaskCount] = useState(0)
   const [hasUrgent, setHasUrgent] = useState(false)
+  const [newMeetingCount, setNewMeetingCount] = useState(0)
+  const [hasLiveMeeting, setHasLiveMeeting] = useState(false)
 
   const isEmployee  = user?.role === 'employee'
   const isAdmin     = user?.role === 'admin'
   const isManager   = user?.role === 'manager'
   const onTasksPage = location.pathname === '/employee/my-tasks'
+  const onMeetingsPage = location.pathname === `/${user?.role}/meetings`
 
   const checkNewTasks = useCallback(async () => {
     if (!isEmployee) return
@@ -107,6 +125,38 @@ export default function DashboardLayout() {
     })()
   }, [isEmployee, onTasksPage])
 
+  const checkNewMeetings = useCallback(async () => {
+    if (!user) return
+    try {
+      const { data } = await api.get('/meetings')
+      const meetings = data.data ?? []
+      const seen     = getSeenMeetingIds()
+      const unseen   = meetings.filter(m => !seen.has(m._id))
+      setNewMeetingCount(unseen.length)
+      setHasLiveMeeting(unseen.some(meetingIsLive))
+    } catch {}
+  }, [user])
+
+  useEffect(() => {
+    checkNewMeetings()
+    const interval = setInterval(checkNewMeetings, 60_000)
+    return () => clearInterval(interval)
+  }, [checkNewMeetings])
+
+  useEffect(() => {
+    if (!onMeetingsPage) return
+    ;(async () => {
+      try {
+        const { data } = await api.get('/meetings')
+        const meetings = data.data ?? []
+        const allIds   = new Set(meetings.map(m => m._id))
+        saveSeenMeetingIds(allIds)
+        setNewMeetingCount(0)
+        setHasLiveMeeting(false)
+      } catch {}
+    })()
+  }, [onMeetingsPage])
+
   const navItems = NAV[user?.role] || []
   const handleLogout = () => { logout(); navigate('/login') }
 
@@ -115,6 +165,15 @@ export default function DashboardLayout() {
     return (
       <span className={`ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold text-gray-800 shadow-sm ${hasUrgent ? 'bg-danger animate-pulse' : 'bg-success'}`}>
         {newTaskCount}
+      </span>
+    )
+  }
+
+  const MeetingBadge = () => {
+    if (newMeetingCount === 0) return null
+    return (
+      <span className={`ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold text-gray-800 shadow-sm ${hasLiveMeeting ? 'bg-danger animate-pulse' : 'bg-success'}`}>
+        {newMeetingCount}
       </span>
     )
   }
@@ -166,7 +225,7 @@ export default function DashboardLayout() {
         {!isCollapsed && (
           <p className="text-[16px] font-semibold text-gray-400 uppercase tracking-widest px-3 py-2">Menu</p>
         )}
-        {navItems.map(({ to, label, icon: Icon, end, taskBadge }) => (
+        {navItems.map(({ to, label, icon: Icon, end, taskBadge, meetingBadge }) => (
           <NavLink
             key={to} to={to} end={end}
             onClick={() => setSidebarOpen(false)}
@@ -176,6 +235,7 @@ export default function DashboardLayout() {
             <Icon size={17} className="flex-shrink-0" />
             {!isCollapsed && <span>{label}</span>}
             {!isCollapsed && taskBadge && isEmployee && <TaskBadge />}
+            {!isCollapsed && meetingBadge && <MeetingBadge />}
           </NavLink>
         ))}
       </nav>
