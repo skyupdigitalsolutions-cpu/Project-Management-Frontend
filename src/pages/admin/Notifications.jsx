@@ -95,23 +95,23 @@ export default function AdminNotifications() {
         <button
           onClick={() => setTab('inbox')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === 'inbox' ? 'bg-brand-600 text-gray-800' : 'text-neutral hover:text-gray-800'
+            tab === 'inbox' ? 'bg-violet-600 text-white shadow-sm' : 'text-neutral hover:text-gray-800 hover:bg-white'
           }`}
         >
           <Inbox size={15} /> Inbox
           {unreadCount > 0 && (
-            <span className="bg-red-500 text-gray-800 text-[16px] rounded-full px-1.5 py-0.5 leading-none">{unreadCount}</span>
+            <span className="min-w-[20px] inline-flex items-center justify-center bg-red-100 text-red-600 ring-1 ring-red-200 text-xs font-bold rounded-full px-1.5 py-0.5 leading-none">{unreadCount}</span>
           )}
         </button>
         <button
           onClick={() => setTab('sent')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === 'sent' ? 'bg-brand-600 text-gray-800' : 'text-neutral hover:text-gray-800'
+            tab === 'sent' ? 'bg-violet-600 text-white shadow-sm' : 'text-neutral hover:text-gray-800 hover:bg-white'
           }`}
         >
           <SendHorizonal size={15} /> Sent
           {sent.length > 0 && (
-            <span className="bg-slate-600 text-gray-600 text-[16px] rounded-full px-1.5 py-0.5 leading-none">{sent.length}</span>
+            <span className="min-w-[20px] inline-flex items-center justify-center bg-violet-100 text-violet-600 ring-1 ring-violet-200 text-xs font-bold rounded-full px-1.5 py-0.5 leading-none">{sent.length}</span>
           )}
         </button>
       </div>
@@ -155,15 +155,27 @@ export default function AdminNotifications() {
               <div className="flex-1 min-w-0">
                 <p className={`text-sm ${tab === 'inbox' && !n.is_read ? 'text-gray-700' : 'text-neutral'}`}>{n.message}</p>
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
-                  {n.type && (
-                    <span className="text-[16px] text-neutral bg-gray-50 px-2 py-0.5 rounded-full">{n.type}</span>
-                  )}
-                  {tab === 'sent' && n.recipient_count != null && (
-                    <span className="text-[16px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                      → {n.recipient_count} recipient{n.recipient_count !== 1 ? 's' : ''}
+                  {tab === 'inbox' && n.sender_id?.name && (
+                    <span className="text-xs font-medium text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">
+                      From: {n.sender_id.name}
+                      {n.sender_id.role ? <span className="text-violet-400 font-normal capitalize"> · {n.sender_id.role}</span> : null}
                     </span>
                   )}
-                  <span className="text-[16px] text-neutral">
+                  {tab === 'sent' && (
+                    <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                      To: {
+                        Array.isArray(n.recipient_ids) && n.recipient_ids.length > 0
+                          ? (n.recipient_ids.length <= 3
+                              ? n.recipient_ids.map(r => r?.name).filter(Boolean).join(', ')
+                              : `${n.recipient_ids.slice(0, 2).map(r => r?.name).filter(Boolean).join(', ')} +${n.recipient_ids.length - 2} more`)
+                          : `${n.recipient_count ?? 0} recipient${(n.recipient_count ?? 0) !== 1 ? 's' : ''}`
+                      }
+                    </span>
+                  )}
+                  {n.type && (
+                    <span className="text-xs text-neutral bg-gray-100 px-2 py-0.5 rounded-full">{n.type}</span>
+                  )}
+                  <span className="text-xs text-neutral">
                     {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                   </span>
                 </div>
