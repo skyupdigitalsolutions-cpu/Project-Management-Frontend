@@ -1,27 +1,32 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   Mail as MailIcon, Inbox, Send, Reply, Forward, RefreshCw, Paperclip, X,
-  Plus, Loader2, Link2, AlertCircle,
+  Plus, Loader2, Link2, AlertCircle, Search, Trash2, FileText, ShieldAlert,
+  Archive, Folder, Users, ChevronLeft,
 } from 'lucide-react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 
-const Spinner = ({ size = 20 }) => (
-  <Loader2 size={size} className="animate-spin text-primary" />
-)
+const Spinner = ({ size = 20 }) => <Loader2 size={size} className="animate-spin text-primary" />
 
-function addr(a) {
-  if (!a) return ''
-  return a.name ? `${a.name} <${a.address}>` : a.address
+function addr(a) { if (!a) return ''; return a.name ? `${a.name} <${a.address}>` : a.address }
+function shortName(a) { if (!a) return 'Unknown'; return a.name || a.address || 'Unknown' }
+function stripPrefix(s = '', p) { return s.replace(new RegExp(`^\\s*(${p})\\s*:\\s*`, 'i'), '') }
+
+/* Map an IMAP folder to a friendly label + icon + sort order */
+const SPECIAL = {
+  '\\Inbox':   { label: 'Inbox',   icon: Inbox,       order: 0 },
+  '\\Sent':    { label: 'Sent',    icon: Send,        order: 1 },
+  '\\Drafts':  { label: 'Drafts',  icon: FileText,    order: 2 },
+  '\\Junk':    { label: 'Spam',    icon: ShieldAlert, order: 3 },
+  '\\Trash':   { label: 'Trash',   icon: Trash2,      order: 4 },
+  '\\Archive': { label: 'Archive', icon: Archive,     order: 5 },
 }
-function shortName(a) {
-  if (!a) return 'Unknown'
-  return a.name || a.address || 'Unknown'
-}
-function stripPrefix(subject = '', prefix) {
-  const re = new RegExp(`^\\s*(${prefix})\\s*:\\s*`, 'i')
-  return subject.replace(re, '')
+function folderMeta(f) {
+  const s = SPECIAL[f.specialUse]
+  if (s) return { ...s, path: f.path }
+  return { label: f.name, icon: Folder, order: 100, path: f.path }
 }
 
 /* ── Connect screen ─────────────────────────────────────────────── */
@@ -29,58 +34,32 @@ function ConnectMailbox({ onConnected }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
-
   const connect = async () => {
     if (!email || !password) return toast.error('Enter your Hostinger email and password')
     setBusy(true)
     try {
       const { data } = await api.post('/mail/connect', { email, password })
-      toast.success('Mailbox connected')
-      onConnected(data.email)
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not connect mailbox')
-    } finally {
-      setBusy(false)
-    }
+      toast.success('Mailbox connected'); onConnected(data.email)
+    } catch (err) { toast.error(err.response?.data?.message || 'Could not connect mailbox') }
+    finally { setBusy(false) }
   }
-
   return (
     <div className="max-w-md mx-auto mt-10 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
       <div className="flex items-center gap-2 mb-1">
         <Link2 size={20} className="text-primary" />
         <h2 className="text-lg font-bold text-gray-800">Connect your Hostinger mailbox</h2>
       </div>
-      <p className="text-sm text-neutral mb-5">
-        Use your full Hostinger email address and its password. Your password is stored
-        encrypted and used only to sync your mail.
-      </p>
-
+      <p className="text-sm text-neutral mb-5">Use your full Hostinger email and its password. Your password is stored encrypted and used only to sync your mail.</p>
       <div className="space-y-3">
-        <div>
-          <label className="text-[13px] font-medium text-gray-600">Email address</label>
-          <input
-            type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="you@yourdomain.com"
-            className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-        </div>
-        <div>
-          <label className="text-[13px] font-medium text-gray-600">Mailbox password</label>
-          <input
-            type="password" value={password} onChange={e => setPassword(e.target.value)}
-            placeholder="••••••••"
-            className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-        </div>
-        <button
-          onClick={connect} disabled={busy}
-          className="w-full flex items-center justify-center gap-2 bg-primary text-white font-medium py-2.5 rounded-xl hover:opacity-90 transition disabled:opacity-60"
-        >
-          {busy ? <Spinner size={16} /> : <Link2 size={16} />}
-          {busy ? 'Connecting…' : 'Connect mailbox'}
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@yourdomain.com"
+          className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mailbox password"
+          className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        <button onClick={connect} disabled={busy}
+          className="w-full flex items-center justify-center gap-2 bg-primary text-white font-medium py-2.5 rounded-xl hover:opacity-90 transition disabled:opacity-60">
+          {busy ? <Spinner size={16} /> : <Link2 size={16} />} {busy ? 'Connecting…' : 'Connect mailbox'}
         </button>
       </div>
-
       <div className="mt-4 flex items-start gap-2 text-[12px] text-neutral bg-gray-50 rounded-xl p-3">
         <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
         <span>Server settings are handled automatically (imap.hostinger.com / smtp.hostinger.com).</span>
@@ -89,36 +68,28 @@ function ConnectMailbox({ onConnected }) {
   )
 }
 
-/* ── Compose / Reply / Forward modal ────────────────────────────── */
+/* ── Composer ───────────────────────────────────────────────────── */
 function Composer({ initial, onClose, onSent }) {
   const [to, setTo] = useState(initial.to || '')
   const [cc, setCc] = useState('')
   const [subject, setSubject] = useState(initial.subject || '')
   const [body, setBody] = useState(initial.body || '')
   const [busy, setBusy] = useState(false)
-
   const send = async () => {
     if (!to.trim()) return toast.error('Add at least one recipient')
     setBusy(true)
     try {
       await api.post('/mail/send', {
         to, cc: cc || undefined, subject,
-        text: body,
-        html: body.replace(/\n/g, '<br>'),
-        inReplyTo: initial.inReplyTo,
-        references: initial.references,
-        attachments: initial.attachments, // carried through on forward
+        text: body, html: body.replace(/\n/g, '<br>'),
+        inReplyTo: initial.inReplyTo, references: initial.references,
+        attachments: initial.attachments,
       })
-      toast.success('Message sent')
-      onSent?.()
-      onClose()
+      toast.success('Message sent'); onSent?.(); onClose()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send')
-    } finally {
-      setBusy(false)
-    }
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to send')
+    } finally { setBusy(false) }
   }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -157,133 +128,180 @@ function Composer({ initial, onClose, onSent }) {
   )
 }
 
-/* ── Main page ──────────────────────────────────────────────────── */
+/* ── Main ───────────────────────────────────────────────────────── */
 export default function Mail() {
   const [checking, setChecking] = useState(true)
   const [connected, setConnected] = useState(false)
+  const [folders, setFolders] = useState([])
+  const [box, setBox] = useState('INBOX')
+  const [view, setView] = useState('mail')          // 'mail' | 'contacts'
   const [messages, setMessages] = useState([])
+  const [contacts, setContacts] = useState([])
   const [loadingList, setLoadingList] = useState(false)
-  const [active, setActive] = useState(null)      // full message
+  const [active, setActive] = useState(null)
   const [loadingMsg, setLoadingMsg] = useState(false)
-  const [composer, setComposer] = useState(null)  // composer initial state or null
+  const [composer, setComposer] = useState(null)
+  const [search, setSearch] = useState('')
+  const [query, setQuery] = useState('')            // applied search
 
   const checkStatus = useCallback(async () => {
     setChecking(true)
-    try {
-      const { data } = await api.get('/mail/status')
-      setConnected(data.connected)
-    } catch { setConnected(false) }
-    finally { setChecking(false) }
+    try { const { data } = await api.get('/mail/status'); setConnected(data.connected) }
+    catch { setConnected(false) } finally { setChecking(false) }
   }, [])
 
-  const loadList = useCallback(async () => {
-    setLoadingList(true)
+  const loadFolders = useCallback(async () => {
     try {
-      const { data } = await api.get('/mail/messages', { params: { box: 'INBOX', limit: 40 } })
+      const { data } = await api.get('/mail/folders')
+      const sorted = (data.data ?? []).map(folderMeta).sort((a, b) => a.order - b.order || a.label.localeCompare(b.label))
+      setFolders(sorted)
+    } catch { /* non-fatal */ }
+  }, [])
+
+  const loadList = useCallback(async (targetBox = box, q = query) => {
+    setLoadingList(true); setActive(null)
+    try {
+      const { data } = await api.get('/mail/messages', { params: { box: targetBox, limit: 40, search: q || undefined } })
       setMessages(data.data ?? [])
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to load inbox')
-    } finally { setLoadingList(false) }
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to load mail') }
+    finally { setLoadingList(false) }
+  }, [box, query])
+
+  const loadContacts = useCallback(async () => {
+    setLoadingList(true)
+    try { const { data } = await api.get('/mail/contacts'); setContacts(data.data ?? []) }
+    catch (err) { toast.error(err.response?.data?.message || 'Failed to load contacts') }
+    finally { setLoadingList(false) }
   }, [])
 
   useEffect(() => { checkStatus() }, [checkStatus])
-  useEffect(() => { if (connected) loadList() }, [connected, loadList])
+  useEffect(() => { if (connected) { loadFolders(); loadList('INBOX', '') } }, [connected, loadFolders, loadList])
+
+  const selectFolder = (path) => {
+    setView('mail'); setBox(path); setSearch(''); setQuery(''); loadList(path, '')
+  }
+  const openContacts = () => { setView('contacts'); setActive(null); loadContacts() }
+
+  const runSearch = () => { setQuery(search); setView('mail'); loadList(box, search) }
 
   const openMessage = async (uid) => {
-    setLoadingMsg(true)
-    setActive({ uid })
+    setLoadingMsg(true); setActive({ uid })
     try {
-      const { data } = await api.get(`/mail/messages/${uid}`)
+      const { data } = await api.get(`/mail/messages/${uid}`, { params: { box } })
       setActive(data.data)
       setMessages(ms => ms.map(m => m.uid === uid ? { ...m, seen: true } : m))
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to open message')
-      setActive(null)
-    } finally { setLoadingMsg(false) }
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to open message'); setActive(null) }
+    finally { setLoadingMsg(false) }
   }
 
-  const startReply = (msg) => {
-    const quoted = `\n\n\n----- On ${msg.date ? format(new Date(msg.date), 'dd MMM yyyy, hh:mm a') : ''}, ${shortName(msg.from)} wrote: -----\n${msg.text || ''}`
-    setComposer({
-      heading: 'Reply',
-      to: msg.from?.address || '',
-      subject: `Re: ${stripPrefix(msg.subject, 'Re')}`,
-      body: quoted,
-      inReplyTo: msg.messageId,
-      references: msg.references,
-    })
+  const removeMessage = async (uid) => {
+    try {
+      await api.delete(`/mail/messages/${uid}`, { params: { box } })
+      setMessages(ms => ms.filter(m => m.uid !== uid)); setActive(null); toast.success('Moved to Trash')
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to delete') }
   }
 
-  const startForward = (msg) => {
-    const fwd = `\n\n----- Forwarded message -----\nFrom: ${addr(msg.from)}\nDate: ${msg.date ? format(new Date(msg.date), 'dd MMM yyyy, hh:mm a') : ''}\nSubject: ${msg.subject}\n\n${msg.text || ''}`
-    setComposer({
-      heading: 'Forward',
-      to: '',
-      subject: `Fwd: ${stripPrefix(msg.subject, 'Fwd')}`,
-      body: fwd,
-      attachments: msg.attachments,
-    })
-  }
+  const startReply = (m) => setComposer({
+    heading: 'Reply', to: m.from?.address || '',
+    subject: `Re: ${stripPrefix(m.subject, 'Re')}`,
+    body: `\n\n\n----- On ${m.date ? format(new Date(m.date), 'dd MMM yyyy, hh:mm a') : ''}, ${shortName(m.from)} wrote: -----\n${m.text || ''}`,
+    inReplyTo: m.messageId, references: m.references,
+  })
+  const startForward = (m) => setComposer({
+    heading: 'Forward', to: '',
+    subject: `Fwd: ${stripPrefix(m.subject, 'Fwd')}`,
+    body: `\n\n----- Forwarded message -----\nFrom: ${addr(m.from)}\nDate: ${m.date ? format(new Date(m.date), 'dd MMM yyyy, hh:mm a') : ''}\nSubject: ${m.subject}\n\n${m.text || ''}`,
+    attachments: m.attachments,
+  })
 
-  if (checking) {
-    return <div className="flex justify-center py-24"><Spinner size={28} /></div>
-  }
+  if (checking) return <div className="flex justify-center py-24"><Spinner size={28} /></div>
+  if (!connected) return (
+    <div className="space-y-6">
+      <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2"><MailIcon size={22} className="text-primary" /> Mail</h1>
+      <ConnectMailbox onConnected={() => setConnected(true)} />
+    </div>
+  )
 
-  if (!connected) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          <MailIcon size={22} className="text-primary" /> Mail
-        </h1>
-        <ConnectMailbox onConnected={() => setConnected(true)} />
-      </div>
-    )
-  }
+  const currentFolderLabel = folders.find(f => f.path === box)?.label || 'Inbox'
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          <MailIcon size={22} className="text-primary" /> Mail
-        </h1>
-        <div className="flex items-center gap-2">
-          <button onClick={loadList} className="p-2 text-neutral hover:text-gray-800 hover:bg-gray-50 rounded-xl transition">
-            <RefreshCw size={16} className={loadingList ? 'animate-spin' : ''} />
-          </button>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2"><MailIcon size={22} className="text-primary" /> Mail</h1>
+        <div className="flex items-center gap-2 flex-1 max-w-md">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral" />
+            <input
+              value={search} onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && runSearch()}
+              placeholder="Search mail…"
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
           <button onClick={() => setComposer({ heading: 'New message' })}
-            className="inline-flex items-center gap-2 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl hover:opacity-90 transition">
+            className="inline-flex items-center gap-2 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl hover:opacity-90 transition whitespace-nowrap">
             <Plus size={16} /> Compose
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-4">
-        {/* List */}
+      <div className="grid grid-cols-1 lg:grid-cols-[190px_320px_1fr] gap-4">
+        {/* Folder rail */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-2 h-fit">
+          {folders.map(f => {
+            const Icon = f.icon
+            const activeF = view === 'mail' && box === f.path
+            return (
+              <button key={f.path} onClick={() => selectFolder(f.path)}
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition ${activeF ? 'bg-purple-50 text-primary font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
+                <Icon size={16} /> <span className="truncate">{f.label}</span>
+              </button>
+            )
+          })}
+          <div className="my-1 border-t border-gray-100" />
+          <button onClick={openContacts}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition ${view === 'contacts' ? 'bg-purple-50 text-primary font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}>
+            <Users size={16} /> Contacts
+          </button>
+        </div>
+
+        {/* Middle: list or contacts */}
         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 text-sm font-semibold text-gray-700">
-            <Inbox size={16} className="text-primary" /> Inbox
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 text-sm font-semibold text-gray-700">
+            <span>{view === 'contacts' ? 'Contacts' : (query ? `Search: "${query}"` : currentFolderLabel)}</span>
+            <button onClick={() => view === 'contacts' ? loadContacts() : loadList(box, query)}
+              className="p-1 text-neutral hover:text-gray-800 rounded-lg">
+              <RefreshCw size={14} className={loadingList ? 'animate-spin' : ''} />
+            </button>
           </div>
+
           {loadingList ? (
             <div className="flex justify-center py-16"><Spinner /></div>
+          ) : view === 'contacts' ? (
+            contacts.length === 0 ? <div className="text-center py-16 text-neutral text-sm">No contacts found yet.</div> : (
+              <div className="divide-y divide-gray-50 max-h-[70vh] overflow-y-auto">
+                {contacts.map((c, i) => (
+                  <button key={i} onClick={() => setComposer({ heading: 'New message', to: c.address })}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 transition">
+                    <div className="text-sm text-gray-800 font-medium truncate">{c.name || c.address}</div>
+                    {c.name && <div className="text-[12px] text-neutral truncate">{c.address}</div>}
+                  </button>
+                ))}
+              </div>
+            )
           ) : messages.length === 0 ? (
-            <div className="text-center py-16 text-neutral text-sm">Your inbox is empty.</div>
+            <div className="text-center py-16 text-neutral text-sm">{query ? 'No matches.' : 'Nothing here.'}</div>
           ) : (
             <div className="divide-y divide-gray-50 max-h-[70vh] overflow-y-auto">
               {messages.map(m => (
                 <button key={m.uid} onClick={() => openMessage(m.uid)}
                   className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition ${active?.uid === m.uid ? 'bg-purple-50' : ''}`}>
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`text-sm truncate ${m.seen ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>
-                      {shortName(m.from)}
-                    </span>
-                    <span className="text-[11px] text-neutral flex-shrink-0">
-                      {m.date ? format(new Date(m.date), 'dd MMM') : ''}
-                    </span>
+                    <span className={`text-sm truncate ${m.seen ? 'text-gray-600' : 'text-gray-900 font-semibold'}`}>{shortName(m.from)}</span>
+                    <span className="text-[11px] text-neutral flex-shrink-0">{m.date ? format(new Date(m.date), 'dd MMM') : ''}</span>
                   </div>
-                  <div className={`text-[13px] truncate ${m.seen ? 'text-neutral' : 'text-gray-800 font-medium'}`}>
-                    {m.subject}
-                  </div>
+                  <div className={`text-[13px] truncate ${m.seen ? 'text-neutral' : 'text-gray-800 font-medium'}`}>{m.subject}</div>
                 </button>
               ))}
             </div>
@@ -292,55 +310,46 @@ export default function Mail() {
 
         {/* Reader */}
         <div className="bg-white border border-gray-100 rounded-2xl min-h-[60vh]">
-          {!active ? (
+          {view === 'contacts' ? (
             <div className="h-full flex flex-col items-center justify-center text-neutral py-20">
-              <MailIcon size={40} className="opacity-30 mb-3" />
-              <p className="text-sm">Select a message to read</p>
+              <Users size={40} className="opacity-30 mb-3" /><p className="text-sm">Tap a contact to email them</p>
+            </div>
+          ) : !active ? (
+            <div className="h-full flex flex-col items-center justify-center text-neutral py-20">
+              <MailIcon size={40} className="opacity-30 mb-3" /><p className="text-sm">Select a message to read</p>
             </div>
           ) : loadingMsg ? (
             <div className="flex justify-center py-24"><Spinner size={26} /></div>
           ) : (
             <div className="flex flex-col h-full">
               <div className="px-5 py-4 border-b border-gray-100">
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">{active.subject}</h2>
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-2">{active.subject}</h2>
+                  <button onClick={() => removeMessage(active.uid)} title="Delete"
+                    className="p-1.5 text-neutral hover:text-danger hover:bg-red-50 rounded-lg flex-shrink-0"><Trash2 size={16} /></button>
+                </div>
                 <div className="text-[13px] text-neutral">
                   <div><span className="text-gray-500">From:</span> {addr(active.from)}</div>
                   <div><span className="text-gray-500">To:</span> {active.to?.map(addr).join(', ')}</div>
                   <div className="mt-0.5">{active.date ? format(new Date(active.date), 'dd MMM yyyy, hh:mm a') : ''}</div>
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button onClick={() => startReply(active)}
-                    className="inline-flex items-center gap-1.5 text-[13px] font-medium border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-700">
-                    <Reply size={14} /> Reply
-                  </button>
-                  <button onClick={() => startForward(active)}
-                    className="inline-flex items-center gap-1.5 text-[13px] font-medium border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-700">
-                    <Forward size={14} /> Forward
-                  </button>
+                  <button onClick={() => startReply(active)} className="inline-flex items-center gap-1.5 text-[13px] font-medium border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-700"><Reply size={14} /> Reply</button>
+                  <button onClick={() => startForward(active)} className="inline-flex items-center gap-1.5 text-[13px] font-medium border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-700"><Forward size={14} /> Forward</button>
                 </div>
               </div>
-
-              {/* Body: HTML rendered in a sandboxed iframe, else plain text */}
               <div className="flex-1 overflow-y-auto p-5">
                 {active.html ? (
-                  <iframe
-                    title="message-body"
-                    sandbox=""
-                    srcDoc={active.html}
-                    className="w-full min-h-[40vh] border-0"
-                  />
+                  <iframe title="message-body" sandbox="" srcDoc={active.html} className="w-full min-h-[40vh] border-0" />
                 ) : (
                   <pre className="whitespace-pre-wrap font-poppins text-sm text-gray-700">{active.text}</pre>
                 )}
-
                 {active.attachments?.length > 0 && (
                   <div className="mt-5 border-t border-gray-100 pt-4">
                     <p className="text-[13px] font-semibold text-gray-600 mb-2">Attachments</p>
                     <div className="flex flex-wrap gap-2">
                       {active.attachments.map((a, i) => (
-                        <a key={i}
-                          href={`data:${a.contentType};base64,${a.content}`}
-                          download={a.filename}
+                        <a key={i} href={`data:${a.contentType};base64,${a.content}`} download={a.filename}
                           className="inline-flex items-center gap-1.5 text-[13px] bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700 hover:bg-gray-100">
                           <Paperclip size={13} /> {a.filename}
                         </a>
@@ -354,9 +363,7 @@ export default function Mail() {
         </div>
       </div>
 
-      {composer && (
-        <Composer initial={composer} onClose={() => setComposer(null)} onSent={loadList} />
-      )}
+      {composer && <Composer initial={composer} onClose={() => setComposer(null)} onSent={() => loadList(box, query)} />}
     </div>
   )
 }
