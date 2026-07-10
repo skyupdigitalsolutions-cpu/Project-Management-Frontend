@@ -545,7 +545,7 @@ function AttendanceTab() {
   const handleTelegramTest = async () => {
     setTgBusy('test')
     try {
-      const res = await api.post('/attendance/telegram/test')
+      const res = await api.post('/attendance/telegram/test', {})
       toast.success(res.data.message || 'Test message sent to Telegram')
     } catch (e) {
       toast.error(e.response?.data?.message || 'Telegram test failed', { duration: 8000 })
@@ -557,7 +557,7 @@ function AttendanceTab() {
   const handleTelegramDigest = async () => {
     setTgBusy('digest')
     try {
-      const res = await api.post('/attendance/telegram/digest', null, { params: { date: dateF } })
+      const res = await api.post('/attendance/telegram/digest', {}, { params: { date: dateF } })
       const c = res.data.counts || {}
       toast.success(`Digest sent — ${c.present ?? 0} present · ${c.late ?? 0} late · ${c.overtime ?? 0} OT`)
     } catch (e) {
