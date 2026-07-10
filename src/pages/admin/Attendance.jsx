@@ -19,6 +19,7 @@ import {
   Shield, ToggleLeft, ToggleRight, Plus, Trash2,
   Calendar, BookOpen, Loader2, ChevronDown, ChevronUp,
   FileSpreadsheet, X, Upload, Download, Paperclip, FileText, ExternalLink,
+  Send, Timer,
 } from 'lucide-react'
 import api, { fetchAllLeaves, updateLeaveStatus } from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -372,6 +373,26 @@ function AttendanceTab() {
   const [pinging,      setPinging]      = useState(false)
   const [pingStatus,   setPingStatus]   = useState(null)   // { reachable, message }
   const [lastSynced,   setLastSynced]   = useState(null)   // timestamp of last successful auto-refresh
+  const [tgBusy,       setTgBusy]       = useState(null)   // 'test' | 'digest' | null
+
+  // Overtime display config — mirrors the backend defaults
+  // (STANDARD_WORK_HOURS / STANDARD_BREAK_MINUTES / OVERTIME_MIN_MINUTES).
+  // Keep these in sync if you change those env vars.
+  const STD_HOURS      = 8
+  const STD_BREAK_MIN  = 60
+  const OT_MIN_MINUTES = 15
+
+  // Extra minutes worked beyond the standard day for one record (0 if none).
+  const overtimeMinutes = (r) => {
+    if (!r.clock_in || !r.clock_out) return 0
+    const grossMin = (new Date(r.clock_out) - new Date(r.clock_in)) / 60000
+    const appBreak = r.break_minutes ?? 0
+    const breakMin = appBreak > 0 ? appBreak : STD_BREAK_MIN
+    const netMin   = Math.max(0, grossMin - breakMin)
+    const dailyMin = (r.user_id?.dailyWorkingHours || STD_HOURS) * 60
+    const extra    = Math.round(netMin - dailyMin)
+    return extra >= OT_MIN_MINUTES ? extra : 0
+  }
 
   // Pre-fill device IP from backend .env (DEVICE_IP) so admin doesn't retype it every time
   useEffect(() => {
@@ -520,19 +541,47 @@ function AttendanceTab() {
     finally { setSyncing(false) }
   }
 
+  // ── Telegram ──────────────────────────────────────────────────────────────
+  const handleTelegramTest = async () => {
+    setTgBusy('test')
+    try {
+      const res = await api.post('/attendance/telegram/test')
+      toast.success(res.data.message || 'Test message sent to Telegram')
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Telegram test failed', { duration: 8000 })
+    } finally {
+      setTgBusy(null)
+    }
+  }
+
+  const handleTelegramDigest = async () => {
+    setTgBusy('digest')
+    try {
+      const res = await api.post('/attendance/telegram/digest', null, { params: { date: dateF } })
+      const c = res.data.counts || {}
+      toast.success(`Digest sent — ${c.present ?? 0} present · ${c.late ?? 0} late · ${c.overtime ?? 0} OT`)
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to send digest', { duration: 8000 })
+    } finally {
+      setTgBusy(null)
+    }
+  }
+
   const present = records.filter(r => ['present', 'wfh'].includes(r.status)).length
   const absent  = records.filter(r => r.status === 'absent').length
   const late    = records.filter(r => r.status === 'late').length
   const fromFp  = records.filter(r => r.source === 'fingerprint').length
   const fromWfh = records.filter(r => r.source === 'wfh').length
+  const otCount = records.filter(r => overtimeMinutes(r) > 0).length
 
   return (
     <>
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard label="Present"    value={present} icon={CheckCircle2}  color="emerald" />
         <StatCard label="Absent"     value={absent}  icon={XCircle}       color="red"     />
         <StatCard label="Late"       value={late}    icon={Clock}         color="amber"   />
+        <StatCard label="Overtime"   value={otCount} icon={Timer}         color="orange"  />
         <StatCard label="Biometric"  value={fromFp}  icon={Fingerprint}   color="purple"  />
         <StatCard label="WFH"        value={fromWfh} icon={Home}          color="blue"    />
       </div>
@@ -569,6 +618,14 @@ function AttendanceTab() {
         </div>
 
         <div className="flex gap-2">
+          <button className="btn-secondary flex items-center gap-2" onClick={handleTelegramTest} disabled={tgBusy !== null}
+            title="Send a test message to the configured Telegram chat">
+            {tgBusy === 'test' ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} Test Telegram
+          </button>
+          <button className="btn-secondary flex items-center gap-2" onClick={handleTelegramDigest} disabled={tgBusy !== null}
+            title="Send the attendance digest for the selected date to Telegram now">
+            {tgBusy === 'digest' ? <Loader2 size={15} className="animate-spin" /> : <Timer size={15} />} Send Digest
+          </button>
           <button className="btn-secondary flex items-center gap-2" onClick={() => setSyncModal(true)}>
             <Wifi size={15} /> Sync Device
           </button>
@@ -584,20 +641,21 @@ function AttendanceTab() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Employee', 'Department', 'Status', 'Work Mode', 'Clock In', 'Clock Out', 'Break', 'Hours', 'Source', 'Actions']
+                {['Employee', 'Department', 'Status', 'Work Mode', 'Clock In', 'Clock Out', 'Break', 'Hours', 'OT', 'Source', 'Actions']
                   .map(h => <th key={h} className="table-header text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>)}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading
-                ? <tr><td colSpan={10} className="py-16 text-center"><Spinner /></td></tr>
+                ? <tr><td colSpan={11} className="py-16 text-center"><Spinner /></td></tr>
                 : records.length === 0
-                  ? <tr><td colSpan={10}><EmptyState icon={Clock} title="No records found" description="Try a different date or filter" /></td></tr>
+                  ? <tr><td colSpan={11}><EmptyState icon={Clock} title="No records found" description="Try a different date or filter" /></td></tr>
                   : records.map(r => {
                     const breakMin = r.break_minutes ?? 0
                     const grossH   = r.clock_in && r.clock_out ? (new Date(r.clock_out) - new Date(r.clock_in)) / 3600000 : null
                     const hrs      = grossH != null ? Math.max(0, grossH - breakMin / 60).toFixed(1) : null
                     const fmtMin   = (m) => m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`
+                    const otMin    = overtimeMinutes(r)
                     return (
                       <tr key={r._id} className="hover:bg-gray-50 transition-colors">
                         <td className="table-cell px-4 py-3">
@@ -627,6 +685,14 @@ function AttendanceTab() {
                         </td>
                         <td className="table-cell px-4 py-3 text-sm text-orange-500">{breakMin > 0 ? fmtMin(breakMin) : '—'}</td>
                         <td className="table-cell px-4 py-3 text-sm text-gray-500">{hrs ? `${hrs}h` : '—'}</td>
+                        <td className="table-cell px-4 py-3">
+                          {otMin > 0 ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-600 text-xs font-semibold px-2 py-0.5"
+                              title={`Worked ${fmtMin(otMin)} beyond the standard day`}>
+                              <Timer size={11} /> +{fmtMin(otMin)}
+                            </span>
+                          ) : <span className="text-sm text-gray-400">—</span>}
+                        </td>
                         <td className="table-cell px-4 py-3"><SourceBadge source={r.source} /></td>
                         <td className="table-cell px-4 py-3">
                           <div className="flex items-center gap-1">

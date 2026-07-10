@@ -51,6 +51,7 @@ export const StatCard = ({ label, value, icon: Icon, color = 'primary', trend })
     red:     'text-danger bg-red-100',
     danger:  'text-danger bg-red-100',
     blue:    'text-blue-600 bg-blue-100',
+    orange:  'text-orange-600 bg-orange-100',
     purple:  'text-info bg-purple-100',
     info:    'text-info bg-purple-100',
   }
