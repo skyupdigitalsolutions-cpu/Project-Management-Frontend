@@ -709,7 +709,7 @@ export default function NotificationBell() {
       >
         <Bell size={18} />
         {unread > 0 && (
-          <span className="absolute top-1 right-1 w-4 h-4 bg-brand-500 rounded-full text-[10px] font-bold text-red-900 flex items-center justify-center animate-pulse">
+          <span className="absolute top-2 right-1 w-4 h-4 bg-brand-500 rounded-full text-[10px] font-bold bg-yellow-400 text-red-500 flex items-center justify-center animate-pulse">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
