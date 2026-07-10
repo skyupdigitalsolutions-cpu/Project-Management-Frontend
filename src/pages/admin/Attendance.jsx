@@ -375,20 +375,20 @@ function AttendanceTab() {
   const [lastSynced,   setLastSynced]   = useState(null)   // timestamp of last successful auto-refresh
   const [tgBusy,       setTgBusy]       = useState(null)   // 'test' | 'digest' | null
 
-  // Overtime display config — mirrors the backend defaults
-  // (STANDARD_WORK_HOURS / STANDARD_BREAK_MINUTES / OVERTIME_MIN_MINUTES).
-  // Keep these in sync if you change those env vars.
-  const STD_HOURS      = 8
-  const STD_BREAK_MIN  = 60
-  const OT_MIN_MINUTES = 15
+  // Overtime display config — mirrors the backend defaults.
+  // Breaks/lunch count as working time, so OT = (clock-out − clock-in) − standard day.
+  // Keep these in sync with the backend env vars
+  // (STANDARD_WORK_HOURS / OVERTIME_MIN_MINUTES / OVERTIME_INCLUDE_BREAKS).
+  const STD_HOURS       = 8
+  const OT_MIN_MINUTES  = 15
+  const INCLUDE_BREAKS  = true   // false ⇒ subtract app-logged breaks before counting OT
 
   // Extra minutes worked beyond the standard day for one record (0 if none).
   const overtimeMinutes = (r) => {
     if (!r.clock_in || !r.clock_out) return 0
     const grossMin = (new Date(r.clock_out) - new Date(r.clock_in)) / 60000
-    const appBreak = r.break_minutes ?? 0
-    const breakMin = appBreak > 0 ? appBreak : STD_BREAK_MIN
-    const netMin   = Math.max(0, grossMin - breakMin)
+    const deduct   = INCLUDE_BREAKS ? 0 : (r.break_minutes ?? 0)
+    const netMin   = Math.max(0, grossMin - deduct)
     const dailyMin = (r.user_id?.dailyWorkingHours || STD_HOURS) * 60
     const extra    = Math.round(netMin - dailyMin)
     return extra >= OT_MIN_MINUTES ? extra : 0
