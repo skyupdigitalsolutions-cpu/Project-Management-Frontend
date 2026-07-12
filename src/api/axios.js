@@ -13,13 +13,31 @@ api.interceptors.request.use((config) => {
 })
 
 // Handle 401 globally
+//
+// A 401 should only ever mean "your APP session (JWT) is missing/expired" — in
+// which case we clear the session and send the user to /login. But some
+// endpoints legitimately return 401/4xx for OTHER reasons (e.g. connecting a
+// Hostinger mailbox with a wrong password). Those must NOT log the user out.
+//
+// Rules:
+//   1. Never auto-logout for mail routes — a mailbox-credential failure is not
+//      an app-session failure. (The mail pages surface their own error toast.)
+//   2. Only redirect if the user actually had a token (a genuine expiry), and
+//      not when we're already on the login screen — this avoids redirect loops.
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status
+    const url = err.config?.url || ''
+    const isMailRoute = url.includes('/mail/')
+
+    if (status === 401 && !isMailRoute) {
+      const hadToken = !!localStorage.getItem('token')
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      if (hadToken && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(err)
   }

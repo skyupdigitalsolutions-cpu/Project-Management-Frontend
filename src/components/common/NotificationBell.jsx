@@ -5,9 +5,8 @@ import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Utility
-// ─────────────────────────────────────────────────────────────────────────────
+
 function extractLink(message) {
   const match = message?.match(/https?:\/\/[^\s]+/)
   return match ? match[0] : null
