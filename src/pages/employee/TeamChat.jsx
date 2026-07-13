@@ -10,6 +10,7 @@ import { useAuth } from '../../context/AuthContext'
 const POLL_MS = 4000
 const MAX_FILES = 5
 const MAX_FILE_MB = 25
+const DELETE_WINDOW_MS = 15 * 60 * 1000 // messages can be deleted for 15 min
 
 // Dependency-free emoji set for the picker.
 const EMOJIS = [
@@ -115,6 +116,7 @@ export default function TeamChat() {
   const [pickedMentions, setPicked] = useState([])          // [{_id, name}]
   const [mention, setMention]     = useState({ open: false, query: '', start: 0 })
   const [mentionIndex, setMentionIndex] = useState(0)
+  const [now, setNow]             = useState(Date.now())     // ticks so the delete window can expire live
 
   const bottomRef  = useRef(null)
   const lastTsRef  = useRef(null)
@@ -180,6 +182,12 @@ export default function TeamChat() {
     const id = setInterval(poll, POLL_MS)
     return () => clearInterval(id)
   }, [poll])
+
+  // Re-evaluate delete windows periodically so the button disappears at 15 min.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(id)
+  }, [])
 
   // Close the emoji panel on outside click.
   useEffect(() => {
@@ -328,6 +336,7 @@ export default function TeamChat() {
                 const showDay = day !== lastDay
                 lastDay = day
                 const atts = m.attachments || []
+                const canDelete = mine && (now - new Date(m.createdAt).getTime() < DELETE_WINDOW_MS)
                 return (
                   <div key={m._id}>
                     {showDay && (
@@ -344,7 +353,7 @@ export default function TeamChat() {
                         {atts.map((a, i) => <Attachment key={i} a={a} mine={mine} />)}
                         <div className={`text-[10px] mt-1 flex items-center gap-2 ${mine ? 'text-white/70 justify-end' : 'text-gray-400'}`}>
                           {fmtTime(m.createdAt)}
-                          {mine && (
+                          {canDelete && (
                             <button
                               onClick={() => remove(m._id)}
                               className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-300"
