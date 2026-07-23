@@ -28,7 +28,6 @@ vendor/
 __pycache__/
 *.pyc
 
-hello this is  for testing
 # Java build
 *.class
 target/
