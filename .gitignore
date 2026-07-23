@@ -7,7 +7,7 @@ logs
 
 # Environment variables
 .env
-.env.*
+.env.* 
 
 # Build files
 dist/
