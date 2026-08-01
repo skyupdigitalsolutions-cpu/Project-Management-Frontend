@@ -444,6 +444,18 @@ function AttendanceTab() {
     }
   }, [load])
 
+  // <input type="time"> gives us a bare "HH:mm" wall-clock string, which Mongoose
+  // cannot cast to a Date. Combine it with the record's own calendar day and send
+  // a full ISO datetime so the backend stores the correct instant.
+  const toISO = (baseDate, hhmm) => {
+    if (!hhmm) return null
+    const [h, m] = hhmm.split(':').map(Number)
+    if (Number.isNaN(h) || Number.isNaN(m)) return null
+    const d = new Date(baseDate)
+    d.setHours(h, m, 0, 0)
+    return d
+  }
+
   const openEdit = (rec) => {
     setForm({
       status:    rec.status ?? '',
@@ -462,9 +474,24 @@ function AttendanceTab() {
   }
 
   const handleSave = async () => {
+    if (!form.clock_in) { toast.error('Clock-in time is required'); return }
+
+    const base    = editModal.clock_in || editModal.date
+    const inDate  = toISO(base, form.clock_in)
+    let   outDate = toISO(base, form.clock_out)
+
+    // Overnight shift — a clock-out earlier than the clock-in belongs to the next day.
+    if (inDate && outDate && outDate <= inDate) {
+      outDate = new Date(outDate.getTime() + 24 * 60 * 60 * 1000)
+    }
+
     setSaving(true)
     try {
-      await api.patch(`/attendance/${editModal._id}`, form)
+      await api.patch(`/attendance/${editModal._id}`, {
+        status:    form.status || undefined,
+        clock_in:  inDate.toISOString(),
+        clock_out: outDate ? outDate.toISOString() : null,
+      })
       toast.success('Record updated')
       setEditModal(null)
       load()
@@ -474,7 +501,7 @@ function AttendanceTab() {
   const handleSetWorkMode = async () => {
     setSaving(true)
     try {
-      await api.patch(`/attendance/work-mode/${workModeModal.user_id?._id}`, wmForm)
+      await api.patch(`/wfh/override/${workModeModal.user_id?._id}`, wmForm)
       toast.success(`Work mode updated for ${workModeModal.user_id?.name}`)
       setWorkModeModal(null)
       load()
