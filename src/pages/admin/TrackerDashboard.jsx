@@ -17,6 +17,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   Clock, Activity, TrendingUp, Users as UsersIcon,
   RefreshCw, Download, ChevronDown, ChevronRight, LogIn, LogOut, Calendar,
+  Camera, X, ChevronLeft,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import api from '../../api/axios'
@@ -63,6 +64,165 @@ const buildTimeline = (logs) =>
       ...l,
       label: l.is_idle ? 'Idle' : l.app_name + (l.window_title ? ` — ${l.window_title}` : ''),
     }))
+
+// ─── Screenshot gallery + lightbox ──────────────────────────────────────────────
+// Shots are captured by the desktop agent every 2 minutes. Thumbnails come from
+// Cloudinary's on-the-fly resize (thumb_url); the lightbox loads the full image.
+
+function Lightbox({ shots, index, onClose, onMove }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft') onMove(-1)
+      if (e.key === 'ArrowRight') onMove(1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, onMove])
+
+  const shot = shots[index]
+  if (!shot) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white/80 hover:text-white"
+        aria-label="Close"
+      >
+        <X size={28} />
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); onMove(-1) }}
+        disabled={index === 0}
+        className="absolute left-3 text-white/80 hover:text-white disabled:opacity-30"
+        aria-label="Previous screenshot"
+      >
+        <ChevronLeft size={36} />
+      </button>
+      <div className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+        <img
+          src={shot.url}
+          alt={`Screenshot at ${fmtTime(shot.taken_at)}`}
+          className="w-full max-h-[80vh] object-contain rounded-lg bg-black"
+        />
+        <div className="mt-2 flex items-center justify-between text-sm text-white/90">
+          <span>
+            {fmtTime(shot.taken_at)}
+            {shot.app_name ? ` · ${shot.app_name}` : ''}
+            {shot.is_idle ? ' · Idle' : ''}
+            {shot.screen ? ` · ${shot.screen}` : ''}
+          </span>
+          <span className="text-white/60">{index + 1} / {shots.length}</span>
+        </div>
+      </div>
+      <button
+        onClick={(e) => { e.stopPropagation(); onMove(1) }}
+        disabled={index === shots.length - 1}
+        className="absolute right-3 text-white/80 hover:text-white disabled:opacity-30"
+        aria-label="Next screenshot"
+      >
+        <ChevronRight size={36} />
+      </button>
+    </div>
+  )
+}
+
+function ScreenshotGallery({ userId, date }) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [shots, setShots] = useState([])
+  const [lightbox, setLightbox] = useState(null) // index or null
+
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
+    try {
+      const res = await api.get('/tracker/screenshots', { params: { user_id: userId, date } })
+      setShots(res.data.data || [])
+    } catch {
+      if (!silent) toast.error('Failed to load screenshots')
+    } finally {
+      if (!silent) setLoading(false)
+    }
+  }, [userId, date])
+
+  const toggle = () => {
+    if (open) { setOpen(false); return }
+    setOpen(true)
+    load()
+  }
+
+  // Keep the open gallery live — new shots land every 2 minutes.
+  useEffect(() => {
+    if (!open) return
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') load({ silent: true })
+    }, 60000)
+    return () => clearInterval(id)
+  }, [open, load])
+
+  return (
+    <div className="mt-5">
+      <button
+        onClick={toggle}
+        className="text-sm text-blue-600 hover:underline flex items-center gap-1.5"
+      >
+        <Camera size={14} />
+        {open ? 'Hide' : 'Show'} screenshots
+        <ChevronDown size={14} style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
+      </button>
+
+      {open && (
+        <div className="mt-3">
+          {loading ? (
+            <div className="py-4 flex justify-center"><Spinner /></div>
+          ) : shots.length === 0 ? (
+            <p className="text-sm text-neutral">No screenshots for this date.</p>
+          ) : (
+            <>
+              <p className="text-xs text-neutral mb-2">
+                {shots.length} screenshot{shots.length === 1 ? '' : 's'} · captured every 2 minutes while tracking
+              </p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 max-h-80 overflow-y-auto pr-1">
+                {shots.map((s, i) => (
+                  <button
+                    key={s._id}
+                    onClick={() => setLightbox(i)}
+                    className="group relative rounded-lg overflow-hidden border border-gray-100 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    title={`${fmtTime(s.taken_at)}${s.app_name ? ` — ${s.app_name}` : ''}`}
+                  >
+                    <img
+                      src={s.thumb_url || s.url}
+                      alt={`Screenshot at ${fmtTime(s.taken_at)}`}
+                      loading="lazy"
+                      className="w-full aspect-video object-cover group-hover:scale-105 transition-transform"
+                    />
+                    <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] px-1 py-0.5 flex items-center justify-between">
+                      <span>{fmtTime(s.taken_at)}</span>
+                      {s.is_idle && <span className="text-amber-300">idle</span>}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {lightbox !== null && (
+        <Lightbox
+          shots={shots}
+          index={lightbox}
+          onClose={() => setLightbox(null)}
+          onMove={(d) => setLightbox((i) => Math.min(Math.max(i + d, 0), shots.length - 1))}
+        />
+      )}
+    </div>
+  )
+}
 
 // ─── Expanded per-employee summary ──────────────────────────────────────────────
 
@@ -127,8 +287,9 @@ function EmployeeSummary({ userId, date }) {
           <p className="text-sm font-medium text-gray-800 mt-1">{fmtTime(data.last_activity)}</p>
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-neutral">Tracked</p>
-          <p className="text-sm font-medium text-gray-800 mt-1">{fmtDuration(data.tracked_sec)}</p>
+          <p className="text-xs text-neutral">Total time</p>
+          <p className="text-sm font-medium text-gray-800 mt-1">{fmtDuration(data.total_sec ?? (data.tracked_sec || 0) + (data.idle_sec || 0))}</p>
+          <p className="text-[11px] text-neutral mt-0.5">Active {fmtDuration(data.tracked_sec)}</p>
         </div>
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-xs text-neutral">Idle</p>
@@ -255,6 +416,8 @@ function EmployeeSummary({ userId, date }) {
           )}
         </div>
       </div>
+
+      <ScreenshotGallery userId={userId} date={date} />
     </div>
   )
 }
@@ -297,9 +460,9 @@ export default function TrackerDashboard() {
   const exportCsv = () => {
     if (!summary?.users?.length) return
     const rows = [
-      ['Employee', 'Designation', 'Tracked', 'Productive %', 'Neutral %', 'Unproductive %', 'Idle'],
+      ['Employee', 'Designation', 'Total', 'Active', 'Productive %', 'Neutral %', 'Unproductive %', 'Idle'],
       ...summary.users.map((u) => [
-        u.name, u.designation || '', fmtDuration(u.tracked),
+        u.name, u.designation || '', fmtDuration(u.total ?? u.tracked + u.idle), fmtDuration(u.tracked),
         pct(u.productive, u.tracked), pct(u.neutral, u.tracked),
         pct(u.unproductive, u.tracked), fmtDuration(u.idle),
       ]),
@@ -386,7 +549,7 @@ export default function TrackerDashboard() {
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard label="Tracked today" value={fmtDuration(totals.tracked_sec)} icon={Clock} color="blue" />
+            <StatCard label="Total time" value={fmtDuration(totals.total_sec ?? (totals.tracked_sec || 0) + (totals.idle_sec || 0))} icon={Clock} color="blue" />
             <StatCard label="Productive" value={`${totals.productive_pct}%`} icon={TrendingUp} color="success" />
             <StatCard label="Idle time" value={fmtDuration(totals.idle_sec)} icon={Activity} color="amber" />
             <StatCard label="Active now" value={totals.active_now} icon={UsersIcon} color="primary" />
@@ -404,7 +567,7 @@ export default function TrackerDashboard() {
 
             <div className="divide-y divide-gray-100">
               {summary.users
-                .sort((a, b) => b.tracked - a.tracked)
+                .sort((a, b) => ((b.total ?? b.tracked + b.idle) - (a.total ?? a.tracked + a.idle)))
                 .map((u) => {
                   const p = pct(u.productive, u.tracked)
                   const n = pct(u.neutral, u.tracked)
@@ -429,7 +592,7 @@ export default function TrackerDashboard() {
                           <span style={{ width: `${n}%`, background: CATEGORY_COLORS.neutral }} />
                           <span style={{ width: `${up}%`, background: CATEGORY_COLORS.unproductive }} />
                         </div>
-                        <span className="text-sm text-gray-700 w-20 text-right shrink-0">{fmtDuration(u.tracked)}</span>
+                        <span className="text-sm text-gray-700 w-20 text-right shrink-0">{fmtDuration(u.total ?? u.tracked + u.idle)}</span>
                         <span className="text-sm font-medium w-12 text-right shrink-0" style={{ color: CATEGORY_COLORS.productive }}>{p}%</span>
                       </button>
                       {isOpen && <EmployeeSummary userId={u.user_id} date={date} />}
