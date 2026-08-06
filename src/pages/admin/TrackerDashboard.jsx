@@ -335,6 +335,23 @@ function EmployeeSummary({ userId, date }) {
               </div>
             </>
           )}
+
+          {data.idle_reasons && data.idle_reasons.length > 0 && (
+            <>
+              <p className="text-sm font-medium text-gray-800 mb-2 mt-5">Idle reasons</p>
+              <div className="space-y-1.5">
+                {data.idle_reasons.map((r, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    <span className="text-neutral shrink-0 w-32">
+                      {fmtTime(r.idle_start)}–{fmtTime(r.idle_end)}
+                    </span>
+                    <span className="flex-1 text-gray-700 break-words">{r.reason}</span>
+                    <span className="text-neutral shrink-0">{fmtDuration(r.duration_sec)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div>
