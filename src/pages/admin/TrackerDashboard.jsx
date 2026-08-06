@@ -1,18 +1,3 @@
-/**
- * pages/admin/TrackerDashboard.jsx
- *
- * Desktop tracker productivity dashboard.
- * Backend routes used:
- *   GET /api/tracker/summary?date=YYYY-MM-DD          -> KPIs + per-user split
- *   GET /api/tracker/employee-summary?user_id=&date=  -> one employee's daily summary
- *   GET /api/tracker/activity?user_id=&date=          -> one employee's raw timeline
- *
- * PLACE AT: Project-Management-Frontend/src/pages/admin/TrackerDashboard.jsx
- *
- * Route (App.jsx, inside /admin block):  <Route path="tracker" element={<TrackerDashboard />} />
- * Sidebar (DashboardLayout.jsx admin nav): { to: '/admin/tracker', label: 'Productivity', icon: Clock }
- */
-
 import { useEffect, useState, useCallback } from 'react'
 import {
   Clock, Activity, TrendingUp, Users as UsersIcon,
