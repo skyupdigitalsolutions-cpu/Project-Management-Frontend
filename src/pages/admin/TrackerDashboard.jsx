@@ -2,9 +2,10 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   Clock, Activity, TrendingUp, Users as UsersIcon,
   RefreshCw, Download, ChevronDown, ChevronRight, LogIn, LogOut, Calendar,
-  Camera, X, ChevronLeft,
+  Camera, X, ChevronLeft, Search, Globe,
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
 import {
@@ -33,6 +34,79 @@ const rateLabel = (p) =>
   p >= 65 ? { label: 'Good',    color: '#1D9E75', bg: 'rgba(29,158,117,0.12)' }
   : p >= 40 ? { label: 'Fair',   color: '#B7791F', bg: 'rgba(245,158,11,0.14)' }
   :           { label: 'Low',    color: '#D85A30', bg: 'rgba(216,90,48,0.12)' }
+
+// ─── Window-title parsing ─────────────────────────────────────────────────────
+// The tracker records the active window title. For browsers that title usually
+// already contains the search query ("<query> - Google Search") and the site,
+// so we can surface "what they searched / where they were" from data we already
+// have — no extra tracking. This is best-effort text parsing, not exhaustive.
+const BROWSER_SUFFIXES = [
+  'Google Chrome', 'Chromium', 'Microsoft\u200b Edge', 'Microsoft Edge',
+  'Mozilla Firefox', 'Firefox', 'Brave', 'Opera', 'Vivaldi', 'Safari', 'Arc',
+]
+const DASH = '[-\\u2013\\u2014]' // -, en-dash, em-dash
+
+function stripBrowserSuffix(title = '') {
+  let t = String(title).trim()
+  for (const b of BROWSER_SUFFIXES) {
+    const esc = b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    t = t.replace(new RegExp(`\\s${DASH}\\s${esc}\\s*$`, 'i'), '')
+  }
+  return t.replace(/^\(\d+\)\s*/, '').trim() // drop "(3)" unread-count prefixes
+}
+
+const SEARCH_PATTERNS = [
+  { engine: 'Google',     re: new RegExp(`^(.*?)\\s${DASH}\\sGoogle Search$`, 'i') },
+  { engine: 'Bing',       re: new RegExp(`^(.*?)\\s${DASH}\\sBing$`, 'i') },
+  { engine: 'DuckDuckGo', re: /^(.*?)\s+at DuckDuckGo$/i },
+  { engine: 'YouTube',    re: new RegExp(`^(.*?)\\s${DASH}\\sYouTube$`, 'i') },
+  { engine: 'Yahoo',      re: new RegExp(`^(.*?)\\s${DASH}\\sYahoo.*$`, 'i') },
+]
+
+// Returns { type:'search', engine, text } | { type:'site', site, page } | null
+function parseTitle(app_name, window_title) {
+  const t = stripBrowserSuffix(window_title)
+  if (!t) return null
+  for (const { engine, re } of SEARCH_PATTERNS) {
+    const m = t.match(re)
+    if (m && m[1] && m[1].trim()) return { type: 'search', engine, text: m[1].trim() }
+  }
+  const parts = t.split(new RegExp(`\\s${DASH}\\s`))
+  if (parts.length > 1) {
+    const site = parts[parts.length - 1].trim()
+    const page = parts.slice(0, -1).join(' - ').trim()
+    return { type: 'site', site, page }
+  }
+  return { type: 'site', site: app_name || 'Unknown', page: t }
+}
+
+// Roll a list of {app_name, window_title, seconds} into de-duplicated search and
+// site lists, each sorted by time spent.
+function buildSearchesAndSites(items = []) {
+  const searches = new Map()
+  const sites = new Map()
+  for (const it of items) {
+    const p = parseTitle(it.app_name, it.window_title)
+    if (!p) continue
+    const secs = it.seconds || 0
+    if (p.type === 'search') {
+      const key = `${p.engine}::${p.text.toLowerCase()}`
+      const cur = searches.get(key) || { engine: p.engine, text: p.text, seconds: 0 }
+      cur.seconds += secs
+      searches.set(key, cur)
+    } else {
+      const key = p.site.toLowerCase()
+      const cur = sites.get(key) || { site: p.site, page: p.page, seconds: 0 }
+      cur.seconds += secs
+      if (secs > 0 && p.page && (!cur.page || secs > cur.seconds - secs)) cur.page = p.page
+      sites.set(key, cur)
+    }
+  }
+  return {
+    searches: [...searches.values()].sort((a, b) => b.seconds - a.seconds),
+    sites: [...sites.values()].sort((a, b) => b.seconds - a.seconds),
+  }
+}
 
 const fmtTime = (iso) => (iso ? format(new Date(iso), 'h:mm a') : '—')
 
@@ -267,6 +341,21 @@ function EmployeeSummary({ userId, date }) {
 
   const total = data.tracked_sec || 0
 
+  // Attractive per-employee split for the donut.
+  const donutData = [
+    { name: 'Productive', key: 'productive', value: data.productive_sec || 0 },
+    { name: 'Neutral', key: 'neutral', value: data.neutral_sec || 0 },
+    { name: 'Unproductive', key: 'unproductive', value: data.unproductive_sec || 0 },
+  ].filter((d) => d.value > 0)
+
+  // Searches + sites parsed from the titles we already store (all categories).
+  const allItems = [
+    ...(data.productive_items || []),
+    ...(data.neutral_items || []),
+    ...(data.unproductive_items || []),
+  ]
+  const { searches, sites } = buildSearchesAndSites(allItems)
+
   return (
     <div className="px-2 pb-4 pt-1">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -288,6 +377,81 @@ function EmployeeSummary({ userId, date }) {
           <p className="text-sm font-medium text-gray-800 mt-1">{fmtDuration(data.idle_sec)}</p>
         </div>
       </div>
+
+      {/* Attractive productivity donut */}
+      {donutData.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-50 rounded-xl p-4 mb-4">
+          <div className="relative w-40 h-40 shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={donutData} dataKey="value" nameKey="name"
+                  cx="50%" cy="50%" innerRadius={48} outerRadius={70} paddingAngle={2} stroke="none">
+                  {donutData.map((d) => <Cell key={d.key} fill={CATEGORY_COLORS[d.key]} />)}
+                </Pie>
+                <Tooltip formatter={(v, n) => [fmtDuration(v), n]} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-2xl font-bold" style={{ color: CATEGORY_COLORS.productive }}>
+                {pct(data.productive_sec, total)}%
+              </span>
+              <span className="text-[11px] text-neutral">productive</span>
+            </div>
+          </div>
+          <div className="flex-1 w-full space-y-2">
+            {['productive', 'neutral', 'unproductive'].map((cat) => (
+              <div key={cat} className="flex items-center gap-2 text-sm">
+                <span className="w-3 h-3 rounded-sm" style={{ background: CATEGORY_COLORS[cat] }} />
+                <span className="flex-1 capitalize text-gray-700">{cat}</span>
+                <span className="text-neutral">{fmtDuration(data[`${cat}_sec`])}</span>
+                <span className="w-10 text-right font-medium text-gray-700">{pct(data[`${cat}_sec`], total)}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Searches & sites parsed from tab titles */}
+      {(searches.length > 0 || sites.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white border border-gray-100 rounded-xl p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2 flex items-center gap-1.5">
+              <Search size={14} className="text-primary" /> Searches
+            </p>
+            {searches.length === 0 ? (
+              <p className="text-sm text-neutral">No searches detected in tab titles.</p>
+            ) : (
+              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                {searches.slice(0, 20).map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-purple-50 text-primary shrink-0">{s.engine}</span>
+                    <span className="flex-1 truncate text-gray-700" title={s.text}>{s.text}</span>
+                    <span className="text-neutral shrink-0">{fmtDuration(s.seconds)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="bg-white border border-gray-100 rounded-xl p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2 flex items-center gap-1.5">
+              <Globe size={14} className="text-primary" /> Sites &amp; activity
+            </p>
+            {sites.length === 0 ? (
+              <p className="text-sm text-neutral">No sites detected.</p>
+            ) : (
+              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                {sites.slice(0, 20).map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <span className="text-gray-800 font-medium shrink-0 max-w-[40%] truncate">{s.site}</span>
+                    {s.page && <span className="flex-1 truncate text-neutral" title={s.page}>{s.page}</span>}
+                    <span className="text-neutral shrink-0 ml-auto">{fmtDuration(s.seconds)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
