@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   Clock, Activity, TrendingUp, Users as UsersIcon,
   RefreshCw, Download, ChevronDown, ChevronRight, LogIn, LogOut, Calendar,
@@ -26,6 +26,13 @@ const fmtDuration = (sec = 0) => {
 }
 
 const pct = (part, whole) => (whole > 0 ? Math.round((part / whole) * 100) : 0)
+
+// A plain, at-a-glance verdict from a productive %, so admins don't have to
+// interpret the number themselves. Kept to three simple bands.
+const rateLabel = (p) =>
+  p >= 65 ? { label: 'Good',    color: '#1D9E75', bg: 'rgba(29,158,117,0.12)' }
+  : p >= 40 ? { label: 'Fair',   color: '#B7791F', bg: 'rgba(245,158,11,0.14)' }
+  :           { label: 'Low',    color: '#D85A30', bg: 'rgba(216,90,48,0.12)' }
 
 const fmtTime = (iso) => (iso ? format(new Date(iso), 'h:mm a') : '—')
 
@@ -499,6 +506,26 @@ export default function TrackerDashboard() {
 
   const totals = summary?.totals
 
+  // Team-level rates for the plain summary line and the stat cards. Derived from
+  // the per-user rows already returned, so no extra request is needed.
+  const team = useMemo(() => {
+    const users = summary?.users || []
+    const agg = users.reduce(
+      (a, u) => ({
+        tracked: a.tracked + (u.tracked || 0),
+        productive: a.productive + (u.productive || 0),
+        unproductive: a.unproductive + (u.unproductive || 0),
+      }),
+      { tracked: 0, productive: 0, unproductive: 0 }
+    )
+    return {
+      count: users.length,
+      productivePct: pct(agg.productive, agg.tracked),
+      unproductivePct: pct(agg.unproductive, agg.tracked),
+      lowCount: users.filter((u) => u.tracked > 0 && pct(u.productive, u.tracked) < 40).length,
+    }
+  }, [summary])
+
   return (
     <div>
       <PageHeader
@@ -568,9 +595,21 @@ export default function TrackerDashboard() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Plain-language summary — the whole day in one sentence */}
+          <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-gray-700">
+            On {format(new Date(date), 'MMM d, yyyy')}, the team was{' '}
+            <b style={{ color: CATEGORY_COLORS.productive }}>{team.productivePct}% productive</b> and{' '}
+            <b style={{ color: CATEGORY_COLORS.unproductive }}>{team.unproductivePct}% unproductive</b>{' '}
+            across {team.count} employee{team.count === 1 ? '' : 's'}.
+            {team.lowCount > 0 && (
+              <> {team.lowCount} {team.lowCount === 1 ? 'is' : 'are'} below 40% — worth a look.</>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
             <StatCard label="Total time" value={fmtDuration(totals.total_sec ?? (totals.tracked_sec || 0) + (totals.idle_sec || 0))} icon={Clock} color="blue" />
-            <StatCard label="Productive" value={`${totals.productive_pct}%`} icon={TrendingUp} color="success" />
+            <StatCard label="Productive rate" value={`${team.productivePct}%`} icon={TrendingUp} color="success" />
+            <StatCard label="Unproductive rate" value={`${team.unproductivePct}%`} icon={Activity} color="red" />
             <StatCard label="Idle time" value={fmtDuration(totals.idle_sec)} icon={Activity} color="amber" />
             <StatCard label="Active now" value={totals.active_now} icon={UsersIcon} color="primary" />
           </div>
@@ -585,6 +624,18 @@ export default function TrackerDashboard() {
               </div>
             </div>
 
+            {/* Column guide so the two rates are self-explanatory */}
+            <div className="hidden sm:flex items-center gap-3 px-2 pb-2 mb-1 border-b border-gray-100 text-[11px] font-semibold uppercase tracking-wide text-neutral">
+              <span className="w-4 shrink-0" />
+              <span className="w-9 shrink-0" />
+              <span className="w-36 shrink-0">Employee</span>
+              <span className="flex-1">Productivity split</span>
+              <span className="w-20 text-right shrink-0">Time</span>
+              <span className="w-12 text-right shrink-0" style={{ color: CATEGORY_COLORS.productive }}>Prod</span>
+              <span className="w-12 text-right shrink-0" style={{ color: CATEGORY_COLORS.unproductive }}>Unprod</span>
+              <span className="w-14 text-right shrink-0 hidden md:inline">Rating</span>
+            </div>
+
             <div className="divide-y divide-gray-100">
               {summary.users
                 .sort((a, b) => ((b.total ?? b.tracked + b.idle) - (a.total ?? a.tracked + a.idle)))
@@ -592,6 +643,7 @@ export default function TrackerDashboard() {
                   const p = pct(u.productive, u.tracked)
                   const n = pct(u.neutral, u.tracked)
                   const up = pct(u.unproductive, u.tracked)
+                  const r = rateLabel(p)
                   const isOpen = expandedUser === u.user_id
                   return (
                     <div key={u.user_id}>
@@ -614,6 +666,12 @@ export default function TrackerDashboard() {
                         </div>
                         <span className="text-sm text-gray-700 w-20 text-right shrink-0">{fmtDuration(u.total ?? u.tracked + u.idle)}</span>
                         <span className="text-sm font-medium w-12 text-right shrink-0" style={{ color: CATEGORY_COLORS.productive }}>{p}%</span>
+                        <span className="text-sm font-medium w-12 text-right shrink-0" style={{ color: CATEGORY_COLORS.unproductive }}>{up}%</span>
+                        <span className="w-14 text-right shrink-0 hidden md:block">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ color: r.color, background: r.bg }}>
+                            {r.label}
+                          </span>
+                        </span>
                       </button>
                       {isOpen && <EmployeeSummary userId={u.user_id} date={date} />}
                     </div>
