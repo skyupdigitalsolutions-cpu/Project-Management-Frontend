@@ -318,23 +318,41 @@ function EmployeeSummary({ userId, date }) {
             })}
           </div>
 
-          {data.unproductive_items && data.unproductive_items.length > 0 && (
-            <>
-              <p className="text-sm font-medium mb-2 mt-5" style={{ color: '#D85A30' }}>
-                Unproductive activity
-              </p>
-              <div className="space-y-1.5">
-                {data.unproductive_items.map((u, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <span className="flex-1 truncate text-gray-700" title={`${u.app_name} — ${u.window_title}`}>
-                      {u.app_name}{u.window_title ? ` — ${u.window_title}` : ''}
-                    </span>
-                    <span className="text-neutral shrink-0">{fmtDuration(u.seconds)}</span>
+          {/* Detailed activity breakdown — exactly which apps/windows counted
+              as productive, neutral, or unproductive. Falls back gracefully to
+              just the unproductive list if an older backend is deployed. */}
+          {(() => {
+            const groups = [
+              { key: 'productive',   label: 'Productive activity',   color: CATEGORY_COLORS.productive,   items: data.productive_items },
+              { key: 'neutral',      label: 'Neutral activity',      color: CATEGORY_COLORS.neutral,      items: data.neutral_items },
+              { key: 'unproductive', label: 'Unproductive activity', color: CATEGORY_COLORS.unproductive, items: data.unproductive_items },
+            ].filter((g) => g.items && g.items.length > 0)
+            if (groups.length === 0) return null
+            return groups.map((g) => {
+              const totalSec = g.items.reduce((s, it) => s + (it.seconds || 0), 0)
+              return (
+                <div key={g.key} className="mt-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium flex items-center gap-1.5" style={{ color: g.color }}>
+                      <span className="w-2.5 h-2.5 rounded-sm" style={{ background: g.color }} />
+                      {g.label}
+                    </p>
+                    <span className="text-xs text-neutral shrink-0">{g.items.length} · {fmtDuration(totalSec)}</span>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {g.items.map((u, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <span className="flex-1 truncate text-gray-700" title={`${u.app_name}${u.window_title ? ' — ' + u.window_title : ''}`}>
+                          {u.app_name}{u.window_title ? ` — ${u.window_title}` : ''}
+                        </span>
+                        <span className="text-neutral shrink-0">{fmtDuration(u.seconds)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })
+          })()}
 
           {data.idle_reasons && data.idle_reasons.length > 0 && (
             <>
