@@ -69,12 +69,68 @@ function ConnectMailbox({ onConnected }) {
 }
 
 /* ── Composer ───────────────────────────────────────────────────── */
+// Brevo caps a transactional email at ~10 MB total, so we guard the combined
+// raw size of all attachments a little under that.
+const MAX_ATTACH_BYTES = 9 * 1024 * 1024
+
+// Read a File into the shape the backend/Brevo expect: base64 `content`
+// (without the data: prefix) plus filename/type/size for the UI.
+function fileToAttachment(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = String(reader.result || '')
+      const base64 = result.includes(',') ? result.split(',')[1] : result
+      resolve({
+        filename: file.name,
+        content: base64,
+        contentType: file.type || 'application/octet-stream',
+        size: file.size,
+      })
+    }
+    reader.onerror = () => reject(new Error(`Could not read ${file.name}`))
+    reader.readAsDataURL(file)
+  })
+}
+
+function fmtSize(bytes = 0) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 function Composer({ initial, onClose, onSent }) {
   const [to, setTo] = useState(initial.to || '')
   const [cc, setCc] = useState('')
   const [subject, setSubject] = useState(initial.subject || '')
   const [body, setBody] = useState(initial.body || '')
+  const [attachments, setAttachments] = useState(initial.attachments || [])
   const [busy, setBusy] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const totalBytes = attachments.reduce((s, a) => s + (a.size || 0), 0)
+
+  const pickFiles = () => fileInputRef.current?.click()
+
+  const onFilesChosen = async (e) => {
+    const files = Array.from(e.target.files || [])
+    e.target.value = '' // allow re-selecting the same file later
+    if (!files.length) return
+    try {
+      const read = await Promise.all(files.map(fileToAttachment))
+      const merged = [...attachments, ...read]
+      const newTotal = merged.reduce((s, a) => s + (a.size || 0), 0)
+      if (newTotal > MAX_ATTACH_BYTES) {
+        return toast.error(`Attachments too large — keep the total under ${fmtSize(MAX_ATTACH_BYTES)}`)
+      }
+      setAttachments(merged)
+    } catch (err) {
+      toast.error(err.message || 'Could not read file')
+    }
+  }
+
+  const removeAttachment = (i) => setAttachments((list) => list.filter((_, idx) => idx !== i))
+
   const send = async () => {
     if (!to.trim()) return toast.error('Add at least one recipient')
     setBusy(true)
@@ -83,7 +139,7 @@ function Composer({ initial, onClose, onSent }) {
         to, cc: cc || undefined, subject,
         text: body, html: body.replace(/\n/g, '<br>'),
         inReplyTo: initial.inReplyTo, references: initial.references,
-        attachments: initial.attachments,
+        attachments: attachments.length ? attachments : undefined,
       })
       toast.success('Message sent'); onSent?.(); onClose()
     } catch (err) {
@@ -107,17 +163,37 @@ function Composer({ initial, onClose, onSent }) {
             className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
           <textarea value={body} onChange={e => setBody(e.target.value)} rows={12} placeholder="Write your message…"
             className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/30" />
-          {initial.attachments?.length > 0 && (
+
+          {/* Attachment chips */}
+          {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {initial.attachments.map((a, i) => (
-                <span key={i} className="inline-flex items-center gap-1 text-[12px] bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-gray-600">
-                  <Paperclip size={12} /> {a.filename}
+              {attachments.map((a, i) => (
+                <span key={i} className="inline-flex items-center gap-1.5 text-[12px] bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-gray-600">
+                  <Paperclip size={12} />
+                  <span className="max-w-[180px] truncate">{a.filename}</span>
+                  {a.size ? <span className="text-gray-400">({fmtSize(a.size)})</span> : null}
+                  <button onClick={() => removeAttachment(i)} className="ml-0.5 text-gray-400 hover:text-danger" title="Remove">
+                    <X size={12} />
+                  </button>
                 </span>
               ))}
             </div>
           )}
+
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={onFilesChosen} />
         </div>
-        <div className="px-5 py-3 border-t border-gray-100 flex justify-end">
+        <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <button onClick={pickFiles} type="button"
+              className="inline-flex items-center gap-2 border border-gray-200 text-gray-600 font-medium px-3 py-2 rounded-xl hover:bg-gray-50 transition">
+              <Paperclip size={16} /> Attach
+            </button>
+            {totalBytes > 0 && (
+              <span className="text-[12px] text-neutral truncate">
+                {attachments.length} file{attachments.length === 1 ? '' : 's'} · {fmtSize(totalBytes)}
+              </span>
+            )}
+          </div>
           <button onClick={send} disabled={busy}
             className="inline-flex items-center gap-2 bg-primary text-white font-medium px-5 py-2 rounded-xl hover:opacity-90 transition disabled:opacity-60">
             {busy ? <Spinner size={16} /> : <Send size={16} />} {busy ? 'Sending…' : 'Send'}
