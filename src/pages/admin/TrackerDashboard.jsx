@@ -400,7 +400,7 @@ function EmployeeSummary({ userId, date }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-xs text-neutral flex items-center gap-1"><LogIn size={12} /> First activity</p>
           <p className="text-sm font-medium text-gray-800 mt-1">{fmtTime(data.first_activity)}</p>
@@ -418,7 +418,39 @@ function EmployeeSummary({ userId, date }) {
           <p className="text-xs text-neutral">Idle</p>
           <p className="text-sm font-medium text-gray-800 mt-1">{fmtDuration(data.idle_sec)}</p>
         </div>
+        <div className="bg-gray-50 rounded-lg p-3">
+          <p className="text-xs text-neutral">Untracked</p>
+          <p className="text-sm font-medium mt-1" style={{ color: (data.untracked_sec || 0) > 0 ? '#B7791F' : '#111827' }}>
+            {fmtDuration(data.untracked_sec || 0)}
+          </p>
+          <p className="text-[11px] text-neutral mt-0.5">asleep / off</p>
+        </div>
       </div>
+
+      {/* Untracked gaps — why total time is less than first→last span */}
+      {data.gaps && data.gaps.length > 0 && (
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50/50 p-4 mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+              <Clock size={15} className="text-warning" /> Untracked gaps
+            </p>
+            <span className="text-xs text-neutral">{fmtDuration(data.untracked_sec || 0)} total</span>
+          </div>
+          <p className="text-xs text-neutral mb-3">
+            Periods with no activity recorded — the machine was asleep, shut down, or the tracker wasn’t running.
+            This is why total time can be less than first→last activity.
+          </p>
+          <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+            {data.gaps.map((g, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm">
+                <span className="text-gray-700 w-32 shrink-0">{fmtTime(g.start)}–{fmtTime(g.end)}</span>
+                <span className="flex-1 text-neutral">no data recorded</span>
+                <span className="text-neutral shrink-0">{fmtDuration(g.seconds)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Attractive productivity donut */}
       {donutData.length > 0 && (
