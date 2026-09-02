@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   Clock, Activity, TrendingUp, Users as UsersIcon,
   RefreshCw, Download, ChevronDown, ChevronRight, LogIn, LogOut, Calendar,
-  Camera, X, ChevronLeft, Search, Globe,
+  Camera, X, ChevronLeft, Search, Globe, Sparkles,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
@@ -299,6 +299,8 @@ function EmployeeSummary({ userId, date }) {
   const [timeline, setTimeline] = useState([])
   const [tlLoading, setTlLoading] = useState(false)
   const [openRow, setOpenRow] = useState(null)
+  const [brief, setBrief] = useState(null)      // null = not loaded, '' = none
+  const [briefLoading, setBriefLoading] = useState(false)
 
   const load = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true)
@@ -312,7 +314,21 @@ function EmployeeSummary({ userId, date }) {
     }
   }, [userId, date])
 
-  useEffect(() => { load() }, [load])
+  const loadBrief = useCallback(async (refresh = false) => {
+    setBriefLoading(true)
+    try {
+      const res = await api.get('/tracker/employee-summary/brief', {
+        params: { user_id: userId, date, ...(refresh ? { refresh: 1 } : {}) },
+      })
+      setBrief(res.data.brief || '')
+    } catch {
+      setBrief('')
+    } finally {
+      setBriefLoading(false)
+    }
+  }, [userId, date])
+
+  useEffect(() => { load(); loadBrief() }, [load, loadBrief])
 
   // Keep the open summary live
   useEffect(() => {
@@ -358,6 +374,32 @@ function EmployeeSummary({ userId, date }) {
 
   return (
     <div className="px-2 pb-4 pt-1">
+      {/* AI daily summary — a quick plain-English read of the day */}
+      <div className="rounded-xl border border-purple-100 bg-purple-50/50 p-4 mb-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+            <Sparkles size={15} className="text-primary" /> Summary
+          </p>
+          <button
+            onClick={() => loadBrief(true)}
+            disabled={briefLoading}
+            className="text-xs text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
+            title="Regenerate summary"
+          >
+            <RefreshCw size={12} className={briefLoading ? 'animate-spin' : ''} /> Regenerate
+          </button>
+        </div>
+        {briefLoading && brief === null ? (
+          <div className="flex items-center gap-2 text-sm text-neutral"><Spinner /> Writing summary…</div>
+        ) : brief ? (
+          <p className="text-sm text-gray-700 leading-relaxed">{brief}</p>
+        ) : (
+          <p className="text-sm text-neutral">
+            {briefLoading ? 'Writing summary…' : 'No summary available for this day.'}
+          </p>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-xs text-neutral flex items-center gap-1"><LogIn size={12} /> First activity</p>
