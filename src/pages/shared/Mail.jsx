@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Mail as MailIcon, Inbox, Send, Reply, Forward, RefreshCw, Paperclip, X,
   Plus, Loader2, Link2, AlertCircle, Search, Trash2, FileText, ShieldAlert,
-  Archive, Folder, Users, ChevronLeft,
+  Archive, Folder, Users, ChevronLeft, LogOut,
 } from 'lucide-react'
 import api from '../../api/axios'
 import toast from 'react-hot-toast'
@@ -208,6 +208,8 @@ function Composer({ initial, onClose, onSent }) {
 export default function Mail() {
   const [checking, setChecking] = useState(true)
   const [connected, setConnected] = useState(false)
+  const [account, setAccount] = useState(null)      // connected mailbox address
+  const [disconnecting, setDisconnecting] = useState(false)
   const [folders, setFolders] = useState([])
   const [box, setBox] = useState('INBOX')
   const [view, setView] = useState('mail')          // 'mail' | 'contacts'
@@ -223,8 +225,29 @@ export default function Mail() {
 
   const checkStatus = useCallback(async () => {
     setChecking(true)
-    try { const { data } = await api.get('/mail/status'); setConnected(data.connected) }
-    catch { setConnected(false) } finally { setChecking(false) }
+    try {
+      const { data } = await api.get('/mail/status')
+      setConnected(data.connected)
+      setAccount(data.email || null)
+    }
+    catch { setConnected(false); setAccount(null) } finally { setChecking(false) }
+  }, [])
+
+  const disconnect = useCallback(async () => {
+    if (!window.confirm('Disconnect this mailbox? You’ll need to sign in again to read or send mail.')) return
+    setDisconnecting(true)
+    try {
+      await api.delete('/mail/disconnect')
+      // Reset the page back to the connect screen.
+      setConnected(false); setAccount(null)
+      setMessages([]); setContacts([]); setActive(null); setComposer(null)
+      setBox('INBOX'); setView('mail'); setSearch(''); setQuery('')
+      toast.success('Mailbox disconnected')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to disconnect')
+    } finally {
+      setDisconnecting(false)
+    }
   }, [])
 
   const loadFolders = useCallback(async () => {
@@ -313,7 +336,7 @@ export default function Mail() {
   if (!connected) return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2"><MailIcon size={22} className="text-primary" /> Mail</h1>
-      <ConnectMailbox onConnected={() => setConnected(true)} />
+      <ConnectMailbox onConnected={(email) => { setConnected(true); setAccount(email || null) }} />
     </div>
   )
 
@@ -323,7 +346,10 @@ export default function Mail() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2"><MailIcon size={22} className="text-primary" /> Mail</h1>
+        <div>
+          <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2"><MailIcon size={22} className="text-primary" /> Mail</h1>
+          {account && <p className="text-xs text-neutral mt-0.5 ml-8">Connected as {account}</p>}
+        </div>
         <div className="flex items-center gap-2 flex-1 max-w-md">
           <div className="relative flex-1">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral" />
@@ -337,6 +363,15 @@ export default function Mail() {
           <button onClick={() => setComposer({ heading: 'New message' })}
             className="inline-flex items-center gap-2 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl hover:opacity-90 transition whitespace-nowrap">
             <Plus size={16} /> Compose
+          </button>
+          <button
+            onClick={disconnect}
+            disabled={disconnecting}
+            title={account ? `Disconnect ${account}` : 'Disconnect mailbox'}
+            className="inline-flex items-center gap-2 border border-gray-200 text-gray-600 text-sm font-medium px-3 py-2 rounded-xl hover:bg-gray-50 hover:text-danger transition whitespace-nowrap disabled:opacity-60"
+          >
+            {disconnecting ? <Spinner size={16} /> : <LogOut size={16} />}
+            <span className="hidden sm:inline">Disconnect</span>
           </button>
         </div>
       </div>
