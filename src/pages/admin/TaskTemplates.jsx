@@ -56,6 +56,7 @@ const PROJECT_TYPES = [
   { value: 'meta_ads',               label: 'Meta Ads' },
   { value: 'video_editing',          label: 'Video Editing' },
   { value: 'role_based_dashboards',  label: 'Role Based Dashboards' },
+  { value: 'gmb',                    label: 'GMB (Google My Business)' },
 ]
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical']
